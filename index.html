@@ -1,0 +1,582 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Dashboard +Roma 2025/26</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --bg: #0f1117;
+      --bg2: #1a1d27;
+      --bg3: #22263a;
+      --border: #2e3250;
+      --text: #e8eaf6;
+      --text2: #8b90b8;
+      --blue: #3b82f6;
+      --amber: #f59e0b;
+      --green: #10b981;
+      --red: #ef4444;
+      --radius: 10px;
+      --font: 'Segoe UI', system-ui, sans-serif;
+    }
+    body { background: var(--bg); color: var(--text); font-family: var(--font); min-height: 100vh; }
+
+    header {
+      background: var(--bg2);
+      border-bottom: 1px solid var(--border);
+      padding: 18px 28px;
+      display: flex;
+      align-items: center;
+      gap: 14px;
+    }
+    header h1 { font-size: 20px; font-weight: 600; letter-spacing: 0.02em; }
+    header span { font-size: 13px; color: var(--text2); }
+    .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--green); box-shadow: 0 0 6px var(--green); }
+
+    main { max-width: 1100px; margin: 0 auto; padding: 28px 20px; }
+
+    .tabs { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 24px; }
+    .tab-btn {
+      background: var(--bg2);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 8px 18px;
+      font-size: 13px;
+      color: var(--text2);
+      cursor: pointer;
+      transition: all .15s;
+      font-family: var(--font);
+    }
+    .tab-btn.active {
+      background: var(--bg3);
+      border-color: #4a5080;
+      color: var(--text);
+      font-weight: 500;
+    }
+    .tab-btn:hover:not(.active) { background: var(--bg3); color: var(--text); }
+
+    .panel { display: none; }
+    .panel.active { display: block; }
+
+    .metrics {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+      gap: 12px;
+      margin-bottom: 28px;
+    }
+    .metric {
+      background: var(--bg2);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 16px 18px;
+    }
+    .metric-label { font-size: 11px; color: var(--text2); text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 6px; }
+    .metric-value { font-size: 22px; font-weight: 600; color: var(--text); }
+    .metric-value.neg { color: var(--red); }
+    .metric-value.pos { color: var(--green); }
+
+    .section-row { display: flex; align-items: center; gap: 10px; margin: 24px 0 10px; }
+    .section-title { font-size: 13px; font-weight: 500; color: var(--text2); text-transform: uppercase; letter-spacing: 0.06em; }
+    select {
+      font-size: 12px; padding: 5px 10px;
+      border-radius: 6px;
+      border: 1px solid var(--border);
+      background: var(--bg3);
+      color: var(--text);
+      font-family: var(--font);
+      cursor: pointer;
+    }
+
+    .chart-card {
+      background: var(--bg2);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 18px;
+      margin-bottom: 20px;
+    }
+    .chart-wrap { position: relative; width: 100%; }
+
+    .legend { display: flex; flex-wrap: wrap; gap: 16px; margin-bottom: 16px; }
+    .legend-item { display: flex; align-items: center; gap: 6px; font-size: 12px; color: var(--text2); }
+    .legend-dot { width: 12px; height: 12px; border-radius: 3px; }
+
+    .store-tabs { display: flex; gap: 8px; margin-bottom: 20px; }
+    .store-btn {
+      background: var(--bg2); border: 1px solid var(--border);
+      border-radius: var(--radius); padding: 7px 16px;
+      font-size: 12px; color: var(--text2); cursor: pointer;
+      font-family: var(--font); transition: all .15s;
+    }
+    .store-btn.active { background: var(--bg3); border-color: #4a5080; color: var(--text); font-weight: 500; }
+
+    footer { text-align: center; padding: 28px; font-size: 12px; color: var(--text2); border-top: 1px solid var(--border); margin-top: 20px; }
+  </style>
+</head>
+<body>
+
+<header>
+  <div class="dot"></div>
+  <div>
+    <h1>+Roma — Dashboard de Métricas</h1>
+    <span>Temporada 2025 / 2026</span>
+  </div>
+</header>
+
+<main>
+
+  <!-- Store selector -->
+  <div class="store-tabs" id="store-tabs">
+    <button class="store-btn active" data-store="showroom">Local Showroom</button>
+    <button class="store-btn" data-store="outlet">Local Outlet</button>
+  </div>
+
+  <!-- Main tabs -->
+  <div class="tabs" id="main-tabs">
+    <button class="tab-btn active" data-tab="ventas">Ventas</button>
+    <button class="tab-btn" data-tab="gastos">Gastos</button>
+    <button class="tab-btn" data-tab="ganancias">Ganancias</button>
+    <button class="tab-btn" data-tab="comparativo">Comparativo anual</button>
+  </div>
+
+  <!-- VENTAS -->
+  <div id="tab-ventas" class="panel active">
+    <div class="metrics" id="metrics-ventas"></div>
+    <div class="section-row">
+      <span class="section-title">Vista diaria</span>
+      <select id="sel-ventas-mes"><option value="all">Todos los meses</option></select>
+    </div>
+    <div class="chart-card"><div class="chart-wrap" style="height:260px"><canvas id="chart-ventas-dia"></canvas></div></div>
+    <div class="section-row"><span class="section-title">Vista semanal</span></div>
+    <div class="chart-card"><div class="chart-wrap" style="height:220px"><canvas id="chart-ventas-sem"></canvas></div></div>
+    <div class="section-row"><span class="section-title">Vista mensual — anual</span></div>
+    <div class="chart-card"><div class="chart-wrap" style="height:220px"><canvas id="chart-ventas-mes"></canvas></div></div>
+  </div>
+
+  <!-- GASTOS -->
+  <div id="tab-gastos" class="panel">
+    <div class="metrics" id="metrics-gastos"></div>
+    <div class="section-row">
+      <span class="section-title">Vista diaria</span>
+      <select id="sel-gastos-mes"><option value="all">Todos los meses</option></select>
+    </div>
+    <div class="chart-card"><div class="chart-wrap" style="height:260px"><canvas id="chart-gastos-dia"></canvas></div></div>
+    <div class="section-row"><span class="section-title">Vista semanal</span></div>
+    <div class="chart-card"><div class="chart-wrap" style="height:220px"><canvas id="chart-gastos-sem"></canvas></div></div>
+    <div class="section-row"><span class="section-title">Vista mensual — anual</span></div>
+    <div class="chart-card"><div class="chart-wrap" style="height:220px"><canvas id="chart-gastos-mes"></canvas></div></div>
+  </div>
+
+  <!-- GANANCIAS -->
+  <div id="tab-ganancias" class="panel">
+    <div class="metrics" id="metrics-ganancias"></div>
+    <div class="section-row">
+      <span class="section-title">Vista diaria</span>
+      <select id="sel-ganancias-mes"><option value="all">Todos los meses</option></select>
+    </div>
+    <div class="chart-card"><div class="chart-wrap" style="height:260px"><canvas id="chart-ganancias-dia"></canvas></div></div>
+    <div class="section-row"><span class="section-title">Vista semanal</span></div>
+    <div class="chart-card"><div class="chart-wrap" style="height:220px"><canvas id="chart-ganancias-sem"></canvas></div></div>
+    <div class="section-row"><span class="section-title">Vista mensual — anual</span></div>
+    <div class="chart-card"><div class="chart-wrap" style="height:220px"><canvas id="chart-ganancias-mes"></canvas></div></div>
+  </div>
+
+  <!-- COMPARATIVO -->
+  <div id="tab-comparativo" class="panel">
+    <div class="legend">
+      <div class="legend-item"><div class="legend-dot" style="background:#3b82f6"></div>Ventas</div>
+      <div class="legend-item"><div class="legend-dot" style="background:#f59e0b"></div>Gastos</div>
+      <div class="legend-item"><div class="legend-dot" style="background:#10b981"></div>Ganancias</div>
+    </div>
+    <div class="chart-card"><div class="chart-wrap" style="height:320px"><canvas id="chart-comp"></canvas></div></div>
+  </div>
+
+</main>
+
+<footer>+Roma Showroom &amp; Outlet · Dashboard interno · Temporada 2025/26</footer>
+
+<script>
+// ─── DATOS ────────────────────────────────────────────────────────────────────
+const STORES = {
+  showroom: [
+    ["jue 1 may","194400","23000","194400"],["vie 2 may","194400","23000","194400"],
+    ["sab 3 may","447400","50000","397400"],["lun 5 may","257000","49500","207500"],
+    ["mar 6 may","218300","71200","147100"],["mie 7 may","193300","546000","-352700"],
+    ["jue 8 may","133100","35800","97300"],["vie 9 may","621955","37450","584505"],
+    ["sab 10 may","516000","72600","443400"],["lun 12 may","251150","246100","5050"],
+    ["mar 13 may","295800","1396800","-1101000"],["mie 14 may","127400","22300","105100"],
+    ["jue 15 may","359300","52400","306900"],["vie 16 may","79850","335000","-255150"],
+    ["sab 17 may","195900","107150","88750"],["lun 19 may","298300","60050","238250"],
+    ["mar 20 may","212100","461497","-249397"],["mie 21 may","238850","25300","213550"],
+    ["jue 22 may","240100","47400","192700"],["vie 23 may","564300","33100","531200"],
+    ["sab 24 may","231300","52900","178400"],["lun 26 may","352800","1021300","-668500"],
+    ["mar 27 may","223500","31400","192100"],["mie 28 may","302400","141100","161300"],
+    ["jue 29 may","326650","47700","278950"],["vie 30 may","565160","454300","110860"],
+    ["sab 31 may","914900","83500","831400"],
+    ["lun 2 jun","347900","94200","253700"],["mar 3 jun","134550","185100","-50550"],
+    ["mie 4 jun","485700","233400","252300"],["jue 5 jun","404500","72300","332200"],
+    ["vie 6 jun","247200","32300","214900"],["sab 7 jun","430400","763900","-333500"],
+    ["lun 9 jun","401350","179500","221850"],["mar 10 jun","257100","67400","189700"],
+    ["mie 11 jun","364950","1729100","-1364150"],["jue 12 jun","304900","77600","227300"],
+    ["vie 13 jun","312200","31700","280500"],["sab 14 jun","497500","274900","222600"],
+    ["lun 16 jun","210200","0","210200"],["mar 17 jun","280400","614300","-333900"],
+    ["mie 18 jun","539516","589300","-49784"],["jue 19 jun","387600","94600","293000"],
+    ["vie 20 jun","154600","95000","59600"],["sab 21 jun","574079","978600","-404521"],
+    ["lun 23 jun","226873","102200","124673"],["mar 24 jun","519597","95800","423797"],
+    ["mie 25 jun","302500","174900","127600"],["jue 26 jun","500174","84900","415274"],
+    ["vie 27 jun","154500","29900","124600"],["sab 28 jun","409200","70000","339200"],
+    ["lun 30 jun","285350","1957720","-1672370"],
+    ["mar 1 jul","523036","76000","447036"],["mie 2 jul","503000","67520","435480"],
+    ["jue 3 jul","494796","82700","412096"],["vie 4 jul","890622","1698600","-807978"],
+    ["sab 5 jul","242742","58600","184142"],["lun 7 jul","431250","74700","356550"],
+    ["mar 8 jul","445638","78600","367038"],["mie 9 jul","343200","678414","-335214"],
+    ["jue 10 jul","196800","227500","-30700"],["vie 11 jul","372915","64500","308415"],
+    ["sab 12 jul","369600","62000","307600"],["lun 14 jul","256818","7900","248918"],
+    ["mar 15 jul","232200","92900","139300"],["mie 16 jul","189600","68750","120850"],
+    ["jue 17 jul","456952","55400","401552"],["vie 18 jul","817752","108000","709752"],
+    ["sab 19 jul","458600","94100","364500"],["lun 21 jul","231500","1289500","-1058000"],
+    ["mar 22 jul","295000","108000","187000"],["mie 23 jul","373276","90000","283276"],
+    ["jue 24 jul","437500","65000","372500"],["vie 25 jul","210700","197000","13700"],
+    ["sab 26 jul","521875","35000","486875"],["lun 28 jul","550030","60000","490030"],
+    ["mar 29 jul","212336","967090","-754754"],["mie 30 jul","372340","73600","298740"],
+    ["jue 31 jul","390847","75800","315047"],
+    ["vie 1 ago","166407","50600","115807"],["sab 2 ago","189300","34700","154600"],
+    ["lun 4 ago","355500","45100","310400"],["mar 5 ago","231942","67200","164742"],
+    ["mie 6 ago","297000","103000","194000"],["jue 7 ago","302349","49700","252649"],
+    ["vie 8 ago","221200","55500","165700"],["sab 9 ago","335000","44000","291000"],
+    ["lun 11 ago","185721","48000","137721"],["mar 12 ago","304100","848766","-544666"],
+    ["mie 13 ago","355555","69000","286555"],["jue 14 ago","247800","87500","160300"],
+    ["vie 15 ago","276700","96800","179900"],["sab 16 ago","461130","264200","196930"],
+    ["lun 18 ago","106732","233900","-127168"],["mar 19 ago","107000","360000","-253000"],
+    ["mie 20 ago","237800","71000","166800"],["jue 21 ago","261890","100600","161290"],
+    ["vie 22 ago","560500","54500","506000"],["sab 23 ago","98800","29000","69800"],
+    ["lun 25 ago","175150","79700","95450"],["mar 26 ago","209750","87800","121950"],
+    ["mie 27 ago","168300","68400","99900"],["jue 28 ago","523800","104100","419700"],
+    ["vie 29 ago","93470","26700","66770"],["sab 30 ago","304693","29000","275693"],
+    ["lun 1 sep","56000","687100","-631100"],["mar 2 sep","348500","63100","285400"],
+    ["mie 3 sep","179000","63100","115900"],["jue 4 sep","293400","80500","212900"],
+    ["vie 5 sep","230200","37600","192600"],["sab 6 sep","178400","36500","141900"],
+    ["lun 8 sep","199800","46000","153800"],["mar 9 sep","123800","57100","66700"],
+    ["mie 10 sep","100694","443900","-343206"],["jue 11 sep","101330","73200","28130"],
+    ["vie 12 sep","71400","31500","39900"],["sab 13 sep","478200","81000","397200"],
+    ["lun 15 sep","160300","4048990","-3888690"],["mar 16 sep","156900","74200","82700"],
+    ["mie 17 sep","129100","68400","60700"],["jue 18 sep","129900","123300","6600"],
+    ["vie 19 sep","31000","30200","800"],["sab 20 sep","288500","35500","253000"],
+    ["lun 22 sep","67000","45000","22000"],["mar 23 sep","104200","29500","74700"],
+    ["mie 24 sep","268000","312700","-44700"],["jue 25 sep","180150","121000","59150"],
+    ["vie 26 sep","282600","33500","249100"],["sab 27 sep","458700","566500","-107800"],
+    ["lun 29 sep","105600","72200","33400"],["mar 30 sep","381200","42004","339196"],
+    ["mie 1 oct","161700","210600","-48900"],["jue 2 oct","346000","94600","251400"],
+    ["vie 3 oct","159500","33600","125900"],["sab 4 oct","433100","189250","243850"],
+    ["lun 6 oct","238000","47400","190600"],["mar 7 oct","142400","473700","-331300"],
+    ["mie 8 oct","359100","88400","270700"],["jue 9 oct","334400","63400","271000"],
+    ["vie 10 oct","228700","44000","184700"],["sab 11 oct","135950","63000","72950"],
+    ["lun 13 oct","78000","58800","19200"],["mar 14 oct","247220","77600","169620"],
+    ["mie 15 oct","100500","64200","36300"],["jue 16 oct","271450","63700","207750"],
+    ["vie 17 oct","105750","47400","58350"],["sab 18 oct","345020","35100","309920"],
+    ["lun 20 oct","295300","511700","-216400"],["mar 21 oct","287700","52100","235600"],
+    ["mie 22 oct","371800","85200","286600"],["jue 23 oct","230500","3099300","-2868800"],
+    ["vie 24 oct","335500","39700","295800"],["sab 25 oct","341400","85600","255800"],
+    ["lun 27 oct","429600","90200","339400"],["mar 28 oct","89000","59300","29700"],
+    ["mie 29 oct","112000","702100","-590100"],["jue 30 oct","177750","80700","97050"],
+    ["vie 31 oct","307924","36700","271224"],
+    ["sab 1 nov","239210","79600","159610"],["lun 3 nov","230900","73100","157800"],
+    ["mar 4 nov","102200","53100","49100"],["mie 5 nov","103800","50500","53300"],
+    ["jue 6 nov","182600","43600","139000"],["vie 7 nov","195000","28500","166500"],
+    ["sab 8 nov","181400","112950","68450"],["lun 10 nov","188100","60800","127300"],
+    ["mar 11 nov","411100","84000","327100"],["mie 12 nov","266047","51600","214447"],
+    ["jue 13 nov","193300","63000","130300"],["vie 14 nov","269528","220500","49028"],
+    ["sab 15 nov","505050","103800","401250"],["lun 17 nov","50000","40000","10000"],
+    ["mar 18 nov","254000","80400","173600"],["mie 19 nov","173300","46000","127300"],
+    ["jue 20 nov","65300","40000","25300"],["vie 21 nov","78300","28200","50100"],
+    ["sab 22 nov","181900","140000","41900"],["lun 24 nov","943350","3017900","-2074550"],
+    ["mar 25 nov","168400","20000","148400"],["mie 26 nov","91900","68100","23800"],
+    ["jue 27 nov","64000","58800","5200"],["vie 28 nov","475550","39400","436150"],
+    ["sab 29 nov","143500","2831600","-2688100"],
+    ["lun 1 dic","184500","59700","124800"],["mar 2 dic","60900","44200","16700"],
+    ["mie 3 dic","144400","51900","92500"],["jue 4 dic","119500","34000","85500"],
+    ["vie 5 dic","268600","36000","232600"],["sab 6 dic","323900","67300","256600"],
+    ["mar 9 dic","66600","53800","12800"],["mie 10 dic","82300","43700","38600"],
+    ["jue 11 dic","304700","42100","262600"],["vie 12 dic","75100","42200","32900"],
+    ["sab 13 dic","57300","26700","30600"],["lun 15 dic","426500","118300","308200"],
+    ["mar 16 dic","197500","33200","164300"],["mie 17 dic","170000","116000","54000"],
+    ["jue 18 dic","270100","50300","219800"],["vie 19 dic","156800","57000","99800"],
+    ["sab 20 dic","141800","1086600","-944800"],["lun 22 dic","263000","67300","195700"],
+    ["mar 23 dic","330600","61100","269500"],["mie 24 dic","267700","154000","113700"],
+    ["vie 26 dic","140800","8000","132800"],["sab 27 dic","151900","50600","101300"],
+    ["lun 29 dic","140000","44800","95200"],["mar 30 dic","257500","20000","237500"],
+    ["mie 31 dic","283500","1560000","-1276500"],
+    ["vie 2 ene","179400","66500","112900"],["sab 3 ene","141400","49500","91900"],
+    ["lun 5 ene","394400","71950","322450"],["mar 6 ene","40100","26800","13300"],
+    ["mie 7 ene","11000","0","11000"],["lun 19 ene","59400","24000","35400"],
+    ["mar 20 ene","76900","104000","-27100"],["mie 21 ene","46750","20000","26750"],
+    ["jue 22 ene","40500","78700","-38200"],["vie 23 ene","119600","51600","68000"],
+    ["sab 24 ene","231400","132000","99400"],["lun 26 ene","24700","65000","441504"],
+    ["mar 27 ene","40500","25000","15500"],["mie 28 ene","99200","169004","-69804"],
+    ["jue 29 ene","90500","51300","39200"],["vie 30 ene","142700","53200","89500"],
+    ["sab 31 ene","121700","78000","43700"],
+    ["lun 2 feb","163200","47700","115500"],["mar 3 feb","98500","185900","-87400"],
+    ["mie 4 feb","71400","25900","45500"],["jue 5 feb","150700","47500","103200"],
+    ["vie 6 feb","254000","97500","156500"],["sab 7 feb","127900","84400","43500"],
+    ["lun 9 feb","46000","84400","-38400"],["mar 10 feb","98600","50900","47700"],
+    ["mie 11 feb","93200","47800","45400"],["jue 12 feb","57800","58000","-200"],
+    ["vie 13 feb","127500","127500","0"],["sab 14 feb","118000","69500","48500"],
+    ["lun 16 feb","0","434908","406192"],["mar 17 feb","138400","39300","99100"],
+    ["mie 18 feb","92900","32250","60650"],["jue 19 feb","13000","26900","-13900"],
+    ["vie 20 feb","207800","293958","-86158"],["sab 21 feb","389000","42500","346500"],
+    ["lun 23 feb","70000","30000","40000"],["mar 24 feb","168000","50000","118000"],
+    ["mie 25 feb","75400","51800","23600"],["jue 26 feb","40000","50000","-10000"],
+    ["vie 27 feb","20200","80300","-60100"],["sab 28 feb","73000","815000","-742000"],
+    ["lun 2 mar","41400","50200","-8800"],["mar 3 mar","37000","48900","-11900"],
+    ["mie 4 mar","169720","50000","119720"],["jue 5 mar","154500","60000","94500"],
+    ["vie 6 mar","423500","119700","303800"],["sab 7 mar","554438","79900","474538"],
+    ["lun 9 mar","218950","60400","158550"],["mar 10 mar","112000","750000","-638000"],
+    ["mie 11 mar","50200","46000","4200"],["jue 12 mar","171200","50000","121200"],
+    ["vie 13 mar","128200","55000","73200"],["sab 14 mar","245400","57200","188200"],
+    ["lun 16 mar","101500","145000","-43500"],["mar 17 mar","133610","46500","87110"],
+    ["mie 18 mar","19000","47200","-28200"],["jue 19 mar","156700","46900","109800"],
+    ["vie 20 mar","186750","60000","126750"],["sab 21 mar","384800","67000","317800"],
+    ["lun 23 mar","89800","122800","-33000"],["mie 25 mar","127400","52400","75000"],
+    ["jue 26 mar","138700","54700","84000"],["vie 27 mar","249150","51600","197550"],
+    ["sab 28 mar","111300","56000","55300"],["lun 30 mar","118500","117000","1500"],
+    ["mar 31 mar","117500","74400","43100"]
+  ],
+  outlet: [] // se cargará si hay datos disponibles
+};
+
+// ─── HELPERS ──────────────────────────────────────────────────────────────────
+const monthOrder = ['Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre','Enero','Febrero','Marzo','Abril'];
+const monthMap = { ene:'Enero',feb:'Febrero',mar:'Marzo',abr:'Abril',may:'Mayo',jun:'Junio',jul:'Julio',ago:'Agosto',sep:'Septiembre',oct:'Octubre',nov:'Noviembre',dic:'Diciembre' };
+
+function monthOf(label) {
+  const parts = label.trim().split(' ');
+  return monthMap[parts[parts.length - 1]] || '';
+}
+
+function parseNum(s) {
+  if (!s || s === '' || s === 'null') return 0;
+  return parseFloat(s.toString().replace(/\./g,'').replace(',','.')) || 0;
+}
+
+function fmt(v) {
+  if (v === null || v === undefined) return '—';
+  const abs = Math.abs(v);
+  let s;
+  if (abs >= 1000000) s = '$' + (abs/1000000).toFixed(2) + 'M';
+  else if (abs >= 1000) s = '$' + (abs/1000).toFixed(0) + 'K';
+  else s = '$' + Math.round(abs);
+  return v < 0 ? '-' + s : s;
+}
+
+let currentStore = 'showroom';
+const chartInstances = {};
+
+function getRows() {
+  return (STORES[currentStore] || []).map(r => ({
+    label: r[0],
+    month: monthOf(r[0]),
+    ventas: parseNum(r[1]),
+    gastos: parseNum(r[2]),
+    ganancias: parseNum(r[3])
+  })).filter(d => monthOrder.includes(d.month));
+}
+
+function getMonths(rows) {
+  return [...new Set(rows.map(d => d.month))].sort((a,b) => monthOrder.indexOf(a) - monthOrder.indexOf(b));
+}
+
+function byMonth(rows, field) {
+  const months = getMonths(rows);
+  const res = {};
+  months.forEach(m => {
+    res[m] = rows.filter(d => d.month === m).reduce((s,d) => s + d[field], 0);
+  });
+  return res;
+}
+
+function byWeek(rows, field) {
+  const weeks = [];
+  let wSum = 0, wCount = 0, wMonthIdx = 0, weekNum = 1;
+  let prevMonth = '';
+  rows.forEach((d, i) => {
+    if (d.month !== prevMonth) { weekNum = 1; prevMonth = d.month; }
+    wSum += d[field]; wCount++;
+    const next = rows[i+1];
+    const endOfMonth = !next || next.month !== d.month;
+    const endOfWeek = wCount >= 6;
+    if (endOfMonth || endOfWeek) {
+      weeks.push({ label: 'S' + weekNum + ' ' + d.month.slice(0,3), value: wSum });
+      wSum = 0; wCount = 0; weekNum++;
+    }
+  });
+  return weeks;
+}
+
+// ─── METRICS ──────────────────────────────────────────────────────────────────
+function setMetrics(id, field) {
+  const rows = getRows();
+  const monthly = byMonth(rows, field);
+  const vals = Object.values(monthly);
+  const total = vals.reduce((s,v) => s+v, 0);
+  const avg = vals.length ? total / vals.length : 0;
+  const mx = Math.max(...vals);
+  const mn = Math.min(...vals);
+  const mxName = Object.keys(monthly).find(k => monthly[k] === mx) || '';
+  const mnName = Object.keys(monthly).find(k => monthly[k] === mn) || '';
+  document.getElementById(id).innerHTML = `
+    <div class="metric"><div class="metric-label">Total período</div><div class="metric-value ${total<0?'neg':'pos'}">${fmt(total)}</div></div>
+    <div class="metric"><div class="metric-label">Promedio mensual</div><div class="metric-value ${avg<0?'neg':''}">${fmt(avg)}</div></div>
+    <div class="metric"><div class="metric-label">Mejor mes</div><div class="metric-value pos">${fmt(mx)}<br><small style="font-size:11px;color:#8b90b8">${mxName}</small></div></div>
+    <div class="metric"><div class="metric-label">Peor mes</div><div class="metric-value ${mn<0?'neg':''}">${fmt(mn)}<br><small style="font-size:11px;color:#8b90b8">${mnName}</small></div></div>
+  `;
+}
+
+// ─── CHARTS ───────────────────────────────────────────────────────────────────
+const COLORS = { ventas:'#3b82f6', gastos:'#f59e0b', ganancias:'#10b981' };
+
+function makeChart(id, labels, values, color, type='bar') {
+  if (chartInstances[id]) chartInstances[id].destroy();
+  const ctx = document.getElementById(id);
+  if (!ctx) return;
+  chartInstances[id] = new Chart(ctx.getContext('2d'), {
+    type,
+    data: {
+      labels,
+      datasets: [{
+        data: values,
+        backgroundColor: type === 'bar' ? values.map(v => v < 0 ? '#ef444499' : color + '99') : color + '33',
+        borderColor: values.map(v => v < 0 ? '#ef4444' : color),
+        borderWidth: type === 'bar' ? 0 : 2,
+        fill: type !== 'bar',
+        tension: 0.3,
+        pointRadius: type !== 'bar' ? 3 : 0,
+        pointHoverRadius: 5
+      }]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: {
+        legend: { display: false },
+        tooltip: { callbacks: { label: c => fmt(c.parsed.y) } }
+      },
+      scales: {
+        x: { ticks: { color:'#8b90b8', font:{size:11}, maxRotation:45, autoSkip:true, maxTicksLimit:20 }, grid:{ color:'rgba(255,255,255,0.04)' } },
+        y: { ticks: { color:'#8b90b8', font:{size:11}, callback: v => fmt(v) }, grid:{ color:'rgba(255,255,255,0.06)' } }
+      }
+    }
+  });
+}
+
+function buildDailyChart(canvasId, field, color, filterMonth) {
+  const rows = getRows().filter(d => filterMonth === 'all' || d.month === filterMonth);
+  makeChart(canvasId, rows.map(d=>d.label), rows.map(d=>d[field]), color);
+}
+
+function buildWeeklyChart(canvasId, field, color) {
+  const w = byWeek(getRows(), field);
+  makeChart(canvasId, w.map(x=>x.label), w.map(x=>x.value), color);
+}
+
+function buildMonthlyChart(canvasId, field, color) {
+  const rows = getRows();
+  const months = getMonths(rows);
+  const m = byMonth(rows, field);
+  makeChart(canvasId, months, months.map(x=>m[x]||0), color);
+}
+
+function buildComparativo() {
+  if (chartInstances['chart-comp']) chartInstances['chart-comp'].destroy();
+  const rows = getRows();
+  const months = getMonths(rows);
+  const vM = byMonth(rows,'ventas'), gM = byMonth(rows,'gastos'), gaM = byMonth(rows,'ganancias');
+  const ctx = document.getElementById('chart-comp');
+  if (!ctx) return;
+  chartInstances['chart-comp'] = new Chart(ctx.getContext('2d'), {
+    type: 'bar',
+    data: {
+      labels: months,
+      datasets: [
+        { label:'Ventas',    data: months.map(m=>vM[m]||0),  backgroundColor:'#3b82f699', borderColor:'#3b82f6', borderWidth:0 },
+        { label:'Gastos',    data: months.map(m=>gM[m]||0),  backgroundColor:'#f59e0b99', borderColor:'#f59e0b', borderWidth:0 },
+        { label:'Ganancias', data: months.map(m=>gaM[m]||0), backgroundColor: months.map(m=>(gaM[m]||0)<0?'#ef444499':'#10b98199'), borderColor: months.map(m=>(gaM[m]||0)<0?'#ef4444':'#10b981'), borderWidth:0 }
+      ]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: {
+        legend: {
+          display: true,
+          labels: { color: '#8b90b8', font: { size: 12 }, boxWidth: 14 }
+        },
+        tooltip: { callbacks: { label: c => c.dataset.label + ': ' + fmt(c.parsed.y) } }
+      },
+      scales: {
+        x: { ticks: { color:'#8b90b8', font:{size:11} }, grid:{ color:'rgba(255,255,255,0.04)' } },
+        y: { ticks: { color:'#8b90b8', font:{size:11}, callback: v => fmt(v) }, grid:{ color:'rgba(255,255,255,0.06)' } }
+      }
+    }
+  });
+}
+
+function populateSelects() {
+  const rows = getRows();
+  const months = getMonths(rows);
+  ['sel-ventas-mes','sel-gastos-mes','sel-ganancias-mes'].forEach(id => {
+    const sel = document.getElementById(id);
+    sel.innerHTML = '<option value="all">Todos los meses</option>';
+    months.forEach(m => {
+      const opt = document.createElement('option');
+      opt.value = m; opt.textContent = m;
+      sel.appendChild(opt);
+    });
+  });
+}
+
+function buildAll() {
+  populateSelects();
+  setMetrics('metrics-ventas','ventas');
+  setMetrics('metrics-gastos','gastos');
+  setMetrics('metrics-ganancias','ganancias');
+  buildDailyChart('chart-ventas-dia','ventas',COLORS.ventas,'all');
+  buildWeeklyChart('chart-ventas-sem','ventas',COLORS.ventas);
+  buildMonthlyChart('chart-ventas-mes','ventas',COLORS.ventas);
+  buildDailyChart('chart-gastos-dia','gastos',COLORS.gastos,'all');
+  buildWeeklyChart('chart-gastos-sem','gastos',COLORS.gastos);
+  buildMonthlyChart('chart-gastos-mes','gastos',COLORS.gastos);
+  buildDailyChart('chart-ganancias-dia','ganancias',COLORS.ganancias,'all');
+  buildWeeklyChart('chart-ganancias-sem','ganancias',COLORS.ganancias);
+  buildMonthlyChart('chart-ganancias-mes','ganancias',COLORS.ganancias);
+  buildComparativo();
+}
+
+// ─── TABS ─────────────────────────────────────────────────────────────────────
+document.getElementById('main-tabs').addEventListener('click', e => {
+  const tab = e.target.dataset.tab;
+  if (!tab) return;
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+  e.target.classList.add('active');
+  document.getElementById('tab-' + tab).classList.add('active');
+});
+
+document.getElementById('store-tabs').addEventListener('click', e => {
+  const store = e.target.dataset.store;
+  if (!store) return;
+  currentStore = store;
+  document.querySelectorAll('.store-btn').forEach(b => b.classList.remove('active'));
+  e.target.classList.add('active');
+  buildAll();
+});
+
+['ventas','gastos','ganancias'].forEach(field => {
+  document.getElementById('sel-' + field + '-mes').addEventListener('change', e => {
+    buildDailyChart('chart-' + field + '-dia', field, COLORS[field], e.target.value);
+  });
+});
+
+// ─── INIT ─────────────────────────────────────────────────────────────────────
+window.addEventListener('DOMContentLoaded', buildAll);
+</script>
+</body>
+</html>

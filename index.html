@@ -22,7 +22,7 @@
       --font: 'Segoe UI', system-ui, sans-serif;
     }
     body { background: var(--bg); color: var(--text); font-family: var(--font); min-height: 100vh; }
-
+ 
     header {
       background: var(--bg2);
       border-bottom: 1px solid var(--border);
@@ -34,9 +34,9 @@
     header h1 { font-size: 20px; font-weight: 600; letter-spacing: 0.02em; }
     header span { font-size: 13px; color: var(--text2); }
     .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--green); box-shadow: 0 0 6px var(--green); }
-
+ 
     main { max-width: 1100px; margin: 0 auto; padding: 28px 20px; }
-
+ 
     .tabs { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 24px; }
     .tab-btn {
       background: var(--bg2);
@@ -56,10 +56,10 @@
       font-weight: 500;
     }
     .tab-btn:hover:not(.active) { background: var(--bg3); color: var(--text); }
-
+ 
     .panel { display: none; }
     .panel.active { display: block; }
-
+ 
     .metrics {
       display: grid;
       grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
@@ -76,7 +76,7 @@
     .metric-value { font-size: 22px; font-weight: 600; color: var(--text); }
     .metric-value.neg { color: var(--red); }
     .metric-value.pos { color: var(--green); }
-
+ 
     .section-row { display: flex; align-items: center; gap: 10px; margin: 24px 0 10px; }
     .section-title { font-size: 13px; font-weight: 500; color: var(--text2); text-transform: uppercase; letter-spacing: 0.06em; }
     select {
@@ -88,7 +88,7 @@
       font-family: var(--font);
       cursor: pointer;
     }
-
+ 
     .chart-card {
       background: var(--bg2);
       border: 1px solid var(--border);
@@ -97,11 +97,11 @@
       margin-bottom: 20px;
     }
     .chart-wrap { position: relative; width: 100%; }
-
+ 
     .legend { display: flex; flex-wrap: wrap; gap: 16px; margin-bottom: 16px; }
     .legend-item { display: flex; align-items: center; gap: 6px; font-size: 12px; color: var(--text2); }
     .legend-dot { width: 12px; height: 12px; border-radius: 3px; }
-
+ 
     .store-tabs { display: flex; gap: 8px; margin-bottom: 20px; }
     .store-btn {
       background: var(--bg2); border: 1px solid var(--border);
@@ -110,12 +110,12 @@
       font-family: var(--font); transition: all .15s;
     }
     .store-btn.active { background: var(--bg3); border-color: #4a5080; color: var(--text); font-weight: 500; }
-
+ 
     footer { text-align: center; padding: 28px; font-size: 12px; color: var(--text2); border-top: 1px solid var(--border); margin-top: 20px; }
   </style>
 </head>
 <body>
-
+ 
 <header>
   <div class="dot"></div>
   <div>
@@ -123,15 +123,15 @@
     <span>Temporada 2025 / 2026</span>
   </div>
 </header>
-
+ 
 <main>
-
+ 
   <!-- Store selector -->
   <div class="store-tabs" id="store-tabs">
     <button class="store-btn active" data-store="showroom">Local Showroom</button>
     <button class="store-btn" data-store="outlet">Local Outlet</button>
   </div>
-
+ 
   <!-- Main tabs -->
   <div class="tabs" id="main-tabs">
     <button class="tab-btn active" data-tab="ventas">Ventas</button>
@@ -139,7 +139,7 @@
     <button class="tab-btn" data-tab="ganancias">Ganancias</button>
     <button class="tab-btn" data-tab="comparativo">Comparativo anual</button>
   </div>
-
+ 
   <!-- VENTAS -->
   <div id="tab-ventas" class="panel active">
     <div class="metrics" id="metrics-ventas"></div>
@@ -153,7 +153,7 @@
     <div class="section-row"><span class="section-title">Vista mensual — anual</span></div>
     <div class="chart-card"><div class="chart-wrap" style="height:220px"><canvas id="chart-ventas-mes"></canvas></div></div>
   </div>
-
+ 
   <!-- GASTOS -->
   <div id="tab-gastos" class="panel">
     <div class="metrics" id="metrics-gastos"></div>
@@ -167,7 +167,7 @@
     <div class="section-row"><span class="section-title">Vista mensual — anual</span></div>
     <div class="chart-card"><div class="chart-wrap" style="height:220px"><canvas id="chart-gastos-mes"></canvas></div></div>
   </div>
-
+ 
   <!-- GANANCIAS -->
   <div id="tab-ganancias" class="panel">
     <div class="metrics" id="metrics-ganancias"></div>
@@ -181,7 +181,7 @@
     <div class="section-row"><span class="section-title">Vista mensual — anual</span></div>
     <div class="chart-card"><div class="chart-wrap" style="height:220px"><canvas id="chart-ganancias-mes"></canvas></div></div>
   </div>
-
+ 
   <!-- COMPARATIVO -->
   <div id="tab-comparativo" class="panel">
     <div class="legend">
@@ -191,11 +191,11 @@
     </div>
     <div class="chart-card"><div class="chart-wrap" style="height:320px"><canvas id="chart-comp"></canvas></div></div>
   </div>
-
+ 
 </main>
-
+ 
 <footer>+Roma Showroom &amp; Outlet · Dashboard interno · Temporada 2025/26</footer>
-
+ 
 <script>
 // ─── DATOS ────────────────────────────────────────────────────────────────────
 const STORES = {
@@ -342,23 +342,72 @@ const STORES = {
     ["sab 28 mar","111300","56000","55300"],["lun 30 mar","118500","117000","1500"],
     ["mar 31 mar","117500","74400","43100"]
   ],
-  outlet: [] // se cargará si hay datos disponibles
+  outlet: [
+    ["2 feb",null,39200,-39200],
+    ["3 feb",12000,35000,-23000],
+    ["4 feb",50580,42900,7680],
+    ["5 feb",40000,40220.68,-220.68],
+    ["6 feb",76900,35150,41750],
+    ["7 feb",183000,40000,143000],
+    ["9 feb",504698,35400,469298],
+    ["10 feb",26750,105000,-78250],
+    ["11 feb",67500,35000,32500],
+    ["12 feb",15000,1500,13500],
+    ["13 feb",69000,44000,25000],
+    ["14 feb",79200,0,79200],
+    ["17 feb",15000,25000,-10000],
+    ["18 feb",68000,32000,36000],
+    ["19 feb",0,65000,-50000],
+    ["20 feb",15000,70000,-55000],
+    ["21 feb",97900,65000,32900],
+    ["23 feb",40000,35000,5000],
+    ["24 feb",91500,32600,58900],
+    ["25 feb",184000,1500,182500],
+    ["26 feb",186000,49500,136500],
+    ["27 feb",171300,35000,136300],
+    ["28 feb",118000,0,118000],
+    ["2 mar",30000,55000,-25000],
+    ["3 mar",50910,70400,-19490],
+    ["4 mar",0,55000,-55000],
+    ["5 mar",30000,64500,-34500],
+    ["6 mar",0,60000,-60000],
+    ["7 mar",183000,40000,143000],
+    ["9 mar",247500,60400,187100],
+    ["10 mar",38000,96300,-58300],
+    ["11 mar",160000,63000,97000],
+    ["12 mar",28000,58800,-30800],
+    ["13 mar",41100,66500,-25400],
+    ["14 mar",183000,0,183000],
+    ["16 mar",10000,55000,-45000],
+    ["17 mar",64000,67500,-3500],
+    ["18 mar",49200,55000,-5800],
+    ["19 mar",0,55000,-55000],
+    ["21 mar",0,40000,-40000],
+    ["23 mar",36000,65000,-29000],
+    ["24 mar",0,60000,-60000],
+    ["25 mar",0,55000,-55000],
+    ["26 mar",64300,35000,29300],
+    ["27 mar",44100,52990,-8890],
+    ["28 mar",0,40800,-40800],
+    ["30 mar",43000,55000,-12000],
+    ["31 mar",156200,56200,100000]
+  ]
 };
-
+ 
 // ─── HELPERS ──────────────────────────────────────────────────────────────────
 const monthOrder = ['Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre','Enero','Febrero','Marzo','Abril'];
 const monthMap = { ene:'Enero',feb:'Febrero',mar:'Marzo',abr:'Abril',may:'Mayo',jun:'Junio',jul:'Julio',ago:'Agosto',sep:'Septiembre',oct:'Octubre',nov:'Noviembre',dic:'Diciembre' };
-
+ 
 function monthOf(label) {
   const parts = label.trim().split(' ');
   return monthMap[parts[parts.length - 1]] || '';
 }
-
+ 
 function parseNum(s) {
   if (!s || s === '' || s === 'null') return 0;
   return parseFloat(s.toString().replace(/\./g,'').replace(',','.')) || 0;
 }
-
+ 
 function fmt(v) {
   if (v === null || v === undefined) return '—';
   const abs = Math.abs(v);
@@ -368,10 +417,10 @@ function fmt(v) {
   else s = '$' + Math.round(abs);
   return v < 0 ? '-' + s : s;
 }
-
+ 
 let currentStore = 'showroom';
 const chartInstances = {};
-
+ 
 function getRows() {
   return (STORES[currentStore] || []).map(r => ({
     label: r[0],
@@ -381,11 +430,11 @@ function getRows() {
     ganancias: parseNum(r[3])
   })).filter(d => monthOrder.includes(d.month));
 }
-
+ 
 function getMonths(rows) {
   return [...new Set(rows.map(d => d.month))].sort((a,b) => monthOrder.indexOf(a) - monthOrder.indexOf(b));
 }
-
+ 
 function byMonth(rows, field) {
   const months = getMonths(rows);
   const res = {};
@@ -394,7 +443,7 @@ function byMonth(rows, field) {
   });
   return res;
 }
-
+ 
 function byWeek(rows, field) {
   const weeks = [];
   let wSum = 0, wCount = 0, wMonthIdx = 0, weekNum = 1;
@@ -412,7 +461,7 @@ function byWeek(rows, field) {
   });
   return weeks;
 }
-
+ 
 // ─── METRICS ──────────────────────────────────────────────────────────────────
 function setMetrics(id, field) {
   const rows = getRows();
@@ -431,10 +480,10 @@ function setMetrics(id, field) {
     <div class="metric"><div class="metric-label">Peor mes</div><div class="metric-value ${mn<0?'neg':''}">${fmt(mn)}<br><small style="font-size:11px;color:#8b90b8">${mnName}</small></div></div>
   `;
 }
-
+ 
 // ─── CHARTS ───────────────────────────────────────────────────────────────────
 const COLORS = { ventas:'#3b82f6', gastos:'#f59e0b', ganancias:'#10b981' };
-
+ 
 function makeChart(id, labels, values, color, type='bar') {
   if (chartInstances[id]) chartInstances[id].destroy();
   const ctx = document.getElementById(id);
@@ -467,24 +516,24 @@ function makeChart(id, labels, values, color, type='bar') {
     }
   });
 }
-
+ 
 function buildDailyChart(canvasId, field, color, filterMonth) {
   const rows = getRows().filter(d => filterMonth === 'all' || d.month === filterMonth);
   makeChart(canvasId, rows.map(d=>d.label), rows.map(d=>d[field]), color);
 }
-
+ 
 function buildWeeklyChart(canvasId, field, color) {
   const w = byWeek(getRows(), field);
   makeChart(canvasId, w.map(x=>x.label), w.map(x=>x.value), color);
 }
-
+ 
 function buildMonthlyChart(canvasId, field, color) {
   const rows = getRows();
   const months = getMonths(rows);
   const m = byMonth(rows, field);
   makeChart(canvasId, months, months.map(x=>m[x]||0), color);
 }
-
+ 
 function buildComparativo() {
   if (chartInstances['chart-comp']) chartInstances['chart-comp'].destroy();
   const rows = getRows();
@@ -518,7 +567,7 @@ function buildComparativo() {
     }
   });
 }
-
+ 
 function populateSelects() {
   const rows = getRows();
   const months = getMonths(rows);
@@ -532,7 +581,7 @@ function populateSelects() {
     });
   });
 }
-
+ 
 function buildAll() {
   populateSelects();
   setMetrics('metrics-ventas','ventas');
@@ -549,7 +598,7 @@ function buildAll() {
   buildMonthlyChart('chart-ganancias-mes','ganancias',COLORS.ganancias);
   buildComparativo();
 }
-
+ 
 // ─── TABS ─────────────────────────────────────────────────────────────────────
 document.getElementById('main-tabs').addEventListener('click', e => {
   const tab = e.target.dataset.tab;
@@ -559,7 +608,7 @@ document.getElementById('main-tabs').addEventListener('click', e => {
   e.target.classList.add('active');
   document.getElementById('tab-' + tab).classList.add('active');
 });
-
+ 
 document.getElementById('store-tabs').addEventListener('click', e => {
   const store = e.target.dataset.store;
   if (!store) return;
@@ -568,13 +617,13 @@ document.getElementById('store-tabs').addEventListener('click', e => {
   e.target.classList.add('active');
   buildAll();
 });
-
+ 
 ['ventas','gastos','ganancias'].forEach(field => {
   document.getElementById('sel-' + field + '-mes').addEventListener('change', e => {
     buildDailyChart('chart-' + field + '-dia', field, COLORS[field], e.target.value);
   });
 });
-
+ 
 // ─── INIT ─────────────────────────────────────────────────────────────────────
 window.addEventListener('DOMContentLoaded', buildAll);
 </script>

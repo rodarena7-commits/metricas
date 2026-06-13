@@ -501,6 +501,16 @@
         <option value="May/26">Mayo 2026</option>
         <option value="Abril/26">Abril 2026</option>
         <option value="Marz/26">Marzo 2026</option>
+        <option value="feb/26">Febrero 2026</option>
+        <option value="ene/26">Enero 2026</option>
+        <option value="Dic/25">Diciembre 2025</option>
+        <option value="Nov/25">Noviembre 2025</option>
+        <option value="Oct/25">Octubre 2025</option>
+        <option value="SEP/25">Septiembre 2025</option>
+        <option value="Agos/25">Agosto 2025</option>
+        <option value="JUL/25">Julio 2025</option>
+        <option value="JUN/25">Junio 2025</option>
+        <option value="Mayo/25">Mayo 2025</option>
       </select>
     </div>
     <div class="chart-card" style="overflow-x: auto;">
@@ -580,7 +590,17 @@ const mesAPestaña = {
   'Junio 2026': 'Jun/26',
   'Mayo 2026': 'May/26',
   'Abril 2026': 'Abril/26',
-  'Marzo 2026': 'Marz/26'
+  'Marzo 2026': 'Marz/26',
+  'Febrero 2026': 'feb/26',
+  'Enero 2026': 'ene/26',
+  'Diciembre 2025': 'Dic/25',
+  'Noviembre 2025': 'Nov/25',
+  'Octubre 2025': 'Oct/25',
+  'Septiembre 2025': 'SEP/25',
+  'Agosto 2025': 'Agos/25',
+  'Julio 2025': 'JUL/25',
+  'Junio 2025': 'JUN/25',
+  'Mayo 2025': 'Mayo/25'
 };
 
 let asistenciaEnTiempoReal = {};
@@ -718,8 +738,8 @@ function parseMonthCSV(csvText, sheetName) {
   let dayData = null;
   
   const mesMap = {
-    "Mayo25": "may", "JUN25": "jun", "JUL25": "jul", "Agos25": "ago", "SEP25": "sep",
-    "Oct25": "oct", "Nov25": "nov", "Dic25": "dic", "Ene26": "ene", "Feb26": "feb",
+    "Mayo25": "may", "Mayo/25": "may", "JUN25": "jun", "JUN/25": "jun", "JUL25": "jul", "JUL/25": "jul", "Agos25": "ago", "Agos/25": "ago", "SEP25": "sep", "SEP/25": "sep",
+    "Oct25": "oct", "Oct/25": "oct", "Nov25": "nov", "Nov/25": "nov", "Dic25": "dic", "Dic/25": "dic", "Ene26": "ene", "ene/26": "ene", "Feb26": "feb", "feb/26": "feb",
     "Marz26": "mar", "Marz/26": "mar", "Abril26": "abr", "Abril/26": "abr", "May26": "may", "May/26": "may", "Jun26": "jun", "Jun/26": "jun"
   };
   const monthCode = mesMap[sheetName] || "jun";
@@ -841,7 +861,10 @@ function parseAuditCSV(csvText, sheetName) {
       }
     }
     
-    if (colC.includes("venta total tm") || colC.includes("venta total tt")) {
+    const isVentaTotal = colC.includes("venta total tm") || colC.includes("venta total tt") || 
+                         colC.includes("facturacion total tm") || colC.includes("facturacion total tt") ||
+                         colC.includes("facturación total tm") || colC.includes("facturación total tt");
+    if (isVentaTotal) {
       const monto = cleanCSVNum(colD);
       const dayLabel = currentDayNum ? `${currentDayName} ${currentDayNum}` : "—";
       auditoria.push([
@@ -1221,19 +1244,32 @@ async function renderPersonal() {
   }
 }
 
-// ─── RENDERING CIERRE JUNIO 2026 ──────────────────────────────────────────────
 async function renderCierreJunio() {
   const tableBody = document.querySelector('#table-cierre-junio tbody');
   if (!tableBody) return;
   
-  const selectedSheet = document.getElementById('sel-auditoria-mes').value; // "Jun/26", "May/26", "Abril/26", "Marz/26"
+  const selectedSheet = document.getElementById('sel-auditoria-mes').value; // "Jun/26", "May/26", ...
   
-  // Título/Mapeo dinámico
-  let mesTitle = "Junio";
-  let fallbackKey = "cierre_junio_2026";
-  if (selectedSheet === 'May/26') { mesTitle = "Mayo"; fallbackKey = "cierre_mayo_2026"; }
-  else if (selectedSheet === 'Abril/26') { mesTitle = "Abril"; fallbackKey = "cierre_abril_2026"; }
-  else if (selectedSheet === 'Marz/26') { mesTitle = "Marzo"; fallbackKey = "cierre_marzo_2026"; }
+  const sheetMeta = {
+    "Jun/26": { title: "Junio 2026", fallback: "cierre_junio_2026", label: "jun 26" },
+    "May/26": { title: "Mayo 2026", fallback: "cierre_mayo_2026", label: "may 26" },
+    "Abril/26": { title: "Abril 2026", fallback: "cierre_abril_2026", label: "abr 26" },
+    "Marz/26": { title: "Marzo 2026", fallback: "cierre_marzo_2026", label: "mar 26" },
+    "feb/26": { title: "Febrero 2026", fallback: "cierre_febrero_2026", label: "feb 26" },
+    "ene/26": { title: "Enero 2026", fallback: "cierre_enero_2026", label: "ene 26" },
+    "Dic/25": { title: "Diciembre 2025", fallback: "cierre_diciembre_2025", label: "dic 25" },
+    "Nov/25": { title: "Noviembre 2025", fallback: "cierre_noviembre_2025", label: "nov 25" },
+    "Oct/25": { title: "Octubre 2025", fallback: "cierre_octubre_2025", label: "oct 25" },
+    "SEP/25": { title: "Septiembre 2025", fallback: "cierre_septiembre_2025", label: "sep 25" },
+    "Agos/25": { title: "Agosto 2025", fallback: "cierre_agosto_2025", label: "ago 25" },
+    "JUL/25": { title: "Julio 2025", fallback: "cierre_julio_2025", label: "jul 25" },
+    "JUN/25": { title: "Junio 2025", fallback: "cierre_junio_2025", label: "jun 25" },
+    "Mayo/25": { title: "Mayo 2025", fallback: "cierre_mayo_2025", label: "may 25" }
+  };
+  
+  const meta = sheetMeta[selectedSheet] || { title: "Junio 2026", fallback: "cierre_junio_2026", label: "jun 26" };
+  const mesTitle = meta.title;
+  const fallbackKey = meta.fallback;
   
   tableBody.innerHTML = `<tr><td colspan="4" style="text-align:center;color:var(--text2)">Cargando datos en vivo de Google Sheets...</td></tr>`;
   
@@ -1251,7 +1287,7 @@ async function renderCierreJunio() {
   tableBody.innerHTML = '';
   
   if (data.length === 0) {
-    tableBody.innerHTML = `<tr><td colspan="4" style="text-align:center;color:var(--text2)">No hay datos de turnos disponibles para ${mesTitle} 2026.</td></tr>`;
+    tableBody.innerHTML = `<tr><td colspan="4" style="text-align:center;color:var(--text2)">No hay datos de turnos disponibles para ${mesTitle}.</td></tr>`;
     return;
   }
   
@@ -1289,10 +1325,7 @@ async function renderCierreJunio() {
     const isTM = concepto.toLowerCase().includes('tm');
     const conceptBadge = `<span class="badge-emp" style="border-color: ${isTM ? 'var(--blue)' : 'var(--amber)'}; color: ${isTM ? 'var(--blue)' : 'var(--amber)'}">${concepto}</span>`;
     
-    let mesLabel = "jun 26";
-    if (selectedSheet === 'May/26') mesLabel = "may 26";
-    else if (selectedSheet === 'Abril/26') mesLabel = "abr 26";
-    else if (selectedSheet === 'Marz/26') mesLabel = "mar 26";
+    const mesLabel = meta.label;
     
     tr.innerHTML = `
       <td><span style="color:var(--text2)">Fila ${rowIdx}</span></td>

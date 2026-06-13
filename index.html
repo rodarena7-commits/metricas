@@ -388,7 +388,7 @@
       <button class="tab-btn" data-tab="ganancias">Ganancias</button>
       <button class="tab-btn" data-tab="comparativo">Comparativo anual</button>
       <button class="tab-btn" data-tab="personal" id="tab-btn-personal">Empleados</button>
-      <button class="tab-btn" data-tab="cierre-junio" id="tab-btn-cierre-junio">Cierre Jun/26</button>
+      <button class="tab-btn" data-tab="cierre-junio" id="tab-btn-cierre-junio">Cierre May-Jun/26</button>
     </div>
   </div>
  
@@ -495,7 +495,11 @@
   <!-- CIERRE JUNIO 2026 -->
   <div id="tab-cierre-junio" class="panel">
     <div class="section-row">
-      <span class="section-title">Auditoría de Turnos — Junio 2026 (Exclusivo Showroom)</span>
+      <span class="section-title">Auditoría de Turnos — Exclusivo Showroom</span>
+      <select id="sel-auditoria-mes">
+        <option value="Jun26">Junio 2026</option>
+        <option value="May26">Mayo 2026</option>
+      </select>
     </div>
     <div class="chart-card" style="overflow-x: auto;">
       <table class="personal-table" id="table-cierre-junio">
@@ -561,6 +565,11 @@ function fmt(v) {
   else if (abs >= 1000) s = '$' + (abs/1000).toFixed(0) + 'K';
   else s = '$' + Math.round(abs);
   return v < 0 ? '-' + s : s;
+}
+
+function fmtExact(v) {
+  if (v === null || v === undefined) return '—';
+  return '$' + Math.round(v).toLocaleString('es-AR');
 }
  
 let currentStore = 'showroom';
@@ -876,11 +885,18 @@ function renderCierreJunio() {
   const tableBody = document.querySelector('#table-cierre-junio tbody');
   if (!tableBody) return;
   
-  const data = typeof DATOS_SINCRONIZADOS !== 'undefined' ? (DATOS_SINCRONIZADOS.cierre_junio_2026 || []) : [];
+  const selectedSheet = document.getElementById('sel-auditoria-mes').value; // "Jun26" o "May26"
+  const isMayo = selectedSheet === 'May26';
+  
+  let data = [];
+  if (typeof DATOS_SINCRONIZADOS !== 'undefined') {
+    data = isMayo ? (DATOS_SINCRONIZADOS.cierre_mayo_2026 || []) : (DATOS_SINCRONIZADOS.cierre_junio_2026 || []);
+  }
+  
   tableBody.innerHTML = '';
   
   if (data.length === 0) {
-    tableBody.innerHTML = '<tr><td colspan="4" style="text-align:center;color:var(--text2)">No hay datos de turnos disponibles para Junio 2026.</td></tr>';
+    tableBody.innerHTML = `<tr><td colspan="4" style="text-align:center;color:var(--text2)">No hay datos de turnos disponibles para ${isMayo ? 'Mayo' : 'Junio'} 2026.</td></tr>`;
     return;
   }
   
@@ -894,12 +910,13 @@ function renderCierreJunio() {
     // Concepto badge color
     const isTM = concepto.toLowerCase().includes('tm');
     const conceptBadge = `<span class="badge-emp" style="border-color: ${isTM ? 'var(--blue)' : 'var(--amber)'}; color: ${isTM ? 'var(--blue)' : 'var(--amber)'}">${concepto}</span>`;
+    const mesLabel = isMayo ? 'may 26' : 'jun 26';
     
     tr.innerHTML = `
       <td><span style="color:var(--text2)">Fila ${rowIdx}</span></td>
-      <td><strong>${dayLabel} jun 26</strong></td>
+      <td><strong>${dayLabel} ${mesLabel}</strong></td>
       <td>${conceptBadge}</td>
-      <td style="font-weight:600;color:var(--green)">${fmt(monto)}</td>
+      <td style="font-weight:600;color:var(--green)">${fmtExact(monto)}</td>
     `;
     tableBody.appendChild(tr);
   });
@@ -980,6 +997,7 @@ document.getElementById('store-tabs').addEventListener('click', e => {
 });
 
 document.getElementById('sel-personal-mes').addEventListener('change', renderPersonal);
+document.getElementById('sel-auditoria-mes').addEventListener('change', renderCierreJunio);
  
 // ─── INIT ─────────────────────────────────────────────────────────────────────
 window.addEventListener('DOMContentLoaded', () => {

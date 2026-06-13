@@ -247,8 +247,7 @@ MONTH_YEAR_MAP = {
     "Jun26": (2026, 6)
 }
 
-def parse_cierre_junio_auditoria(wb):
-    sheet_name = "Jun26"
+def parse_cierre_auditoria(wb, sheet_name):
     if sheet_name not in wb.sheetnames:
         print(f"Advertencia: Hoja '{sheet_name}' no encontrada para auditoría.")
         return []
@@ -289,7 +288,7 @@ def parse_cierre_junio_auditoria(wb):
                 monto
             ])
             
-    print(f"Total de filas de auditoría extraídas de Jun26: {len(auditoria)}")
+    print(f"Total de filas de auditoría extraídas de {sheet_name}: {len(auditoria)}")
     return auditoria
 
 def main():
@@ -380,8 +379,9 @@ def main():
             
     print(f"Total de registros de Showroom consolidados: {len(showroom_data)}")
     
-    # 3. Generar la solapa exclusiva de auditoría de turnos para Junio 2026
-    cierre_junio_data = parse_cierre_junio_auditoria(wb)
+    # 3. Generar la solapa exclusiva de auditoría de turnos para Junio y Mayo 2026
+    cierre_junio_data = parse_cierre_auditoria(wb, "Jun26")
+    cierre_mayo_data = parse_cierre_auditoria(wb, "May26")
             
     # Generar el archivo data.js
     timestamp = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
@@ -393,7 +393,8 @@ const DATOS_SINCRONIZADOS = {{
   ultima_actualizacion: "{timestamp}",
   showroom: {json.dumps(showroom_data)},
   outlet: {json.dumps(OUTLET_HISTORIC_DATA)},
-  cierre_junio_2026: {json.dumps(cierre_junio_data)}
+  cierre_junio_2026: {json.dumps(cierre_junio_data)},
+  cierre_mayo_2026: {json.dumps(cierre_mayo_data)}
 }};
 """
     

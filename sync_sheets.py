@@ -1,6 +1,5 @@
 import openpyxl
 import json
-import pandas as pd
 import requests
 import datetime
 import os
@@ -291,6 +290,145 @@ def parse_cierre_auditoria(wb, sheet_name):
     print(f"Total de filas de auditoría extraídas de {sheet_name}: {len(auditoria)}")
     return auditoria
 
+def parse_employee_expenses(wb, sheet_name):
+    # Encontrar la pestaña de manera flexible
+    sheet = None
+    for name in wb.sheetnames:
+        if name.lower().replace('/', '') == sheet_name.lower().replace('/', ''):
+            sheet = wb[name]
+            break
+    if not sheet:
+        return []
+        
+    # 1. Obtener asistencia de personal de los cierres (columna A de Sobrante/Faltante)
+    asistencia = {} # { (day_num, turno): employee_name }
+    
+    current_day_num = None
+    current_day_name = ""
+    current_turno = ""
+    
+    for r_idx in range(1, sheet.max_row + 1):
+        colA = sheet.cell(row=r_idx, column=1).value
+        colB = sheet.cell(row=r_idx, column=2).value
+        colC = sheet.cell(row=r_idx, column=3).value
+        
+        colA_str = str(colA).strip().lower() if colA is not None else ""
+        colC_str = str(colC).strip().lower() if colC is not None else ""
+        
+        is_novedades = "novedades del dia" in colC_str or "novedades" in colC_str
+        is_new_day = (colA_str in DIA_MAP and is_valid_day_num(colB)) or (is_novedades and is_valid_day_num(colB))
+        
+        if is_new_day:
+            try:
+                current_day_num = int(float(str(colB).strip()))
+            except:
+                current_day_num = None
+            current_turno = ""
+            continue
+            
+        if "turno maña" in colA_str or "primera maña" in colA_str:
+            current_turno = "MAÑANA"
+            continue
+        elif "turno tarde" in colA_str:
+            current_turno = "TARDE"
+            continue
+            
+        if current_day_num and current_turno:
+            is_sobrante = "sobrante/faltante" in colC_str or "sobrantede caja" in colC_str or "sobrente de caja" in colC_str
+            if is_sobrante and colA:
+                emp = str(colA).strip().upper()
+                if emp and emp.lower() not in ["", "nan", "null"]:
+                    asistencia[(current_day_num, current_turno)] = emp
+
+    # 2. Buscar las filas de total y aplicar la regla
+    current_day_num = None
+    current_day_name = ""
+    current_turno = ""
+    expenses = []
+    
+    for r_idx in range(1, sheet.max_row + 1):
+        colA = sheet.cell(row=r_idx, column=1).value
+        colB = sheet.cell(row=r_idx, column=2).value
+        colC = sheet.cell(row=r_idx, column=3).value
+        
+        colA_str = str(colA).strip().lower() if colA is not None else ""
+        colC_str = str(colC).strip().lower() if colC is not None else ""
+        
+        is_novedades = "novedades del dia" in colC_str or "novedades" in colC_str
+        is_new_day = (colA_str in DIA_MAP and is_valid_day_num(colB)) or (is_novedades and is_valid_day_num(colB))
+        
+        if is_new_day:
+            try:
+                current_day_num = int(float(str(colB).strip()))
+            except:
+                current_day_num = None
+            if colA_str in DIA_MAP:
+                current_day_name = DIA_MAP[colA_str]
+            else:
+                current_day_name = "—"
+            current_turno = ""
+            continue
+            
+        if "turno maña" in colA_str or "primera maña" in colA_str:
+            current_turno = "MAÑANA"
+            continue
+        elif "turno tarde" in colA_str:
+            current_turno = "TARDE"
+            continue
+            
+        if not current_day_num or not current_turno:
+            continue
+            
+        # Detectar filas de total de ventas o gastos de turno
+        is_total_tm = "venta total tm" in colC_str or "facturacion total tm" in colC_str or "facturación total tm" in colC_str or "venta total tm" in colA_str or "facturacion total tm" in colA_str
+        is_total_tt = "venta total tt" in colC_str or "facturacion total tt" in colC_str or "facturación total tt" in colC_str or "venta total tt" in colA_str or "facturacion total tt" in colA_str or "gasto total del dia" in colC_str or "gasto total del dia" in colA_str
+        
+        is_gasto_tm = "gasto total tm" in colC_str or "gasto total tm" in colA_str or "gasto total del dia" in colC_str or "gasto total del dia" in colA_str or "gastos total tm" in colC_str or "gastos total tm" in colA_str
+        is_gasto_tt = "gasto total tt" in colC_str or "gasto total tt" in colA_str or "gastos total tt" in colC_str or "gastos total tt" in colA_str
+        
+        is_cierre_row = is_total_tm or is_total_tt or is_gasto_tm or is_gasto_tt
+        
+        if is_cierre_row:
+            valJ = sheet.cell(row=r_idx, column=10).value
+            valK = sheet.cell(row=r_idx, column=11).value
+            valL = sheet.cell(row=r_idx, column=12).value
+            
+            gastoJ = clean_num(valJ)
+            gastoK = clean_num(valK)
+            total = gastoJ + gastoK
+            
+            if total > 0:
+                emp_name = "—"
+                # Regla: si en col L hay un nombre importarlo, sino sacar de asistencia del turno
+                if valL is not None and not isinstance(valL, (int, float)) and str(valL).strip():
+                    valL_str = str(valL).strip()
+                    valL_lower = valL_str.lower()
+                    is_money = "$" in valL_str or (valL_lower.replace('-','').replace('.','').replace(',','').isdigit() and len(valL_str) > 0)
+                    is_stock_header = any(x in valL_lower for x in ["stock", "showroom", "outlet"])
+                    is_omit = valL_lower in ["", "empleado", "nombre", "nan", "null"]
+                    
+                    if not is_money and not is_stock_header and not is_omit:
+                        emp_name = valL_str.upper()
+                    else:
+                        emp_name = asistencia.get((current_day_num, current_turno), "—")
+                else:
+                    emp_name = asistencia.get((current_day_num, current_turno), "—")
+                
+                day_label = f"{current_day_name} {current_day_num}"
+                expenses.append([
+                    sheet_name,
+                    r_idx,
+                    day_label,
+                    current_turno,
+                    str(colC or colA).strip(),
+                    emp_name,
+                    gastoJ,
+                    gastoK,
+                    total
+                ])
+                
+    return expenses
+
 def main():
 
     if not download_sheet():
@@ -384,6 +522,15 @@ def main():
     cierre_mayo_data = parse_cierre_auditoria(wb, "May26")
     cierre_abril_data = parse_cierre_auditoria(wb, "Abril26")
     cierre_marzo_data = parse_cierre_auditoria(wb, "Marz26")
+    
+    # 4. Obtener todos los gastos/adelantos de empleados de todos los meses de la temporada
+    gastos_empleados_data = []
+    print("Procesando adelantos y gastos de empleados en pestañas mensuales...")
+    for month_sheet in MONTH_ORDER:
+        print(f"Procesando gastos de {month_sheet}...")
+        expenses = parse_employee_expenses(wb, month_sheet)
+        gastos_empleados_data.extend(expenses)
+    print(f"Total de registros de adelantos extraídos: {len(gastos_empleados_data)}")
             
     # Generar el archivo data.js
     timestamp = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
@@ -398,7 +545,8 @@ const DATOS_SINCRONIZADOS = {{
   cierre_junio_2026: {json.dumps(cierre_junio_data)},
   cierre_mayo_2026: {json.dumps(cierre_mayo_data)},
   cierre_abril_2026: {json.dumps(cierre_abril_data)},
-  cierre_marzo_2026: {json.dumps(cierre_marzo_data)}
+  cierre_marzo_2026: {json.dumps(cierre_marzo_data)},
+  gastos_empleados: {json.dumps(gastos_empleados_data)}
 }};
 """
     

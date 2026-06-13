@@ -494,39 +494,78 @@
 
   <!-- CIERRE JUNIO 2026 -->
   <div id="tab-cierre-junio" class="panel">
-    <div class="section-row">
+    <div class="section-row" style="flex-wrap: wrap; gap: 10px;">
       <span class="section-title">Auditoría de Turnos — Exclusivo Showroom</span>
-      <select id="sel-auditoria-mes">
-        <option value="Jun/26">Junio 2026</option>
-        <option value="May/26">Mayo 2026</option>
-        <option value="Abril/26">Abril 2026</option>
-        <option value="Marz/26">Marzo 2026</option>
-        <option value="feb/26">Febrero 2026</option>
-        <option value="ene/26">Enero 2026</option>
-        <option value="Dic/25">Diciembre 2025</option>
-        <option value="Nov/25">Noviembre 2025</option>
-        <option value="Oct/25">Octubre 2025</option>
-        <option value="SEP/25">Septiembre 2025</option>
-        <option value="Agos/25">Agosto 2025</option>
-        <option value="JUL/25">Julio 2025</option>
-        <option value="JUN/25">Junio 2025</option>
-        <option value="Mayo/25">Mayo 2025</option>
-      </select>
+      <div style="display: flex; gap: 10px; flex-wrap: wrap; align-items: center;">
+        <select id="sel-auditoria-mes">
+          <option value="Jun/26">Junio 2026</option>
+          <option value="May/26">Mayo 2026</option>
+          <option value="Abril/26">Abril 2026</option>
+          <option value="Marz/26">Marzo 2026</option>
+          <option value="feb/26">Febrero 2026</option>
+          <option value="ene/26">Enero 2026</option>
+          <option value="Dic/25">Diciembre 2025</option>
+          <option value="Nov/25">Noviembre 2025</option>
+          <option value="Oct/25">Octubre 2025</option>
+          <option value="SEP/25">Septiembre 2025</option>
+          <option value="Agos/25">Agosto 2025</option>
+          <option value="JUL/25">Julio 2025</option>
+          <option value="JUN/25">Junio 2025</option>
+          <option value="Mayo/25">Mayo 2025</option>
+        </select>
+        
+        <input type="text" id="inp-auditoria-fecha" placeholder="Buscar fecha... (ej: lun 1)" style="background: var(--bg-card); border: 1px solid var(--border); color: var(--text1); padding: 8px 12px; border-radius: 8px; font-size: 14px; outline: none; width: 200px;">
+        
+        <select id="sel-auditoria-tipo">
+          <option value="all">Todos los registros</option>
+          <option value="VENTAS">Solo Ventas</option>
+          <option value="GASTOS">Solo Gastos</option>
+        </select>
+      </div>
     </div>
-    <div class="chart-card" style="overflow-x: auto;">
-      <table class="personal-table" id="table-cierre-junio">
-        <thead>
-          <tr>
-            <th id="th-cierre-fila" style="cursor: pointer; user-select: none;">Fila Excel <span id="sort-icon-fila" style="font-size: 11px; color: var(--text2);">▼</span></th>
-            <th>Día / Bloque</th>
-            <th>Concepto (Columna C)</th>
-            <th id="th-cierre-monto" style="cursor: pointer; user-select: none;">Monto Sincronizado (Columna D) <span id="sort-icon-monto" style="font-size: 11px; color: var(--text2);"> ↕</span></th>
-          </tr>
-        </thead>
-        <tbody>
-          <!-- Rellenado dinámicamente -->
-        </tbody>
-      </table>
+    
+    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(350px, 1fr)); gap: 20px; margin-top: 15px;">
+      <!-- Detalle de Turnos (Ventas y Gastos) -->
+      <div class="chart-card" style="overflow-x: auto; margin: 0;">
+        <div style="font-weight: 600; margin-bottom: 15px; font-size: 15px; color: var(--text1); display: flex; align-items: center; gap: 8px;">
+          <span>Detalle de Turnos</span>
+          <span style="font-size: 11px; font-weight: 400; color: var(--text2); background: rgba(255,255,255,0.05); padding: 2px 8px; border-radius: 12px;">Auditoría</span>
+        </div>
+        <table class="personal-table" id="table-cierre-junio">
+          <thead>
+            <tr>
+              <th id="th-cierre-fila" style="cursor: pointer; user-select: none;">Fila Excel <span id="sort-icon-fila" style="font-size: 11px; color: var(--text2);">▼</span></th>
+              <th>Día / Bloque</th>
+              <th>Concepto (Columna C)</th>
+              <th id="th-cierre-monto" style="cursor: pointer; user-select: none;">Monto Sincronizado (Columna D) <span id="sort-icon-monto" style="font-size: 11px; color: var(--text2);"> ↕</span></th>
+            </tr>
+          </thead>
+          <tbody>
+            <!-- Rellenado dinámicamente -->
+          </tbody>
+        </table>
+      </div>
+      
+      <!-- Ganancias Diarias (Celeste) -->
+      <div class="chart-card" style="overflow-x: auto; margin: 0;">
+        <div style="font-weight: 600; margin-bottom: 15px; font-size: 15px; color: var(--text1); display: flex; align-items: center; gap: 8px;">
+          <span>Ganancias Diarias</span>
+          <span style="font-size: 11px; font-weight: 400; color: #38bdf8; background: rgba(56,189,248,0.08); padding: 2px 8px; border-radius: 12px;">Restar Ventas - Gastos</span>
+        </div>
+        <table class="personal-table" id="table-cierre-ganancias">
+          <thead>
+            <tr>
+              <th>Día / Bloque</th>
+              <th>Total Ventas</th>
+              <th>Total Gastos</th>
+              <th>Ganancia (Celeste)</th>
+            </tr>
+          </thead>
+          <tbody>
+            <!-- Rellenado dinámicamente -->
+          </tbody>
+        </table>
+      </div>
     </div>
   </div>
  
@@ -1254,6 +1293,7 @@ async function renderPersonal() {
 
 async function renderCierreJunio() {
   const tableBody = document.querySelector('#table-cierre-junio tbody');
+  const tableGananciasBody = document.querySelector('#table-cierre-ganancias tbody');
   if (!tableBody) return;
   
   const selectedSheet = document.getElementById('sel-auditoria-mes').value; // "Jun/26", "May/26", ...
@@ -1278,8 +1318,12 @@ async function renderCierreJunio() {
   const meta = sheetMeta[selectedSheet] || { title: "Junio 2026", fallback: "cierre_junio_2026", label: "jun 26" };
   const mesTitle = meta.title;
   const fallbackKey = meta.fallback;
+  const mesLabel = meta.label;
   
   tableBody.innerHTML = `<tr><td colspan="4" style="text-align:center;color:var(--text2)">Cargando datos en vivo de Google Sheets...</td></tr>`;
+  if (tableGananciasBody) {
+    tableGananciasBody.innerHTML = `<tr><td colspan="4" style="text-align:center;color:var(--text2)">Cargando...</td></tr>`;
+  }
   
   if (!auditoriaEnTiempoReal[selectedSheet]) {
     await fetchMonthlyDataRealTime(selectedSheet);
@@ -1293,13 +1337,35 @@ async function renderCierreJunio() {
   }
   
   tableBody.innerHTML = '';
+  if (tableGananciasBody) tableGananciasBody.innerHTML = '';
   
   if (data.length === 0) {
-    tableBody.innerHTML = `<tr><td colspan="4" style="text-align:center;color:var(--text2)">No hay datos de turnos disponibles para ${mesTitle}.</td></tr>`;
+    const noDataHtml = `<tr><td colspan="4" style="text-align:center;color:var(--text2)">No hay datos de turnos disponibles para ${mesTitle}.</td></tr>`;
+    tableBody.innerHTML = noDataHtml;
+    if (tableGananciasBody) tableGananciasBody.innerHTML = noDataHtml;
     return;
   }
   
-  let displayData = [...data];
+  // Obtener valores de los filtros
+  const searchVal = (document.getElementById('inp-auditoria-fecha')?.value || "").toLowerCase().trim();
+  const filterTipo = document.getElementById('sel-auditoria-tipo')?.value || "all";
+  
+  // 1. Filtrar los datos para la tabla Detalle de Turnos
+  let filteredData = data.filter(r => {
+    const dayLabel = r[1] || "";
+    const concepto = r[2] || "";
+    const tipo = r[4] || (concepto.toLowerCase().includes('gasto') || concepto.toLowerCase().includes('caja') ? 'GASTOS' : 'VENTAS');
+    
+    // Filtro de fecha
+    const matchesSearch = !searchVal || dayLabel.toLowerCase().includes(searchVal) || `${dayLabel} ${mesLabel}`.toLowerCase().includes(searchVal);
+    // Filtro de tipo
+    const matchesTipo = filterTipo === 'all' || tipo === filterTipo;
+    
+    return matchesSearch && matchesTipo;
+  });
+  
+  // 2. Ordenar datos para la tabla Detalle de Turnos
+  let displayData = [...filteredData];
   if (cierreSortCol === 'monto') {
     if (cierreSortDir === 'desc') {
       displayData.sort((a, b) => (parseFloat(b[3]) || 0) - (parseFloat(a[3]) || 0));
@@ -1322,39 +1388,90 @@ async function renderCierreJunio() {
     iconFila.textContent = cierreSortCol === null ? ' ▼' : ' ↕';
   }
   
-  displayData.forEach(r => {
-    const tr = document.createElement('tr');
-    const rowIdx = r[0];      // Nro Fila
-    const dayLabel = r[1];    // lun 1, etc.
-    const concepto = r[2];    // "Venta Total TM" o "Venta Total TT"
-    const monto = parseFloat(r[3]) || 0;
-    const tipo = r[4] || (concepto.toLowerCase().includes('gasto') || concepto.toLowerCase().includes('caja') ? 'GASTOS' : 'VENTAS');
+  if (displayData.length === 0) {
+    tableBody.innerHTML = `<tr><td colspan="4" style="text-align:center;color:var(--text2)">No hay turnos que coincidan con los filtros.</td></tr>`;
+  } else {
+    displayData.forEach(r => {
+      const tr = document.createElement('tr');
+      const rowIdx = r[0];      // Nro Fila
+      const dayLabel = r[1];    // lun 1, etc.
+      const concepto = r[2];    // "Venta Total TM" o "Venta Total TT"
+      const monto = parseFloat(r[3]) || 0;
+      const tipo = r[4] || (concepto.toLowerCase().includes('gasto') || concepto.toLowerCase().includes('caja') ? 'GASTOS' : 'VENTAS');
+      
+      let conceptBadge = "";
+      let montoStyle = "";
+      
+      if (tipo === 'GASTOS') {
+        const isTM = concepto.toLowerCase().includes('tm');
+        const color = isTM ? '#f59e0b' : '#ef4444'; // Orange for TM, Red for TT/Dia
+        conceptBadge = `<span class="badge-emp" style="border-color: ${color}; color: ${color}; font-weight: 500;">${concepto}</span>`;
+        montoStyle = `style="font-weight:600;color:${color}"`;
+      } else {
+        const isTM = concepto.toLowerCase().includes('tm');
+        const color = isTM ? 'var(--blue)' : 'var(--amber)'; // Blue for TM, Amber for TT
+        conceptBadge = `<span class="badge-emp" style="border-color: ${color}; color: ${color}; font-weight: 500;">${concepto}</span>`;
+        montoStyle = `style="font-weight:600;color:var(--green)"`;
+      }
+      
+      tr.innerHTML = `
+        <td><span style="color:var(--text2)">Fila ${rowIdx}</span></td>
+        <td><strong>${dayLabel} ${mesLabel}</strong></td>
+        <td>${conceptBadge}</td>
+        <td ${montoStyle}>${fmtExact(monto)}</td>
+      `;
+      tableBody.appendChild(tr);
+    });
+  }
+
+  // 3. Agrupar para Ganancias Diarias (Ventas - Gastos)
+  if (tableGananciasBody) {
+    const diasGanancia = {};
     
-    let conceptBadge = "";
-    let montoStyle = "";
+    data.forEach(r => {
+      const dayLabel = r[1] || "";
+      const concepto = r[2] || "";
+      const monto = parseFloat(r[3]) || 0;
+      const tipo = r[4] || (concepto.toLowerCase().includes('gasto') || concepto.toLowerCase().includes('caja') ? 'GASTOS' : 'VENTAS');
+      
+      // Aplicar el filtro de búsqueda por fecha a la tabla de ganancias para coherencia
+      const matchesSearch = !searchVal || dayLabel.toLowerCase().includes(searchVal) || `${dayLabel} ${mesLabel}`.toLowerCase().includes(searchVal);
+      if (!matchesSearch) return;
+      
+      if (!diasGanancia[dayLabel]) {
+        diasGanancia[dayLabel] = { ventas: 0, gastos: 0 };
+      }
+      if (tipo === 'VENTAS') {
+        diasGanancia[dayLabel].ventas += monto;
+      } else {
+        diasGanancia[dayLabel].gastos += monto;
+      }
+    });
     
-    if (tipo === 'GASTOS') {
-      const isTM = concepto.toLowerCase().includes('tm');
-      const color = isTM ? '#f59e0b' : '#ef4444'; // Orange for TM, Red for TT/Dia
-      conceptBadge = `<span class="badge-emp" style="border-color: ${color}; color: ${color}; font-weight: 500;">${concepto}</span>`;
-      montoStyle = `style="font-weight:600;color:${color}"`;
+    // Convertir a array y ordenar por número del día para visualización correcta
+    const listDias = Object.entries(diasGanancia).sort((a, b) => {
+      const numA = parseInt(a[0].match(/\d+/)?.[0] || "0");
+      const numB = parseInt(b[0].match(/\d+/)?.[0] || "0");
+      return numA - numB;
+    });
+    
+    if (listDias.length === 0) {
+      tableGananciasBody.innerHTML = `<tr><td colspan="4" style="text-align:center;color:var(--text2)">No hay datos.</td></tr>`;
     } else {
-      const isTM = concepto.toLowerCase().includes('tm');
-      const color = isTM ? 'var(--blue)' : 'var(--amber)'; // Blue for TM, Amber for TT
-      conceptBadge = `<span class="badge-emp" style="border-color: ${color}; color: ${color}; font-weight: 500;">${concepto}</span>`;
-      montoStyle = `style="font-weight:600;color:var(--green)"`;
+      listDias.forEach(([day, val]) => {
+        const ganancia = val.ventas - val.gastos;
+        const tr = document.createElement('tr');
+        
+        tr.innerHTML = `
+          <td><strong>${day} ${mesLabel}</strong></td>
+          <td style="color:var(--green)">${fmtExact(val.ventas)}</td>
+          <td style="color:#ef4444">${fmtExact(val.gastos)}</td>
+          <td style="font-weight:700;color:#38bdf8">${fmtExact(ganancia)}</td>
+        `;
+        tableGananciasBody.appendChild(tr);
+      });
     }
-    
-    const mesLabel = meta.label;
-    
-    tr.innerHTML = `
-      <td><span style="color:var(--text2)">Fila ${rowIdx}</span></td>
-      <td><strong>${dayLabel} ${mesLabel}</strong></td>
-      <td>${conceptBadge}</td>
-      <td ${montoStyle}>${fmtExact(monto)}</td>
-    `;
-    tableBody.appendChild(tr);
-  });
+  }
 }
  
 function buildAll() {
@@ -1433,6 +1550,16 @@ document.getElementById('store-tabs').addEventListener('click', e => {
 
 document.getElementById('sel-personal-mes').addEventListener('change', renderPersonal);
 document.getElementById('sel-auditoria-mes').addEventListener('change', renderCierreJunio);
+
+const inpFecha = document.getElementById('inp-auditoria-fecha');
+if (inpFecha) {
+  inpFecha.addEventListener('input', renderCierreJunio);
+}
+
+const selTipo = document.getElementById('sel-auditoria-tipo');
+if (selTipo) {
+  selTipo.addEventListener('change', renderCierreJunio);
+}
 
 const thMonto = document.getElementById('th-cierre-monto');
 if (thMonto) {

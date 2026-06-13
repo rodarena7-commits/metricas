@@ -450,6 +450,10 @@
   <!-- PERSONAL -->
   <div id="tab-personal" class="panel">
     <div class="metrics" id="metrics-personal"></div>
+    <div class="section-row" style="margin-bottom: 15px;">
+      <span class="section-title">Filtro de período</span>
+      <select id="sel-personal-mes"><option value="all">Todos los meses</option></select>
+    </div>
     
     <!-- Nueva sección: Resumen de Asistencia por Empleado -->
     <div class="section-row">
@@ -474,7 +478,6 @@
     
     <div class="section-row">
       <span class="section-title">Detalle Diario de Asistencia y Turnos</span>
-      <select id="sel-personal-mes"><option value="all">Todos los meses</option></select>
     </div>
     <div class="chart-card" style="overflow-x: auto;">
       <table class="personal-table" id="table-personal-data">
@@ -1487,9 +1490,10 @@ async function renderPersonal() {
     const sorted = Object.entries(turnos).sort((a,b) => b[1] - a[1]);
     const topEmployee = sorted[0] ? `${sorted[0][0]} (${sorted[0][1]} turnos)` : '—';
     const totalTurnos = Object.values(turnos).reduce((a,b) => a+b, 0);
+    const labelTurnos = filterMonth === 'all' ? 'Turnos totales históricos' : 'Turnos totales del mes';
     
     metricsDiv.innerHTML = `
-      <div class="metric"><div class="metric-label">Turnos totales del mes</div><div class="metric-value">${totalTurnos}</div></div>
+      <div class="metric"><div class="metric-label">${labelTurnos}</div><div class="metric-value">${totalTurnos}</div></div>
       <div class="metric"><div class="metric-label">Mayor Presencia</div><div class="metric-value" style="font-size:17px;margin-top:4px;">${topEmployee}</div></div>
       <div class="metric"><div class="metric-label">Personal Activo</div><div class="metric-value">${Object.keys(turnos).length}</div></div>
     `;

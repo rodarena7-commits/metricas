@@ -1,0 +1,12 @@
+{
+  "name": "metrica-dashboard",
+  "version": "1.0.0",
+  "description": "Dashboard interno de métricas para +Roma",
+  "main": "index.html",
+  "scripts": {
+    "sync": "uv run --with openpyxl --with pandas python sync_sheets.py"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC"
+}

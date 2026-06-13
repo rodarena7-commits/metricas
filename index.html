@@ -1266,15 +1266,25 @@ async function renderPersonal() {
     } else {
       sortedActive.forEach(([name, stats]) => {
         const tr = document.createElement('tr');
-        const diasStr = Object.entries(stats.diasMap)
-          .map(([dia, trns]) => `${dia} (${trns.join('/')})`)
-          .join(', ');
+        
+        // Crear las opciones para el select desplegable
+        const optionsHtml = Object.entries(stats.diasMap)
+          .map(([dia, trns]) => `<option style="background: #111321; color: var(--text1);">${dia} (${trns.join('/')})</option>`)
+          .join('');
+          
+        const selectHtml = `
+          <select style="background: var(--bg-card); border: 1px solid var(--border); color: var(--text1); padding: 6px 12px; border-radius: 8px; font-size: 13px; outline: none; cursor: pointer; max-width: 100%;">
+            <option disabled selected>Ver días trabajados (${Object.keys(stats.diasMap).length} días)</option>
+            ${optionsHtml}
+          </select>
+        `;
+        
         tr.innerHTML = `
           <td><span class="badge-emp">${name}</span></td>
           <td>${stats.tm}</td>
           <td>${stats.tt}</td>
           <td><strong>${stats.total}</strong></td>
-          <td style="color:var(--text2); max-width: 450px; word-wrap: break-word; white-space: normal; line-height: 1.5;">${diasStr}</td>
+          <td>${selectHtml}</td>
         `;
         summaryBody.appendChild(tr);
       });

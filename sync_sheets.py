@@ -379,9 +379,11 @@ def main():
             
     print(f"Total de registros de Showroom consolidados: {len(showroom_data)}")
     
-    # 3. Generar la solapa exclusiva de auditoría de turnos para Junio y Mayo 2026
+    # 3. Generar la solapa exclusiva de auditoría de turnos para Junio, Mayo, Abril y Marzo 2026
     cierre_junio_data = parse_cierre_auditoria(wb, "Jun26")
     cierre_mayo_data = parse_cierre_auditoria(wb, "May26")
+    cierre_abril_data = parse_cierre_auditoria(wb, "Abril26")
+    cierre_marzo_data = parse_cierre_auditoria(wb, "Marz26")
             
     # Generar el archivo data.js
     timestamp = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
@@ -394,7 +396,9 @@ const DATOS_SINCRONIZADOS = {{
   showroom: {json.dumps(showroom_data)},
   outlet: {json.dumps(OUTLET_HISTORIC_DATA)},
   cierre_junio_2026: {json.dumps(cierre_junio_data)},
-  cierre_mayo_2026: {json.dumps(cierre_mayo_data)}
+  cierre_mayo_2026: {json.dumps(cierre_mayo_data)},
+  cierre_abril_2026: {json.dumps(cierre_abril_data)},
+  cierre_marzo_2026: {json.dumps(cierre_marzo_data)}
 }};
 """
     

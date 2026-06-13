@@ -1,4 +1,5 @@
 import openpyxl
+import json
 import pandas as pd
 import requests
 import datetime
@@ -269,8 +270,8 @@ def main():
 
 const DATOS_SINCRONIZADOS = {{
   ultima_actualizacion: "{timestamp}",
-  showroom: {str(showroom_data)},
-  outlet: {str(OUTLET_HISTORIC_DATA)}
+  showroom: {json.dumps(showroom_data)},
+  outlet: {json.dumps(OUTLET_HISTORIC_DATA)}
 }};
 """
     

@@ -864,14 +864,22 @@ function parseAuditCSV(csvText, sheetName) {
     const isVentaTotal = colC.includes("venta total tm") || colC.includes("venta total tt") || 
                          colC.includes("facturacion total tm") || colC.includes("facturacion total tt") ||
                          colC.includes("facturación total tm") || colC.includes("facturación total tt");
-    if (isVentaTotal) {
+    const isGastoTotal = colC.includes("gastos total tm") || colC.includes("gastos total tt") || 
+                         colC.includes("gasto total tm") || colC.includes("gasto total tt") || 
+                         colC.includes("gastos total del dia") || colC.includes("gasto total del dia") ||
+                         colC.includes("gastos total del día") || colC.includes("gasto total del día") ||
+                         colC.includes("gastos total tm ") || colC.includes("gastos total tt ") ||
+                         colC.includes("gasto caja") || colC.includes("gastos caja") ||
+                         colC.includes("cierre - gastos caja") || colC.includes("ciere - gastos caja");
+    if (isVentaTotal || isGastoTotal) {
       const monto = cleanCSVNum(colD);
       const dayLabel = currentDayNum ? `${currentDayName} ${currentDayNum}` : "—";
       auditoria.push([
         idx + 1,
         dayLabel,
         row[2] ? row[2].trim() : "",
-        monto
+        monto,
+        isVentaTotal ? "VENTAS" : "GASTOS"
       ]);
     }
   });
@@ -1320,10 +1328,22 @@ async function renderCierreJunio() {
     const dayLabel = r[1];    // lun 1, etc.
     const concepto = r[2];    // "Venta Total TM" o "Venta Total TT"
     const monto = parseFloat(r[3]) || 0;
+    const tipo = r[4] || (concepto.toLowerCase().includes('gasto') || concepto.toLowerCase().includes('caja') ? 'GASTOS' : 'VENTAS');
     
-    // Concepto badge color
-    const isTM = concepto.toLowerCase().includes('tm');
-    const conceptBadge = `<span class="badge-emp" style="border-color: ${isTM ? 'var(--blue)' : 'var(--amber)'}; color: ${isTM ? 'var(--blue)' : 'var(--amber)'}">${concepto}</span>`;
+    let conceptBadge = "";
+    let montoStyle = "";
+    
+    if (tipo === 'GASTOS') {
+      const isTM = concepto.toLowerCase().includes('tm');
+      const color = isTM ? '#f59e0b' : '#ef4444'; // Orange for TM, Red for TT/Dia
+      conceptBadge = `<span class="badge-emp" style="border-color: ${color}; color: ${color}; font-weight: 500;">${concepto}</span>`;
+      montoStyle = `style="font-weight:600;color:${color}"`;
+    } else {
+      const isTM = concepto.toLowerCase().includes('tm');
+      const color = isTM ? 'var(--blue)' : 'var(--amber)'; // Blue for TM, Amber for TT
+      conceptBadge = `<span class="badge-emp" style="border-color: ${color}; color: ${color}; font-weight: 500;">${concepto}</span>`;
+      montoStyle = `style="font-weight:600;color:var(--green)"`;
+    }
     
     const mesLabel = meta.label;
     
@@ -1331,7 +1351,7 @@ async function renderCierreJunio() {
       <td><span style="color:var(--text2)">Fila ${rowIdx}</span></td>
       <td><strong>${dayLabel} ${mesLabel}</strong></td>
       <td>${conceptBadge}</td>
-      <td style="font-weight:600;color:var(--green)">${fmtExact(monto)}</td>
+      <td ${montoStyle}>${fmtExact(monto)}</td>
     `;
     tableBody.appendChild(tr);
   });

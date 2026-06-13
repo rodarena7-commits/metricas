@@ -507,10 +507,10 @@
       <table class="personal-table" id="table-cierre-junio">
         <thead>
           <tr>
-            <th>Fila Excel</th>
+            <th id="th-cierre-fila" style="cursor: pointer; user-select: none;">Fila Excel <span id="sort-icon-fila" style="font-size: 11px; color: var(--text2);">▼</span></th>
             <th>Día / Bloque</th>
             <th>Concepto (Columna C)</th>
-            <th>Monto Sincronizado (Columna D)</th>
+            <th id="th-cierre-monto" style="cursor: pointer; user-select: none;">Monto Sincronizado (Columna D) <span id="sort-icon-monto" style="font-size: 11px; color: var(--text2);"> ↕</span></th>
           </tr>
         </thead>
         <tbody>
@@ -683,6 +683,32 @@ async function fetchMonthlyDataRealTime(sheetName) {
   }
 }
 
+let cierreSortCol = null; // 'monto' o null
+let cierreSortDir = null; // 'asc', 'desc' o null
+
+function getMonthYearFromSheet(sheetName) {
+  let month = 6;
+  let year = 2026;
+  if (!sheetName) return { month, year };
+  const s = sheetName.toLowerCase().replace('/', '');
+  if (s.includes("ene")) month = 1;
+  else if (s.includes("feb")) month = 2;
+  else if (s.includes("marz") || s.includes("mar")) month = 3;
+  else if (s.includes("abr")) month = 4;
+  else if (s.includes("may")) month = 5;
+  else if (s.includes("jun")) month = 6;
+  else if (s.includes("jul")) month = 7;
+  else if (s.includes("ago")) month = 8;
+  else if (s.includes("sep") || s.includes("set")) month = 9;
+  else if (s.includes("oct")) month = 10;
+  else if (s.includes("nov")) month = 11;
+  else if (s.includes("dic")) month = 12;
+  
+  if (s.includes("25")) year = 2025;
+  else if (s.includes("26")) year = 2026;
+  return { month, year };
+}
+
 function parseMonthCSV(csvText, sheetName) {
   const lines = csvText.split('\n');
   const dailyRecords = [];
@@ -712,10 +738,19 @@ function parseMonthCSV(csvText, sheetName) {
     const colC = row[2] ? row[2].trim().toLowerCase() : "";
     const colD = row[3] ? row[3].trim() : "";
     
-    if (DIA_MAP_JS[colA] && isDayNum(colB)) {
+    const isNovedades = colC.includes("novedades del dia") || colC.includes("novedades");
+    const isNewDay = (DIA_MAP_JS[colA] && isDayNum(colB)) || (isNovedades && isDayNum(colB));
+    
+    if (isNewDay) {
       if (dayData && dayData.day_num !== null) dailyRecords.push(dayData);
       currentDayNum = parseInt(colB);
-      currentDayName = DIA_MAP_JS[colA];
+      if (DIA_MAP_JS[colA]) {
+        currentDayName = DIA_MAP_JS[colA];
+      } else {
+        const { month, year } = getMonthYearFromSheet(sheetName);
+        const dateObj = new Date(year, month - 1, currentDayNum);
+        currentDayName = DIA_SEMANA_JS[dateObj.getDay()];
+      }
       currentTurno = "";
       dayData = {
         day_num: currentDayNum, day_name: currentDayName, month_code: monthCode,
@@ -782,6 +817,8 @@ function parseAuditCSV(csvText, sheetName) {
     return !isNaN(num) && num >= 1 && num <= 31;
   };
   
+  const { month, year } = getMonthYearFromSheet(sheetName);
+  
   lines.forEach((line, idx) => {
     const row = parseCSVLine(line);
     if (row.length === 0) return;
@@ -791,9 +828,17 @@ function parseAuditCSV(csvText, sheetName) {
     const colC = row[2] ? row[2].trim().toLowerCase() : "";
     const colD = row[3] ? row[3].trim() : "";
     
-    if (DIA_MAP_JS[colA] && isDayNum(colB)) {
+    const isNovedades = colC.includes("novedades del dia") || colC.includes("novedades");
+    const isNewDay = (DIA_MAP_JS[colA] && isDayNum(colB)) || (isNovedades && isDayNum(colB));
+    
+    if (isNewDay) {
       currentDayNum = parseInt(colB);
-      currentDayName = DIA_MAP_JS[colA];
+      if (DIA_MAP_JS[colA]) {
+        currentDayName = DIA_MAP_JS[colA];
+      } else {
+        const dateObj = new Date(year, month - 1, currentDayNum);
+        currentDayName = DIA_SEMANA_JS[dateObj.getDay()];
+      }
     }
     
     if (colC.includes("venta total tm") || colC.includes("venta total tt")) {
@@ -1210,7 +1255,30 @@ async function renderCierreJunio() {
     return;
   }
   
-  data.forEach(r => {
+  let displayData = [...data];
+  if (cierreSortCol === 'monto') {
+    if (cierreSortDir === 'desc') {
+      displayData.sort((a, b) => (parseFloat(b[3]) || 0) - (parseFloat(a[3]) || 0));
+    } else if (cierreSortDir === 'asc') {
+      displayData.sort((a, b) => (parseFloat(a[3]) || 0) - (parseFloat(b[3]) || 0));
+    }
+  }
+
+  // Actualizar indicadores visuales de ordenamiento en los headers
+  const iconMonto = document.getElementById('sort-icon-monto');
+  if (iconMonto) {
+    if (cierreSortCol === 'monto') {
+      iconMonto.textContent = cierreSortDir === 'desc' ? ' ▼' : ' ▲';
+    } else {
+      iconMonto.textContent = ' ↕';
+    }
+  }
+  const iconFila = document.getElementById('sort-icon-fila');
+  if (iconFila) {
+    iconFila.textContent = cierreSortCol === null ? ' ▼' : ' ↕';
+  }
+  
+  displayData.forEach(r => {
     const tr = document.createElement('tr');
     const rowIdx = r[0];      // Nro Fila
     const dayLabel = r[1];    // lun 1, etc.
@@ -1312,6 +1380,31 @@ document.getElementById('store-tabs').addEventListener('click', e => {
 
 document.getElementById('sel-personal-mes').addEventListener('change', renderPersonal);
 document.getElementById('sel-auditoria-mes').addEventListener('change', renderCierreJunio);
+
+const thMonto = document.getElementById('th-cierre-monto');
+if (thMonto) {
+  thMonto.addEventListener('click', () => {
+    if (cierreSortCol !== 'monto') {
+      cierreSortCol = 'monto';
+      cierreSortDir = 'desc';
+    } else if (cierreSortDir === 'desc') {
+      cierreSortDir = 'asc';
+    } else {
+      cierreSortCol = null;
+      cierreSortDir = null;
+    }
+    renderCierreJunio();
+  });
+}
+
+const thFila = document.getElementById('th-cierre-fila');
+if (thFila) {
+  thFila.addEventListener('click', () => {
+    cierreSortCol = null;
+    cierreSortDir = null;
+    renderCierreJunio();
+  });
+}
  
 // ─── INIT ─────────────────────────────────────────────────────────────────────
 window.addEventListener('DOMContentLoaded', () => {

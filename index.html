@@ -497,10 +497,10 @@
     <div class="section-row">
       <span class="section-title">Auditoría de Turnos — Exclusivo Showroom</span>
       <select id="sel-auditoria-mes">
-        <option value="Jun26">Junio 2026</option>
-        <option value="May26">Mayo 2026</option>
-        <option value="Abril26">Abril 2026</option>
-        <option value="Marz26">Marzo 2026</option>
+        <option value="Jun/26">Junio 2026</option>
+        <option value="May/26">Mayo 2026</option>
+        <option value="Abril/26">Abril 2026</option>
+        <option value="Marz/26">Marzo 2026</option>
       </select>
     </div>
     <div class="chart-card" style="overflow-x: auto;">
@@ -567,7 +567,7 @@ const DIA_MAP_JS = {
 
 const MES_NUM_JS = {
   "enero": 1, "febrero": 2, "marzo": 3, "abril": 4, "mayo": 5, "junio": 6,
-  "julio": 7, "agosto": 8, "septiembre": 9, "octubre": 10, "noviembre": 11, "diciembre": 12
+  "julio": 7, "agosto": 8, "septiembre": 9, "setiembre": 9, "octubre": 10, "noviembre": 11, "diciembre": 12
 };
 
 const MES_CODE_JS = {
@@ -577,10 +577,10 @@ const MES_CODE_JS = {
 
 const DIA_SEMANA_JS = ["dom", "lun", "mar", "mie", "jue", "vie", "sab"];
 const mesAPestaña = {
-  'Junio 2026': 'Jun26',
-  'Mayo 2026': 'May26',
-  'Abril 2026': 'Abril26',
-  'Marzo 2026': 'Marz26'
+  'Junio 2026': 'Jun/26',
+  'Mayo 2026': 'May/26',
+  'Abril 2026': 'Abril/26',
+  'Marzo 2026': 'Marz/26'
 };
 
 let asistenciaEnTiempoReal = {};
@@ -669,7 +669,7 @@ async function fetchMetricaRealTime() {
 }
 
 async function fetchMonthlyDataRealTime(sheetName) {
-  const url = `${SHEET_BASE_URL}&sheet=${sheetName}`;
+  const url = `${SHEET_BASE_URL}&sheet=${encodeURIComponent(sheetName)}`;
   try {
     const res = await fetch(url);
     if (!res.ok) throw new Error("Status " + res.status);
@@ -694,7 +694,7 @@ function parseMonthCSV(csvText, sheetName) {
   const mesMap = {
     "Mayo25": "may", "JUN25": "jun", "JUL25": "jul", "Agos25": "ago", "SEP25": "sep",
     "Oct25": "oct", "Nov25": "nov", "Dic25": "dic", "Ene26": "ene", "Feb26": "feb",
-    "Marz26": "mar", "Abril26": "abr", "May26": "may", "Jun26": "jun"
+    "Marz26": "mar", "Marz/26": "mar", "Abril26": "abr", "Abril/26": "abr", "May26": "may", "May/26": "may", "Jun26": "jun", "Jun/26": "jun"
   };
   const monthCode = mesMap[sheetName] || "jun";
   
@@ -845,11 +845,8 @@ function parseNum(s) {
 function fmt(v) {
   if (v === null || v === undefined) return '—';
   const abs = Math.abs(v);
-  let s;
-  if (abs >= 1000000) s = '$' + (abs/1000000).toFixed(2) + 'M';
-  else if (abs >= 1000) s = '$' + (abs/1000).toFixed(0) + 'K';
-  else s = '$' + Math.round(abs);
-  return v < 0 ? '-' + s : s;
+  const formatted = '$' + Math.round(abs).toLocaleString('es-AR');
+  return v < 0 ? '-' + formatted : formatted;
 }
 
 function fmtExact(v) {
@@ -1184,14 +1181,14 @@ async function renderCierreJunio() {
   const tableBody = document.querySelector('#table-cierre-junio tbody');
   if (!tableBody) return;
   
-  const selectedSheet = document.getElementById('sel-auditoria-mes').value; // "Jun26", "May26", "Abril26", "Marz26"
+  const selectedSheet = document.getElementById('sel-auditoria-mes').value; // "Jun/26", "May/26", "Abril/26", "Marz/26"
   
   // Título/Mapeo dinámico
   let mesTitle = "Junio";
   let fallbackKey = "cierre_junio_2026";
-  if (selectedSheet === 'May26') { mesTitle = "Mayo"; fallbackKey = "cierre_mayo_2026"; }
-  else if (selectedSheet === 'Abril26') { mesTitle = "Abril"; fallbackKey = "cierre_abril_2026"; }
-  else if (selectedSheet === 'Marz26') { mesTitle = "Marzo"; fallbackKey = "cierre_marzo_2026"; }
+  if (selectedSheet === 'May/26') { mesTitle = "Mayo"; fallbackKey = "cierre_mayo_2026"; }
+  else if (selectedSheet === 'Abril/26') { mesTitle = "Abril"; fallbackKey = "cierre_abril_2026"; }
+  else if (selectedSheet === 'Marz/26') { mesTitle = "Marzo"; fallbackKey = "cierre_marzo_2026"; }
   
   tableBody.innerHTML = `<tr><td colspan="4" style="text-align:center;color:var(--text2)">Cargando datos en vivo de Google Sheets...</td></tr>`;
   
@@ -1225,9 +1222,9 @@ async function renderCierreJunio() {
     const conceptBadge = `<span class="badge-emp" style="border-color: ${isTM ? 'var(--blue)' : 'var(--amber)'}; color: ${isTM ? 'var(--blue)' : 'var(--amber)'}">${concepto}</span>`;
     
     let mesLabel = "jun 26";
-    if (selectedSheet === 'May26') mesLabel = "may 26";
-    else if (selectedSheet === 'Abril26') mesLabel = "abr 26";
-    else if (selectedSheet === 'Marz26') mesLabel = "mar 26";
+    if (selectedSheet === 'May/26') mesLabel = "may 26";
+    else if (selectedSheet === 'Abril/26') mesLabel = "abr 26";
+    else if (selectedSheet === 'Marz/26') mesLabel = "mar 26";
     
     tr.innerHTML = `
       <td><span style="color:var(--text2)">Fila ${rowIdx}</span></td>

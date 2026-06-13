@@ -493,6 +493,52 @@
         </tbody>
       </table>
     </div>
+
+    <!-- Nueva sección: Gastos y Adelantos de Empleados -->
+    <div class="section-row" style="margin-top: 32px;">
+      <span class="section-title">Gastos y Adelantos de Empleados</span>
+    </div>
+    
+    <div style="display: flex; flex-direction: row; gap: 24px; flex-wrap: wrap; margin-bottom: 24px;">
+      <!-- Detalle de Adelantos -->
+      <div class="chart-card" style="flex: 1 1 500px; overflow-x: auto;">
+        <div style="margin-bottom: 12px; font-weight: 600; color: var(--text1); font-size: 15px;">Detalle de Adelantos</div>
+        <table class="personal-table" id="table-gastos-empleados-detalle">
+          <thead>
+            <tr>
+              <th>Fila Excel</th>
+              <th>Fecha</th>
+              <th>Empleado</th>
+              <th>Concepto</th>
+              <th>Gasto J</th>
+              <th>Gasto K</th>
+              <th>Total Gasto</th>
+            </tr>
+          </thead>
+          <tbody>
+            <!-- Rellenado dinámicamente -->
+          </tbody>
+        </table>
+      </div>
+      
+      <!-- Resumen por Empleado -->
+      <div class="chart-card" style="flex: 1 1 400px; overflow-x: auto;">
+        <div style="margin-bottom: 12px; font-weight: 600; color: var(--text1); font-size: 15px;">Resumen de Gastos por Empleado</div>
+        <table class="personal-table" id="table-gastos-empleados-resumen">
+          <thead>
+            <tr>
+              <th>Empleado</th>
+              <th>Total Gasto J</th>
+              <th>Total Gasto K</th>
+              <th>Total Acumulado</th>
+            </tr>
+          </thead>
+          <tbody>
+            <!-- Rellenado dinámicamente -->
+          </tbody>
+        </table>
+      </div>
+    </div>
   </div>
 
   <!-- CIERRE JUNIO 2026 -->
@@ -647,6 +693,7 @@ const mesAPestaña = {
 
 let asistenciaEnTiempoReal = {};
 let auditoriaEnTiempoReal = {};
+let gastosEmpleadosTiempoReal = {};
 
 async function fetchMetricaRealTime() {
   const url = `${SHEET_BASE_URL}&sheet=Metrica%20`;
@@ -738,6 +785,7 @@ async function fetchMonthlyDataRealTime(sheetName) {
     const text = await res.text();
     asistenciaEnTiempoReal[sheetName] = parseMonthCSV(text, sheetName);
     auditoriaEnTiempoReal[sheetName] = parseAuditCSV(text, sheetName);
+    gastosEmpleadosTiempoReal[sheetName] = parseEmployeeExpensesCSV(text, sheetName);
     return true;
   } catch (err) {
     console.error(`Error al descargar pestaña '${sheetName}':`, err);
@@ -926,6 +974,149 @@ function parseAuditCSV(csvText, sheetName) {
     }
   });
   return auditoria;
+}
+
+function parseEmployeeExpensesCSV(csvText, sheetName) {
+  const lines = csvText.split('\n');
+  
+  // 1. Obtener la asistencia de personal para este mes
+  const asistencia = {}; // key: dayNum_turno, value: employeeName
+  let currentDayNum = null;
+  let currentTurno = "";
+  
+  const isDayNum = (val) => {
+    const num = parseInt(val);
+    return !isNaN(num) && num >= 1 && num <= 31;
+  };
+  
+  const { month, year } = getMonthYearFromSheet(sheetName);
+  
+  lines.forEach((line) => {
+    const row = parseCSVLine(line);
+    if (row.length === 0) return;
+    
+    const colA = row[0] ? row[0].trim().toLowerCase() : "";
+    const colB = row[1] ? row[1].trim() : "";
+    const colC = row[2] ? row[2].trim().toLowerCase() : "";
+    
+    const isNovedades = colC.includes("novedades del dia") || colC.includes("novedades");
+    const isNewDay = (DIA_MAP_JS[colA] && isDayNum(colB)) || (isNovedades && isDayNum(colB));
+    
+    if (isNewDay) {
+      currentDayNum = parseInt(colB);
+      currentTurno = "";
+      return;
+    }
+    
+    if (colA.includes("turno maña") || colA.includes("primera maña")) {
+      currentTurno = "MAÑANA";
+      return;
+    } else if (colA.includes("turno tarde")) {
+      currentTurno = "TARDE";
+      return;
+    }
+    
+    if (currentDayNum && currentTurno) {
+      const isSobrante = colC.includes("sobrante/faltante") || colC.includes("sobrantede caja") || colC.includes("sobrente de caja");
+      if (isSobrante && row[0]) {
+        const emp = row[0].trim().toUpperCase();
+        if (emp && !["", "nan", "null"].includes(emp.toLowerCase())) {
+          asistencia[currentDayNum + "_" + currentTurno] = emp;
+        }
+      }
+    }
+  });
+  
+  // 2. Buscar las filas de total y aplicar la regla
+  currentDayNum = null;
+  currentDayName = "";
+  currentTurno = "";
+  const expenses = [];
+  
+  lines.forEach((line, idx) => {
+    const row = parseCSVLine(line);
+    if (row.length === 0) return;
+    
+    const colA = row[0] ? row[0].trim().toLowerCase() : "";
+    const colB = row[1] ? row[1].trim() : "";
+    const colC = row[2] ? row[2].trim().toLowerCase() : "";
+    
+    const isNovedades = colC.includes("novedades del dia") || colC.includes("novedades");
+    const isNewDay = (DIA_MAP_JS[colA] && isDayNum(colB)) || (isNovedades && isDayNum(colB));
+    
+    if (isNewDay) {
+      currentDayNum = parseInt(colB);
+      if (DIA_MAP_JS[colA]) {
+        currentDayName = DIA_MAP_JS[colA];
+      } else {
+        const dateObj = new Date(year, month - 1, currentDayNum);
+        currentDayName = DIA_SEMANA_JS[dateObj.getDay()];
+      }
+      currentTurno = "";
+      return;
+    }
+    
+    if (colA.includes("turno maña") || colA.includes("primera maña")) {
+      currentTurno = "MAÑANA";
+      return;
+    } else if (colA.includes("turno tarde")) {
+      currentTurno = "TARDE";
+      return;
+    }
+    
+    if (!currentDayNum || !currentTurno) return;
+    
+    const isTotalTM = colC.includes("venta total tm") || colC.includes("facturacion total tm") || colC.includes("facturación total tm") || colA.includes("venta total tm") || colA.includes("facturacion total tm");
+    const isTotalTT = colC.includes("venta total tt") || colC.includes("facturacion total tt") || colC.includes("facturación total tt") || colA.includes("venta total tt") || colA.includes("facturacion total tt") || colC.includes("gasto total del dia") || colA.includes("gasto total del dia");
+    
+    const isGastoTM = colC.includes("gasto total tm") || colA.includes("gasto total tm") || colC.includes("gasto total del dia") || colA.includes("gasto total del dia") || colC.includes("gastos total tm") || colA.includes("gastos total tm");
+    const isGastoTT = colC.includes("gasto total tt") || colA.includes("gasto total tt") || colC.includes("gastos total tt") || colA.includes("gastos total tt");
+    
+    const isCierreRow = isTotalTM || isTotalTT || isGastoTM || isGastoTT;
+    
+    if (isCierreRow && row.length > 10) {
+      const valJ = row[9];
+      const valK = row[10];
+      const valL = row[11] ? row[11].trim() : "";
+      
+      const gastoJ = cleanCSVNum(valJ);
+      const gastoK = cleanCSVNum(valK);
+      const total = gastoJ + gastoK;
+      
+      if (total > 0) {
+        let empName = "—";
+        if (valL) {
+          const valLLower = valL.toLowerCase();
+          const isMoney = valL.includes('$') || (!isNaN(parseFloat(valL.replace(/\./g,'').replace(',','.'))) && valL.includes(','));
+          const isStockHeader = valLLower.includes("stock") || valLLower.includes("showroom") || valLLower.includes("outlet");
+          const isOmit = ["", "empleado", "nombre", "nan", "null"].includes(valLLower);
+          
+          if (!isMoney && !isStockHeader && !isOmit) {
+            empName = valL.toUpperCase();
+          } else {
+            empName = asistencia[currentDayNum + "_" + currentTurno] || "—";
+          }
+        } else {
+          empName = asistencia[currentDayNum + "_" + currentTurno] || "—";
+        }
+        
+        const dayLabel = `${currentDayName} ${currentDayNum}`;
+        expenses.push([
+          sheetName,
+          idx + 1,
+          dayLabel,
+          currentTurno,
+          (row[2] || row[0] || "").trim(),
+          empName,
+          gastoJ,
+          gastoK,
+          total
+        ]);
+      }
+    }
+  });
+  
+  return expenses;
 }
 
 const monthOrder = [
@@ -1182,8 +1373,8 @@ async function renderPersonal() {
   const sheetName = mesAPestaña[filterMonth];
   
   if (sheetName) {
-    if (!asistenciaEnTiempoReal[sheetName]) {
-      tableBody.innerHTML = '<tr><td colspan="6" style="text-align:center;color:var(--text2)">Cargando asistencia en vivo de Google Sheets...</td></tr>';
+    if (!asistenciaEnTiempoReal[sheetName] || !gastosEmpleadosTiempoReal[sheetName]) {
+      tableBody.innerHTML = '<tr><td colspan="6" style="text-align:center;color:var(--text2)">Cargando asistencia y gastos en vivo de Google Sheets...</td></tr>';
       await fetchMonthlyDataRealTime(sheetName);
     }
   }
@@ -1302,6 +1493,82 @@ async function renderPersonal() {
       <div class="metric"><div class="metric-label">Mayor Presencia</div><div class="metric-value" style="font-size:17px;margin-top:4px;">${topEmployee}</div></div>
       <div class="metric"><div class="metric-label">Personal Activo</div><div class="metric-value">${Object.keys(turnos).length}</div></div>
     `;
+  }
+
+  // ─── RENDERING NUEVAS TABLAS DE GASTOS Y ADELANTOS DE EMPLEADOS ──────────────────
+  const detalleBody = document.querySelector('#table-gastos-empleados-detalle tbody');
+  const resumenBody = document.querySelector('#table-gastos-empleados-resumen tbody');
+  
+  if (detalleBody && resumenBody) {
+    detalleBody.innerHTML = '';
+    resumenBody.innerHTML = '';
+    
+    let expenses = [];
+    
+    if (filterMonth === 'all') {
+      if (typeof DATOS_SINCRONIZADOS !== 'undefined' && DATOS_SINCRONIZADOS.gastos_empleados) {
+        expenses = DATOS_SINCRONIZADOS.gastos_empleados;
+      }
+    } else {
+      if (sheetName && gastosEmpleadosTiempoReal[sheetName]) {
+        expenses = gastosEmpleadosTiempoReal[sheetName];
+      }
+    }
+    
+    if (expenses.length === 0) {
+      detalleBody.innerHTML = '<tr><td colspan="7" style="text-align:center;color:var(--text2)">No hay gastos de empleados en este período.</td></tr>';
+      resumenBody.innerHTML = '<tr><td colspan="4" style="text-align:center;color:var(--text2)">No hay gastos de empleados en este período.</td></tr>';
+    } else {
+      const resumenMap = {};
+      
+      expenses.forEach(x => {
+        // x format: [sheetName, r_idx, day_label, current_turno, concepto, emp_name, gastoJ, gastoK, total]
+        const shName = x[0];
+        const filaExcel = x[1];
+        const fechaLabel = filterMonth === 'all' ? `${x[2]} (${shName})` : x[2];
+        const turno = x[3];
+        const concepto = x[4];
+        const empName = x[5];
+        const gastoJ = x[6];
+        const gastoK = x[7];
+        const total = x[8];
+        
+        const empClean = empName.trim().toUpperCase();
+        if (empClean && empClean !== '—') {
+          if (!resumenMap[empClean]) {
+            resumenMap[empClean] = { J: 0, K: 0, total: 0 };
+          }
+          resumenMap[empClean].J += gastoJ;
+          resumenMap[empClean].K += gastoK;
+          resumenMap[empClean].total += total;
+        }
+        
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+          <td style="color:var(--text2)">#${filaExcel}</td>
+          <td><strong>${fechaLabel} (${turno === 'MAÑANA' ? 'TM' : 'TT'})</strong></td>
+          <td><span class="badge-emp">${empName}</span></td>
+          <td style="font-size:12px;color:var(--text2)">${concepto}</td>
+          <td style="color:var(--text1)">${fmtExact(gastoJ)}</td>
+          <td style="color:var(--text1)">${fmtExact(gastoK)}</td>
+          <td style="color:var(--amber);font-weight:600;">${fmtExact(total)}</td>
+        `;
+        detalleBody.appendChild(tr);
+      });
+      
+      const sortedResumen = Object.entries(resumenMap).sort((a, b) => b[1].total - a[1].total);
+      
+      sortedResumen.forEach(([emp, totals]) => {
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+          <td><span class="badge-emp">${emp}</span></td>
+          <td style="color:var(--text1)">${fmtExact(totals.J)}</td>
+          <td style="color:var(--text1)">${fmtExact(totals.K)}</td>
+          <td style="color:var(--amber);font-weight:700;font-size:14px;">${fmtExact(totals.total)}</td>
+        `;
+        resumenBody.appendChild(tr);
+      });
+    }
   }
 }
 

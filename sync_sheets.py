@@ -247,7 +247,53 @@ MONTH_YEAR_MAP = {
     "Jun26": (2026, 6)
 }
 
+def parse_cierre_junio_auditoria(wb):
+    sheet_name = "Jun26"
+    if sheet_name not in wb.sheetnames:
+        print(f"Advertencia: Hoja '{sheet_name}' no encontrada para auditoría.")
+        return []
+        
+    ws = wb[sheet_name]
+    auditoria = []
+    
+    current_day_num = None
+    current_day_name = ""
+    
+    for idx, row in enumerate(ws.iter_rows(values_only=True), start=1):
+        if not row:
+            continue
+            
+        col_a = row[0]
+        col_b = row[1]
+        col_c = row[2]
+        col_d = row[3]
+        
+        col_a_str = str(col_a).strip().lower() if col_a is not None else ""
+        col_b_str = str(col_b).strip() if col_b is not None else ""
+        col_c_str = str(col_c).strip() if col_c is not None else ""
+        
+        # Detectar día para poder etiquetar la fila
+        if col_a_str in DIA_MAP and is_valid_day_num(col_b):
+            current_day_num = int(float(col_b_str))
+            current_day_name = DIA_MAP[col_a_str]
+            
+        # Filtrar exclusivamente las filas que digan "VENTA TOTAL TM" o "VENTA TOTAL TT" (ignorando espacios iniciales/finales)
+        if "venta total tm" in col_c_str.lower() or "venta total tt" in col_c_str.lower():
+            monto = clean_num(col_d)
+            day_label = f"{current_day_name} {current_day_num}" if current_day_num else "—"
+            # Guardamos: [nro_fila, day_label, concepto (original), monto]
+            auditoria.append([
+                idx,
+                day_label,
+                str(col_c),
+                monto
+            ])
+            
+    print(f"Total de filas de auditoría extraídas de Jun26: {len(auditoria)}")
+    return auditoria
+
 def main():
+
     if not download_sheet():
         print("No se pudo obtener el archivo de Google Sheets. Cancelando sincronización.")
         return
@@ -335,21 +381,7 @@ def main():
     print(f"Total de registros de Showroom consolidados: {len(showroom_data)}")
     
     # 3. Generar la solapa exclusiva de auditoría de turnos para Junio 2026
-    cierre_junio_data = []
-    if (2026, 6) in asistencia_por_mes:
-        junio_asistencia = asistencia_por_mes[(2026, 6)]
-        for d in sorted(junio_asistencia.keys()):
-            # Encontrar el día de la semana para Junio 2026
-            date_obj = datetime.date(2026, 6, d)
-            day_name = DIA_MAP_ES[date_obj.weekday()]
-            label = f"{day_name} {d} jun 26"
-            
-            info = junio_asistencia[d]
-            cierre_junio_data.append([
-                label,
-                info["ventas_tm"],
-                info["ventas_tt"]
-            ])
+    cierre_junio_data = parse_cierre_junio_auditoria(wb)
             
     # Generar el archivo data.js
     timestamp = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")

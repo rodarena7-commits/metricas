@@ -218,9 +218,12 @@ def parse_month_sheet(wb, sheet_name):
     if day_data and day_data["day_num"] is not None:
         daily_records.append(day_data)
         
+    # Extraer el año del final del nombre de la pestaña (ej: 'Mayo25' -> '25')
+    year_code = sheet_name[-2:] if sheet_name[-2:].isdigit() else "26"
+    
     formatted_rows = []
     for r in daily_records:
-        label = f"{r['day_name']} {r['day_num']} {r['month_code']}"
+        label = f"{r['day_name']} {r['day_num']} {r['month_code']} {year_code}"
         ventas = r["ventas_tm"] + r["ventas_tt"]
         gastos = r["gastos_tm"] + r["gastos_tt"]
         ganancias = ventas - gastos

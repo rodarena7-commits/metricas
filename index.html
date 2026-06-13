@@ -501,10 +501,10 @@
       <table class="personal-table" id="table-cierre-junio">
         <thead>
           <tr>
-            <th>Fecha</th>
-            <th>Venta Turno Mañana (TM)</th>
-            <th>Venta Turno Tarde (TT)</th>
-            <th>Venta Total Diaria</th>
+            <th>Fila Excel</th>
+            <th>Día / Bloque</th>
+            <th>Concepto (Columna C)</th>
+            <th>Monto Sincronizado (Columna D)</th>
           </tr>
         </thead>
         <tbody>
@@ -886,16 +886,20 @@ function renderCierreJunio() {
   
   data.forEach(r => {
     const tr = document.createElement('tr');
-    const label = r[0];
-    const tm = parseFloat(r[1]) || 0;
-    const tt = parseFloat(r[2]) || 0;
-    const total = tm + tt;
+    const rowIdx = r[0];      // Nro Fila
+    const dayLabel = r[1];    // lun 1, etc.
+    const concepto = r[2];    // "Venta Total TM" o "Venta Total TT"
+    const monto = parseFloat(r[3]) || 0;
+    
+    // Concepto badge color
+    const isTM = concepto.toLowerCase().includes('tm');
+    const conceptBadge = `<span class="badge-emp" style="border-color: ${isTM ? 'var(--blue)' : 'var(--amber)'}; color: ${isTM ? 'var(--blue)' : 'var(--amber)'}">${concepto}</span>`;
     
     tr.innerHTML = `
-      <td><strong>${label}</strong></td>
-      <td style="color:var(--blue)">${fmt(tm)}</td>
-      <td style="color:var(--amber)">${fmt(tt)}</td>
-      <td style="font-weight:600;color:var(--green)">${fmt(total)}</td>
+      <td><span style="color:var(--text2)">Fila ${rowIdx}</span></td>
+      <td><strong>${dayLabel} jun 26</strong></td>
+      <td>${conceptBadge}</td>
+      <td style="font-weight:600;color:var(--green)">${fmt(monto)}</td>
     `;
     tableBody.appendChild(tr);
   });

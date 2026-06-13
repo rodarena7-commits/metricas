@@ -196,9 +196,9 @@ def parse_month_sheet(wb, sheet_name):
             
         # 3. Detectar Cierres / Totales de Ventas y Gastos
         if current_turno == "MAÑANA":
-            if "venta total tm" in col_c or "venta total tm" in col_a:
+            if any(x in col_c or x in col_a for x in ["venta total tm", "facturacion total tm", "facturación total tm"]):
                 day_data["ventas_tm"] = clean_num(col_d)
-            elif "gastos total tm" in col_c or "gastos total tm" in col_a:
+            elif any(x in col_c or x in col_a for x in ["gastos total tm", "gasto total tm"]):
                 day_data["gastos_tm"] = clean_num(col_d)
             elif "sobrente de caja" in col_c or "sobrantede caja" in col_c or "sobrante/faltante" in col_c:
                 emp = str(row[0]).strip() if row[0] is not None else ""
@@ -206,9 +206,9 @@ def parse_month_sheet(wb, sheet_name):
                     day_data["empleado_tm"] = emp.upper()
                     
         elif current_turno == "TARDE":
-            if "venta total tt" in col_c or "venta total tm" in col_c or "venta total tt" in col_a or "venta total tm" in col_a:
+            if any(x in col_c or x in col_a for x in ["venta total tt", "facturacion total tt", "facturación total tt", "venta total tm", "facturacion total tm"]):
                 day_data["ventas_tt"] = clean_num(col_d)
-            elif "gastos total tm" in col_c or "gastos total tm" in col_a or "gastos total tt" in col_c:
+            elif any(x in col_c or x in col_a for x in ["gastos total tm", "gastos total tt", "gasto total tm", "gastos total del dia", "gastos total del día", "gasto total del dia"]):
                 day_data["gastos_tt"] = clean_num(col_d)
             elif "sobrante/faltante" in col_c or "sobrantede caja" in col_c:
                 emp = str(row[0]).strip() if row[0] is not None else ""

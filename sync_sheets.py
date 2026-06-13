@@ -221,7 +221,12 @@ def parse_month_sheet(wb, sheet_name):
         
     asistencia = {}
     for r in daily_records:
-        asistencia[r["day_num"]] = (r["empleado_tm"] or "—", r["empleado_tt"] or "—")
+        asistencia[r["day_num"]] = {
+            "empleado_tm": r["empleado_tm"] or "—",
+            "empleado_tt": r["empleado_tt"] or "—",
+            "ventas_tm": r["ventas_tm"],
+            "ventas_tt": r["ventas_tt"]
+        }
         
     return asistencia
 
@@ -309,7 +314,8 @@ def main():
             if (y, m) in asistencia_por_mes:
                 month_asistencia = asistencia_por_mes[(y, m)]
                 if d in month_asistencia:
-                    emp_tm, emp_tt = month_asistencia[d]
+                    emp_tm = month_asistencia[d]["empleado_tm"]
+                    emp_tt = month_asistencia[d]["empleado_tt"]
                     
             # Formatear el label con el año
             day_name = DIA_MAP_ES[date_obj.weekday()]
@@ -328,6 +334,23 @@ def main():
             
     print(f"Total de registros de Showroom consolidados: {len(showroom_data)}")
     
+    # 3. Generar la solapa exclusiva de auditoría de turnos para Junio 2026
+    cierre_junio_data = []
+    if (2026, 6) in asistencia_por_mes:
+        junio_asistencia = asistencia_por_mes[(2026, 6)]
+        for d in sorted(junio_asistencia.keys()):
+            # Encontrar el día de la semana para Junio 2026
+            date_obj = datetime.date(2026, 6, d)
+            day_name = DIA_MAP_ES[date_obj.weekday()]
+            label = f"{day_name} {d} jun 26"
+            
+            info = junio_asistencia[d]
+            cierre_junio_data.append([
+                label,
+                info["ventas_tm"],
+                info["ventas_tt"]
+            ])
+            
     # Generar el archivo data.js
     timestamp = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
     
@@ -337,7 +360,8 @@ def main():
 const DATOS_SINCRONIZADOS = {{
   ultima_actualizacion: "{timestamp}",
   showroom: {json.dumps(showroom_data)},
-  outlet: {json.dumps(OUTLET_HISTORIC_DATA)}
+  outlet: {json.dumps(OUTLET_HISTORIC_DATA)},
+  cierre_junio_2026: {json.dumps(cierre_junio_data)}
 }};
 """
     

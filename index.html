@@ -388,6 +388,7 @@
       <button class="tab-btn" data-tab="ganancias">Ganancias</button>
       <button class="tab-btn" data-tab="comparativo">Comparativo anual</button>
       <button class="tab-btn" data-tab="personal" id="tab-btn-personal">Empleados</button>
+      <button class="tab-btn" data-tab="cierre-junio" id="tab-btn-cierre-junio">Cierre Jun/26</button>
     </div>
   </div>
  
@@ -482,6 +483,28 @@
             <th>Ventas</th>
             <th>Gastos</th>
             <th>Ganancias</th>
+          </tr>
+        </thead>
+        <tbody>
+          <!-- Rellenado dinámicamente -->
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- CIERRE JUNIO 2026 -->
+  <div id="tab-cierre-junio" class="panel">
+    <div class="section-row">
+      <span class="section-title">Auditoría de Turnos — Junio 2026 (Exclusivo Showroom)</span>
+    </div>
+    <div class="chart-card" style="overflow-x: auto;">
+      <table class="personal-table" id="table-cierre-junio">
+        <thead>
+          <tr>
+            <th>Fecha</th>
+            <th>Venta Turno Mañana (TM)</th>
+            <th>Venta Turno Tarde (TT)</th>
+            <th>Venta Total Diaria</th>
           </tr>
         </thead>
         <tbody>
@@ -847,22 +870,54 @@ function renderPersonal() {
     `;
   }
 }
+
+// ─── RENDERING CIERRE JUNIO 2026 ──────────────────────────────────────────────
+function renderCierreJunio() {
+  const tableBody = document.querySelector('#table-cierre-junio tbody');
+  if (!tableBody) return;
+  
+  const data = typeof DATOS_SINCRONIZADOS !== 'undefined' ? (DATOS_SINCRONIZADOS.cierre_junio_2026 || []) : [];
+  tableBody.innerHTML = '';
+  
+  if (data.length === 0) {
+    tableBody.innerHTML = '<tr><td colspan="4" style="text-align:center;color:var(--text2)">No hay datos de turnos disponibles para Junio 2026.</td></tr>';
+    return;
+  }
+  
+  data.forEach(r => {
+    const tr = document.createElement('tr');
+    const label = r[0];
+    const tm = parseFloat(r[1]) || 0;
+    const tt = parseFloat(r[2]) || 0;
+    const total = tm + tt;
+    
+    tr.innerHTML = `
+      <td><strong>${label}</strong></td>
+      <td style="color:var(--blue)">${fmt(tm)}</td>
+      <td style="color:var(--amber)">${fmt(tt)}</td>
+      <td style="font-weight:600;color:var(--green)">${fmt(total)}</td>
+    `;
+    tableBody.appendChild(tr);
+  });
+}
  
 function buildAll() {
   populateSelects();
   
-  // Mostrar u ocultar pestaña de personal según la tienda (solo Showroom tiene personal en este sheet)
+  // Mostrar u ocultar pestaña de personal y cierre de junio según la tienda (solo Showroom tiene personal/turnos en este sheet)
   const tabBtnPersonal = document.getElementById('tab-btn-personal');
-  if (tabBtnPersonal) {
-    if (currentStore === 'showroom') {
-      tabBtnPersonal.style.display = 'block';
-    } else {
-      tabBtnPersonal.style.display = 'none';
-      // Si la pestaña actual era personal, volver a ventas
-      const activeTab = document.querySelector('.tab-btn.active');
-      if (activeTab && activeTab.dataset.tab === 'personal') {
-        document.querySelector('.tab-btn[data-tab="ventas"]').click();
-      }
+  const tabBtnCierreJunio = document.getElementById('tab-btn-cierre-junio');
+  
+  if (currentStore === 'showroom') {
+    if (tabBtnPersonal) tabBtnPersonal.style.display = 'block';
+    if (tabBtnCierreJunio) tabBtnCierreJunio.style.display = 'block';
+  } else {
+    if (tabBtnPersonal) tabBtnPersonal.style.display = 'none';
+    if (tabBtnCierreJunio) tabBtnCierreJunio.style.display = 'none';
+    // Si la pestaña actual era personal o cierre-junio, volver a ventas
+    const activeTab = document.querySelector('.tab-btn.active');
+    if (activeTab && (activeTab.dataset.tab === 'personal' || activeTab.dataset.tab === 'cierre-junio')) {
+      document.querySelector('.tab-btn[data-tab="ventas"]').click();
     }
   }
 
@@ -886,6 +941,7 @@ function buildAll() {
   
   if (currentStore === 'showroom') {
     renderPersonal();
+    renderCierreJunio();
   }
 }
  
@@ -899,6 +955,8 @@ document.getElementById('main-tabs').addEventListener('click', e => {
   document.getElementById('tab-' + tab).classList.add('active');
   if (tab === 'personal') {
     renderPersonal();
+  } else if (tab === 'cierre-junio') {
+    renderCierreJunio();
   }
 });
  

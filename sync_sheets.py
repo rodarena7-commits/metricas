@@ -219,30 +219,28 @@ def parse_month_sheet(wb, sheet_name):
     if day_data and day_data["day_num"] is not None:
         daily_records.append(day_data)
         
-    # Extraer el año del final del nombre de la pestaña (ej: 'Mayo25' -> '25')
-    year_code = sheet_name[-2:] if sheet_name[-2:].isdigit() else "26"
-    
-    formatted_rows = []
+    asistencia = {}
     for r in daily_records:
-        label = f"{r['day_name']} {r['day_num']} {r['month_code']} {year_code}"
-        ventas = r["ventas_tm"] + r["ventas_tt"]
-        gastos = r["gastos_tm"] + r["gastos_tt"]
-        ganancias = ventas - gastos
+        asistencia[r["day_num"]] = (r["empleado_tm"] or "—", r["empleado_tt"] or "—")
         
-        # Filtro: si ventas y gastos son cero, saltamos el registro (salvo para el mes en curso)
-        if ventas == 0 and gastos == 0 and sheet_name != "Jun26":
-            continue
-            
-        formatted_rows.append([
-            label,
-            ventas,
-            gastos,
-            ganancias,
-            r["empleado_tm"] or "—",
-            r["empleado_tt"] or "—"
-        ])
-        
-    return formatted_rows
+    return asistencia
+
+MONTH_YEAR_MAP = {
+    "Mayo25": (2025, 5),
+    "JUN25": (2025, 6),
+    "JUL25": (2025, 7),
+    "Agos25": (2025, 8),
+    "SEP25": (2025, 9),
+    "Oct25": (2025, 10),
+    "Nov25": (2025, 11),
+    "Dic25": (2025, 12),
+    "Ene26": (2026, 1),
+    "Feb26": (2026, 2),
+    "Marz26": (2026, 3),
+    "Abril26": (2026, 4),
+    "May26": (2026, 5),
+    "Jun26": (2026, 6)
+}
 
 def main():
     if not download_sheet():
@@ -251,16 +249,84 @@ def main():
         
     wb = openpyxl.load_workbook(LOCAL_XLSX_PATH, data_only=True)
     
+    # 1. Obtener la asistencia de personal de todas las pestañas mensuales
+    asistencia_por_mes = {}
+    print("Procesando asistencia de personal en pestañas mensuales...")
+    for month_sheet in MONTH_ORDER:
+        print(f"Procesando asistencia de {month_sheet}...")
+        asistencia = parse_month_sheet(wb, month_sheet)
+        if month_sheet in MONTH_YEAR_MAP:
+            key = MONTH_YEAR_MAP[month_sheet]
+            asistencia_por_mes[key] = asistencia
+            
+    # 2. Leer los datos financieros oficiales de la pestaña consolidada "Metrica "
+    sheet_metrica_name = None
+    for name in wb.sheetnames:
+        if "metrica" in name.lower():
+            sheet_metrica_name = name
+            break
+            
+    if not sheet_metrica_name:
+        print("Error: No se encontró la hoja consolidada de métricas. Cancelando.")
+        return
+        
+    print(f"Leyendo datos financieros consolidados de la hoja '{sheet_metrica_name}'...")
+    sheet_metrica = wb[sheet_metrica_name]
+    rows_metrica = list(sheet_metrica.iter_rows(values_only=True))
+    
     showroom_data = []
     
-    print("Procesando pestañas mensuales...")
-    for month_sheet in MONTH_ORDER:
-        print(f"Procesando {month_sheet}...")
-        sheet_rows = parse_month_sheet(wb, month_sheet)
-        showroom_data.extend(sheet_rows)
-        print(f"Cargados {len(sheet_rows)} días.")
+    DIA_MAP_ES = {0: "lun", 1: "mar", 2: "mie", 3: "jue", 4: "vie", 5: "sab", 6: "dom"}
+    MES_MAP_ES = {
+        1: "ene", 2: "feb", 3: "mar", 4: "abr", 5: "may", 6: "jun",
+        7: "jul", 8: "ago", 9: "sep", 10: "oct", 11: "nov", 12: "dic"
+    }
+    
+    for idx, r in enumerate(rows_metrica[1:], start=2):
+        col0 = r[0] # Fecha
+        col2 = r[2] # VENTAS X DIA
+        col5 = r[5] # GASTOS X DIA
+        col8 = r[8] # GANANCIA x DIA
         
-    print(f"Total de registros de Showroom procesados: {len(showroom_data)}")
+        if isinstance(col0, (datetime.datetime, datetime.date)):
+            if isinstance(col0, datetime.date) and not isinstance(col0, datetime.datetime):
+                date_obj = datetime.datetime.combine(col0, datetime.datetime.min.time())
+            else:
+                date_obj = col0
+                
+            ventas = clean_num(col2)
+            gastos = clean_num(col5)
+            ganancias = clean_num(col8)
+            
+            # Omitir si ventas y gastos son cero
+            if ventas == 0 and gastos == 0:
+                continue
+                
+            y, m, d = date_obj.year, date_obj.month, date_obj.day
+            
+            # Buscar empleados de TM y TT correspondientes a esta fecha
+            emp_tm, emp_tt = "—", "—"
+            if (y, m) in asistencia_por_mes:
+                month_asistencia = asistencia_por_mes[(y, m)]
+                if d in month_asistencia:
+                    emp_tm, emp_tt = month_asistencia[d]
+                    
+            # Formatear el label con el año
+            day_name = DIA_MAP_ES[date_obj.weekday()]
+            month_code = MES_MAP_ES[m]
+            year_code = str(y)[-2:]
+            label = f"{day_name} {d} {month_code} {year_code}"
+            
+            showroom_data.append([
+                label,
+                ventas,
+                gastos,
+                ganancias,
+                emp_tm,
+                emp_tt
+            ])
+            
+    print(f"Total de registros de Showroom consolidados: {len(showroom_data)}")
     
     # Generar el archivo data.js
     timestamp = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")

@@ -722,7 +722,16 @@
 let manualCorrections = {};
 
 function initManualCorrections() {
-  const saved = localStorage.getItem("METRICA_MANUAL_CORRECTIONS");
+  let saved = localStorage.getItem("AJUSTES_MANUAL_CORRECTIONS");
+  if (!saved) {
+    // Migrar desde el nombre antiguo si existe
+    saved = localStorage.getItem("METRICA_MANUAL_CORRECTIONS");
+    if (saved) {
+      localStorage.setItem("AJUSTES_MANUAL_CORRECTIONS", saved);
+      localStorage.removeItem("METRICA_MANUAL_CORRECTIONS");
+    }
+  }
+  
   if (saved) {
     manualCorrections = JSON.parse(saved);
   } else {
@@ -736,7 +745,7 @@ function initManualCorrections() {
       "2025-08-12": { "gastos": 120876.60 },
       "2025-08-30": { "ventas": 95719.30 }
     };
-    localStorage.setItem("METRICA_MANUAL_CORRECTIONS", JSON.stringify(manualCorrections));
+    localStorage.setItem("AJUSTES_MANUAL_CORRECTIONS", JSON.stringify(manualCorrections));
   }
 }
 
@@ -788,7 +797,7 @@ function deleteAjuste(dateKey, field) {
     if (Object.keys(manualCorrections[dateKey]).length === 0) {
       delete manualCorrections[dateKey];
     }
-    localStorage.setItem("METRICA_MANUAL_CORRECTIONS", JSON.stringify(manualCorrections));
+    localStorage.setItem("AJUSTES_MANUAL_CORRECTIONS", JSON.stringify(manualCorrections));
     renderAjustes();
     buildAll();
   }
@@ -813,7 +822,7 @@ function initAjustesForm() {
     
     manualCorrections[fecha][campo] = valor;
     
-    localStorage.setItem("METRICA_MANUAL_CORRECTIONS", JSON.stringify(manualCorrections));
+    localStorage.setItem("AJUSTES_MANUAL_CORRECTIONS", JSON.stringify(manualCorrections));
     form.reset();
     renderAjustes();
     buildAll();
@@ -828,7 +837,7 @@ function initAjustesForm() {
       const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(manualCorrections, null, 2));
       const downloadAnchor = document.createElement('a');
       downloadAnchor.setAttribute("href", dataStr);
-      downloadAnchor.setAttribute("download", "correcciones_metrica.json");
+      downloadAnchor.setAttribute("download", "correcciones_ajustes.json");
       document.body.appendChild(downloadAnchor);
       downloadAnchor.click();
       downloadAnchor.remove();
@@ -846,7 +855,7 @@ function initAjustesForm() {
           const parsed = JSON.parse(evt.target.result);
           if (parsed && typeof parsed === 'object') {
             manualCorrections = parsed;
-            localStorage.setItem("METRICA_MANUAL_CORRECTIONS", JSON.stringify(manualCorrections));
+            localStorage.setItem("AJUSTES_MANUAL_CORRECTIONS", JSON.stringify(manualCorrections));
             renderAjustes();
             buildAll();
             alert("Correcciones importadas con éxito.");
@@ -933,88 +942,6 @@ const mesAPestaña = {
 let asistenciaEnTiempoReal = {};
 let auditoriaEnTiempoReal = {};
 let gastosEmpleadosTiempoReal = {};
-
-async function fetchMetricaRealTime() {
-  const url = `${SHEET_BASE_URL}&sheet=Metrica%20`;
-  try {
-    const res = await fetch(url);
-    if (!res.ok) throw new Error("Status " + res.status);
-    const text = await res.text();
-    const lines = text.split('\n');
-    
-    const newShowroomData = [];
-    let currentYear = 2025;
-    let lastMonthNum = 5; 
-    
-    for (let i = 1; i < lines.length; i++) {
-      const row = parseCSVLine(lines[i]);
-      if (row.length < 9) continue;
-      
-      const col0 = row[0] ? row[0].trim() : ""; 
-      const col2 = row[2]; 
-      const col5 = row[5]; 
-      const col8 = row[8]; 
-      
-      const strDate = col0.toLowerCase();
-      const match = strDate.match(/(?:,\s*|\s+)(\d+)\s+de\s+(\w+)/);
-      if (match) {
-        const day = parseInt(match[1]);
-        const monthName = match[2].trim();
-        const monthNum = MES_NUM_JS[monthName];
-        
-        if (monthNum) {
-          if (monthNum < lastMonthNum && lastMonthNum === 12) {
-            currentYear++;
-          }
-          lastMonthNum = monthNum;
-          
-          const ventas = cleanCSVNum(col2);
-          const gastos = cleanCSVNum(col5);
-          const ganancias = cleanCSVNum(col8);
-          
-          if (ventas === 0 && gastos === 0) continue;
-          
-          const dateObj = new Date(currentYear, monthNum - 1, day);
-          const dayName = DIA_SEMANA_JS[dateObj.getDay()];
-          const monthCode = MES_CODE_JS[monthNum];
-          const yearCode = currentYear.toString().slice(-2);
-          const label = `${dayName} ${day} ${monthCode} ${yearCode}`;
-          
-          let emp_tm = "—";
-          let emp_tt = "—";
-          if (typeof DATOS_SINCRONIZADOS !== 'undefined' && DATOS_SINCRONIZADOS.showroom) {
-            const localMatch = DATOS_SINCRONIZADOS.showroom.find(r => r[0] === label);
-            if (localMatch) {
-              emp_tm = localMatch[4] || "—";
-              emp_tt = localMatch[5] || "—";
-            }
-          }
-          
-          newShowroomData.push([
-            label,
-            ventas,
-            gastos,
-            ganancias,
-            emp_tm,
-            emp_tt
-          ]);
-        }
-      }
-    }
-    
-    if (newShowroomData.length > 0) {
-      DATOS_SINCRONIZADOS.showroom = newShowroomData;
-      console.log("Datos consolidados actualizados en vivo:", newShowroomData.length);
-      const txtUpdate = document.getElementById('txt-actualizacion');
-      if (txtUpdate) {
-        txtUpdate.innerHTML = `Sincronizado en tiempo real <span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:var(--green);margin-left:4px;box-shadow:0 0 8px var(--green)"></span>`;
-      }
-      buildAll();
-    }
-  } catch (err) {
-    console.error("Error al descargar Metrica en vivo:", err);
-  }
-}
 
 async function fetchMonthlyDataRealTime(sheetName) {
   const url = `${SHEET_BASE_URL}&sheet=${encodeURIComponent(sheetName)}`;

@@ -246,6 +246,30 @@ MONTH_YEAR_MAP = {
     "Jun26": (2026, 6)
 }
 
+# Correcciones específicas para montos con ceros de más (typos en planillas mensuales)
+FINANCIAL_CORRECTIONS = {
+    (2025, 6, 21): {
+        "ventas_tt": 52447.95,
+        "gastos_tt": 92350.0
+    },
+    (2025, 7, 3): {
+        "ventas_tm": 44979.59
+    },
+    (2025, 7, 8): {
+        "ventas_tm": 266737.60
+    },
+    (2025, 7, 17): {
+        "ventas_tm": 36275.18
+    },
+    (2025, 7, 18): {
+        "ventas_tm": 81775.22
+    },
+    (2025, 7, 26): {
+        "ventas_tm": 21280.00,
+        "ventas_tt": 30907.47
+    }
+}
+
 def parse_cierre_auditoria(wb, sheet_name):
     if sheet_name not in wb.sheetnames:
         print(f"Advertencia: Hoja '{sheet_name}' no encontrada para auditoría.")
@@ -525,6 +549,13 @@ def compile_showroom_data_from_months(wb):
         y, m = MONTH_YEAR_MAP[month_sheet]
         for r in daily_records:
             d = r["day_num"]
+            
+            # Aplicar correcciones específicas si existen para esta fecha
+            fecha_key = (y, m, d)
+            if fecha_key in FINANCIAL_CORRECTIONS:
+                for campo, valor in FINANCIAL_CORRECTIONS[fecha_key].items():
+                    r[campo] = valor
+            
             ventas = r["ventas_tm"] + r["ventas_tt"]
             gastos = r["gastos_tm"] + r["gastos_tt"]
             ganancias = ventas - gastos

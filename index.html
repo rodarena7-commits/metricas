@@ -808,6 +808,27 @@ async function fetchMonthlyDataRealTime(sheetName) {
     asistenciaEnTiempoReal[sheetName] = parseMonthCSV(text, sheetName);
     auditoriaEnTiempoReal[sheetName] = parseAuditCSV(text, sheetName);
     gastosEmpleadosTiempoReal[sheetName] = parseEmployeeExpensesCSV(text, sheetName);
+    
+    // Obtener y actualizar en tiempo real los datos financieros desde el balance de la pestaña mensual
+    const financials = parseFinancialsFromMonthlyCSV(text, sheetName);
+    if (financials.length > 0 && typeof DATOS_SINCRONIZADOS !== 'undefined' && DATOS_SINCRONIZADOS.showroom) {
+      const { month, year } = getMonthYearFromSheet(sheetName);
+      const monthCode = MES_CODE_JS[month];
+      const yearCode = year.toString().slice(-2);
+      
+      // Remover datos antiguos del showroom para este mes
+      DATOS_SINCRONIZADOS.showroom = DATOS_SINCRONIZADOS.showroom.filter(r => {
+        const parts = r[0].split(' ');
+        if (parts.length >= 4) {
+          return !(parts[2] === monthCode && parts[3] === yearCode);
+        }
+        return true;
+      });
+      
+      // Insertar los registros financieros reales
+      DATOS_SINCRONIZADOS.showroom.push(...financials);
+    }
+    
     return true;
   } catch (err) {
     console.error(`Error al descargar pestaña '${sheetName}':`, err);
@@ -1137,6 +1158,127 @@ function parseEmployeeExpensesCSV(csvText, sheetName) {
   });
   
   return expenses;
+}
+
+function parseFinancialsFromMonthlyCSV(csvText, sheetName) {
+  const lines = csvText.split('\n');
+  const dailyRecords = [];
+  
+  let currentDayNum = null;
+  let currentDayName = "";
+  let currentTurno = "";
+  let dayData = null;
+  
+  const isDayNum = (val) => {
+    const num = parseInt(val);
+    return !isNaN(num) && num >= 1 && num <= 31;
+  };
+  
+  const { month, year } = getMonthYearFromSheet(sheetName);
+  
+  lines.forEach((line) => {
+    const row = parseCSVLine(line);
+    if (row.length === 0) return;
+    
+    const colA = row[0] ? row[0].trim().toLowerCase() : "";
+    const colB = row[1] ? row[1].trim() : "";
+    const colC = row[2] ? row[2].trim().toLowerCase() : "";
+    const colD = row[3] ? row[3].trim() : "";
+    
+    const isNovedades = colC.includes("novedades del dia") || colC.includes("novedades");
+    const isNewDay = (DIA_MAP_JS[colA] && isDayNum(colB)) || (isNovedades && isDayNum(colB));
+    
+    if (isNewDay) {
+      if (dayData && dayData.dayNum !== null) {
+        dailyRecords.push(dayData);
+      }
+      currentDayNum = parseInt(colB);
+      if (DIA_MAP_JS[colA]) {
+        currentDayName = DIA_MAP_JS[colA];
+      } else {
+        const dateObj = new Date(year, month - 1, currentDayNum);
+        currentDayName = DIA_SEMANA_JS[dateObj.getDay()];
+      }
+      currentTurno = "";
+      
+      dayData = {
+        dayNum: currentDayNum,
+        dayName: currentDayName,
+        ventas_tm: 0,
+        gastos_tm: 0,
+        ventas_tt: 0,
+        gastos_tt: 0
+      };
+      return;
+    }
+    
+    if (dayData === null) return;
+    
+    if (colA.includes("turno maña") || colA.includes("primera maña")) {
+      currentTurno = "MAÑANA";
+      return;
+    } else if (colA.includes("turno tarde")) {
+      currentTurno = "TARDE";
+      return;
+    }
+    
+    if (currentTurno === "MAÑANA") {
+      const isVentaTM = colC.includes("venta total tm") || colC.includes("facturacion total tm") || colC.includes("facturación total tm") || colA.includes("venta total tm") || colA.includes("facturacion total tm");
+      const isGastoTM = colC.includes("gasto total tm") || colA.includes("gasto total tm") || colC.includes("gastos total tm") || colA.includes("gastos total tm");
+      if (isVentaTM) {
+        dayData.ventas_tm = cleanCSVNum(colD);
+      } else if (isGastoTM) {
+        dayData.gastos_tm = cleanCSVNum(colD);
+      }
+    } else if (currentTurno === "TARDE") {
+      const isVentaTT = colC.includes("venta total tt") || colC.includes("facturacion total tt") || colC.includes("facturación total tt") || colA.includes("venta total tt") || colA.includes("facturacion total tt") || colC.includes("venta total tm") || colA.includes("venta total tm");
+      const isGastoTT = colC.includes("gasto total tt") || colA.includes("gasto total tt") || colC.includes("gastos total tt") || colA.includes("gastos total tt") || colC.includes("gasto total del dia") || colA.includes("gasto total del dia") || colC.includes("gastos total del dia") || colA.includes("gastos total del dia");
+      if (isVentaTT) {
+        dayData.ventas_tt = cleanCSVNum(colD);
+      } else if (isGastoTT) {
+        dayData.gastos_tt = cleanCSVNum(colD);
+      }
+    }
+  });
+  
+  if (dayData && dayData.dayNum !== null) {
+    dailyRecords.push(dayData);
+  }
+  
+  const monthCode = MES_CODE_JS[month];
+  const yearCode = year.toString().slice(-2);
+  const formatted = [];
+  
+  dailyRecords.forEach(r => {
+    const ventas = r.ventas_tm + r.ventas_tt;
+    const gastos = r.gastos_tm + r.gastos_tt;
+    const ganancias = ventas - gastos;
+    
+    if (ventas === 0 && gastos === 0) return;
+    
+    const label = `${r.dayName} ${r.dayNum} ${monthCode} ${yearCode}`;
+    
+    let emp_tm = "—";
+    let emp_tt = "—";
+    if (typeof DATOS_SINCRONIZADOS !== 'undefined' && DATOS_SINCRONIZADOS.showroom) {
+      const localMatch = DATOS_SINCRONIZADOS.showroom.find(x => x[0] === label);
+      if (localMatch) {
+        emp_tm = localMatch[4] || "—";
+        emp_tt = localMatch[5] || "—";
+      }
+    }
+    
+    formatted.push([
+      label,
+      ventas,
+      gastos,
+      ganancias,
+      emp_tm,
+      emp_tt
+    ]);
+  });
+  
+  return formatted;
 }
 
 const monthOrder = [
@@ -1888,8 +2030,14 @@ document.getElementById('store-tabs').addEventListener('click', e => {
 });
  
 ['ventas','gastos','ganancias'].forEach(field => {
-  document.getElementById('sel-' + field + '-mes').addEventListener('change', e => {
+  document.getElementById('sel-' + field + '-mes').addEventListener('change', async e => {
     const val = e.target.value;
+    const sheetName = mesAPestaña[val];
+    if (sheetName) {
+      if (!asistenciaEnTiempoReal[sheetName] || !gastosEmpleadosTiempoReal[sheetName]) {
+        await fetchMonthlyDataRealTime(sheetName);
+      }
+    }
     setMetrics('metrics-' + field, field, val);
     buildDailyChart('chart-' + field + '-dia', field, COLORS[field], val);
     buildWeeklyChart('chart-' + field + '-sem', field, COLORS[field], val);
@@ -1942,9 +2090,6 @@ window.addEventListener('DOMContentLoaded', () => {
     txtUpdate.textContent = `Sincronizado: ${DATOS_SINCRONIZADOS.ultima_actualizacion || '—'}`;
   }
   buildAll();
-  
-  // Iniciar sincronización de datos en tiempo real de Google Sheets
-  fetchMetricaRealTime();
 });
 </script>
 </body>

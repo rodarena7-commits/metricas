@@ -961,9 +961,7 @@ function parseAuditCSV(csvText, sheetName) {
                          colC.includes("gasto total tm") || colC.includes("gasto total tt") || 
                          colC.includes("gastos total del dia") || colC.includes("gasto total del dia") ||
                          colC.includes("gastos total del día") || colC.includes("gasto total del día") ||
-                         colC.includes("gastos total tm ") || colC.includes("gastos total tt ") ||
-                         colC.includes("gasto caja") || colC.includes("gastos caja") ||
-                         colC.includes("cierre - gastos caja") || colC.includes("ciere - gastos caja");
+                         colC.includes("gastos total tm ") || colC.includes("gastos total tt ");
     if (isVentaTotal || isGastoTotal) {
       const monto = cleanCSVNum(colD);
       const dayLabel = currentDayNum ? `${currentDayName} ${currentDayNum}` : "—";

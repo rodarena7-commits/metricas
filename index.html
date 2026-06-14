@@ -1250,8 +1250,34 @@ function parseFinancialsFromMonthlyCSV(csvText, sheetName) {
   const formatted = [];
   
   dailyRecords.forEach(r => {
-    const ventas = r.ventas_tm + r.ventas_tt;
-    const gastos = r.gastos_tm + r.gastos_tt;
+    let v_tm = r.ventas_tm;
+    let v_tt = r.ventas_tt;
+    let g_tm = r.gastos_tm;
+    let g_tt = r.gastos_tt;
+    
+    // Aplicar correcciones específicas para el 2025
+    if (year === 2025) {
+      if (month === 6 && r.dayNum === 21) {
+        v_tt = 52447.95;
+        g_tt = 92350.0;
+      } else if (month === 7) {
+        if (r.dayNum === 3) {
+          v_tm = 44979.59;
+        } else if (r.dayNum === 8) {
+          v_tm = 266737.60;
+        } else if (r.dayNum === 17) {
+          v_tm = 36275.18;
+        } else if (r.dayNum === 18) {
+          v_tm = 81775.22;
+        } else if (r.dayNum === 26) {
+          v_tm = 21280.00;
+          v_tt = 30907.47;
+        }
+      }
+    }
+    
+    const ventas = v_tm + v_tt;
+    const gastos = g_tm + g_tt;
     const ganancias = ventas - gastos;
     
     if (ventas === 0 && gastos === 0) return;

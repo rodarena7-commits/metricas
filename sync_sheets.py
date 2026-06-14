@@ -429,6 +429,135 @@ def parse_employee_expenses(wb, sheet_name):
                 
     return expenses
 
+def compile_showroom_data_from_months(wb):
+    showroom_data = []
+    
+    DIA_MAP_ES = {0: "lun", 1: "mar", 2: "mie", 3: "jue", 4: "vie", 5: "sab", 6: "dom"}
+    MES_MAP_ES = {
+        1: "ene", 2: "feb", 3: "mar", 4: "abr", 5: "may", 6: "jun",
+        7: "jul", 8: "ago", 9: "sep", 10: "oct", 11: "nov", 12: "dic"
+    }
+    
+    for month_sheet in MONTH_ORDER:
+        if month_sheet not in wb.sheetnames:
+            continue
+        sheet = wb[month_sheet]
+        rows = list(sheet.iter_rows(values_only=True))
+        
+        daily_records = []
+        current_day_num = None
+        current_day_name = ""
+        current_turno = ""
+        day_data = None
+        
+        for idx, row in enumerate(rows):
+            if not row:
+                continue
+                
+            col_a = str(row[0]).strip().lower() if row[0] is not None else ""
+            col_b = row[1]
+            col_c = str(row[2]).strip().lower() if row[2] is not None else ""
+            col_d = row[3]
+            
+            # Detectar cambio de día
+            is_novedades = "novedades del dia" in col_c or "novedades" in col_c
+            is_new_day = (col_a in DIA_MAP and is_valid_day_num(col_b)) or (is_novedades and is_valid_day_num(col_b))
+            
+            if is_new_day:
+                if day_data and day_data["day_num"] is not None:
+                    daily_records.append(day_data)
+                    
+                try:
+                    current_day_num = int(float(str(col_b).strip()))
+                except:
+                    current_day_num = None
+                current_day_name = DIA_MAP.get(col_a, "—")
+                current_turno = ""
+                
+                day_data = {
+                    "day_num": current_day_num,
+                    "day_name": current_day_name,
+                    "ventas_tm": 0,
+                    "gastos_tm": 0,
+                    "empleado_tm": None,
+                    "ventas_tt": 0,
+                    "gastos_tt": 0,
+                    "empleado_tt": None
+                }
+                continue
+                
+            if day_data is None:
+                continue
+                
+            # Detectar Turno
+            if "turno maña" in col_a or "primera maña" in col_a:
+                current_turno = "MA\u00d1ANA"
+                continue
+            elif "turno tarde" in col_a:
+                current_turno = "TARDE"
+                continue
+                
+            # Detectar Cierres / Totales de Ventas y Gastos
+            if current_turno == "MA\u00d1ANA":
+                if any(x in col_c or x in col_a for x in ["venta total tm", "facturacion total tm", "facturación total tm"]):
+                    day_data["ventas_tm"] = clean_num(col_d)
+                elif any(x in col_c or x in col_a for x in ["gastos total tm", "gasto total tm"]):
+                    day_data["gastos_tm"] = clean_num(col_d)
+                elif "sobrente de caja" in col_c or "sobrantede caja" in col_c or "sobrante/faltante" in col_c:
+                    emp = str(row[0]).strip() if row[0] is not None else ""
+                    if emp and emp.lower() not in ["", "nan", "null"]:
+                        day_data["empleado_tm"] = emp.upper()
+                        
+            elif current_turno == "TARDE":
+                if any(x in col_c or x in col_a for x in ["venta total tt", "facturacion total tt", "facturación total tt", "venta total tm", "facturacion total tm"]):
+                    day_data["ventas_tt"] = clean_num(col_d)
+                elif any(x in col_c or x in col_a for x in ["gastos total tm", "gastos total tt", "gasto total tm", "gastos total del dia", "gastos total del día", "gasto total del dia"]):
+                    day_data["gastos_tt"] = clean_num(col_d)
+                elif "sobrante/faltante" in col_c or "sobrantede caja" in col_c:
+                    emp = str(row[0]).strip() if row[0] is not None else ""
+                    if emp and emp.lower() not in ["", "nan", "null"]:
+                        day_data["empleado_tt"] = emp.upper()
+                        
+        if day_data and day_data["day_num"] is not None:
+            daily_records.append(day_data)
+            
+        # Convertir daily_records a registros de showroom_data
+        y, m = MONTH_YEAR_MAP[month_sheet]
+        for r in daily_records:
+            d = r["day_num"]
+            ventas = r["ventas_tm"] + r["ventas_tt"]
+            gastos = r["gastos_tm"] + r["gastos_tt"]
+            ganancias = ventas - gastos
+            
+            # Omitir si ventas y gastos son cero
+            if ventas == 0 and gastos == 0:
+                continue
+                
+            emp_tm = r["empleado_tm"] or "\u2014"
+            emp_tt = r["empleado_tt"] or "\u2014"
+            
+            # Formatear el label con el año
+            try:
+                date_obj = datetime.date(y, m, d)
+                day_name = DIA_MAP_ES[date_obj.weekday()]
+            except Exception as e:
+                day_name = r["day_name"] if r["day_name"] != "\u2014" else "\u2014"
+                
+            month_code = MES_MAP_ES[m]
+            year_code = str(y)[-2:]
+            label = f"{day_name} {d} {month_code} {year_code}"
+            
+            showroom_data.append([
+                label,
+                ventas,
+                gastos,
+                ganancias,
+                emp_tm,
+                emp_tt
+            ])
+            
+    return showroom_data
+
 def main():
 
     if not download_sheet():
@@ -447,75 +576,10 @@ def main():
             key = MONTH_YEAR_MAP[month_sheet]
             asistencia_por_mes[key] = asistencia
             
-    # 2. Leer los datos financieros oficiales de la pestaña consolidada "Metrica "
-    sheet_metrica_name = None
-    for name in wb.sheetnames:
-        if "metrica" in name.lower():
-            sheet_metrica_name = name
-            break
-            
-    if not sheet_metrica_name:
-        print("Error: No se encontró la hoja consolidada de métricas. Cancelando.")
-        return
-        
-    print(f"Leyendo datos financieros consolidados de la hoja '{sheet_metrica_name}'...")
-    sheet_metrica = wb[sheet_metrica_name]
-    rows_metrica = list(sheet_metrica.iter_rows(values_only=True))
-    
-    showroom_data = []
-    
-    DIA_MAP_ES = {0: "lun", 1: "mar", 2: "mie", 3: "jue", 4: "vie", 5: "sab", 6: "dom"}
-    MES_MAP_ES = {
-        1: "ene", 2: "feb", 3: "mar", 4: "abr", 5: "may", 6: "jun",
-        7: "jul", 8: "ago", 9: "sep", 10: "oct", 11: "nov", 12: "dic"
-    }
-    
-    for idx, r in enumerate(rows_metrica[1:], start=2):
-        col0 = r[0] # Fecha
-        col2 = r[2] # VENTAS X DIA
-        col5 = r[5] # GASTOS X DIA
-        col8 = r[8] # GANANCIA x DIA
-        
-        if isinstance(col0, (datetime.datetime, datetime.date)):
-            if isinstance(col0, datetime.date) and not isinstance(col0, datetime.datetime):
-                date_obj = datetime.datetime.combine(col0, datetime.datetime.min.time())
-            else:
-                date_obj = col0
-                
-            ventas = clean_num(col2)
-            gastos = clean_num(col5)
-            ganancias = clean_num(col8)
-            
-            # Omitir si ventas y gastos son cero
-            if ventas == 0 and gastos == 0:
-                continue
-                
-            y, m, d = date_obj.year, date_obj.month, date_obj.day
-            
-            # Buscar empleados de TM y TT correspondientes a esta fecha
-            emp_tm, emp_tt = "—", "—"
-            if (y, m) in asistencia_por_mes:
-                month_asistencia = asistencia_por_mes[(y, m)]
-                if d in month_asistencia:
-                    emp_tm = month_asistencia[d]["empleado_tm"]
-                    emp_tt = month_asistencia[d]["empleado_tt"]
-                    
-            # Formatear el label con el año
-            day_name = DIA_MAP_ES[date_obj.weekday()]
-            month_code = MES_MAP_ES[m]
-            year_code = str(y)[-2:]
-            label = f"{day_name} {d} {month_code} {year_code}"
-            
-            showroom_data.append([
-                label,
-                ventas,
-                gastos,
-                ganancias,
-                emp_tm,
-                emp_tt
-            ])
-            
-    print(f"Total de registros de Showroom consolidados: {len(showroom_data)}")
+    # 2. Compilar los datos financieros oficiales de Showroom directamente desde las pestañas mensuales (Balance)
+    print("Compilando datos financieros de Showroom desde las pestañas mensuales...")
+    showroom_data = compile_showroom_data_from_months(wb)
+    print(f"Total de registros de Showroom consolidados desde Balance: {len(showroom_data)}")
     
     # 3. Generar la solapa exclusiva de auditoría de turnos para Junio, Mayo, Abril y Marzo 2026
     cierre_junio_data = parse_cierre_auditoria(wb, "Jun26")

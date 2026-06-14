@@ -445,6 +445,25 @@
       <div class="legend-item"><div class="legend-dot" style="background:#10b981"></div>Ganancias</div>
     </div>
     <div class="chart-card"><div class="chart-wrap" style="height:350px"><canvas id="chart-comp"></canvas></div></div>
+    
+    <div class="section-row" style="margin-top: 32px; margin-bottom: 16px;">
+      <span class="section-title">Resumen Mensual Acumulado</span>
+    </div>
+    <div class="chart-card" style="overflow-x: auto; margin-bottom: 24px;">
+      <table class="personal-table" id="table-resumen-mensual">
+        <thead>
+          <tr>
+            <th>Mes</th>
+            <th>Ventas</th>
+            <th>Gastos</th>
+            <th>Ganancias</th>
+          </tr>
+        </thead>
+        <tbody>
+          <!-- Rellenado dinámicamente -->
+        </tbody>
+      </table>
+    </div>
   </div>
 
   <!-- PERSONAL -->
@@ -1213,22 +1232,43 @@ function byWeek(rows, field) {
 }
  
 // ─── METRICS ──────────────────────────────────────────────────────────────────
-function setMetrics(id, field) {
-  const rows = getRows();
-  const monthly = byMonth(rows, field);
-  const vals = Object.values(monthly);
-  const total = vals.reduce((s,v) => s+v, 0);
-  const avg = vals.length ? total / vals.length : 0;
-  const mx = Math.max(...vals);
-  const mn = Math.min(...vals);
-  const mxName = Object.keys(monthly).find(k => monthly[k] === mx) || '';
-  const mnName = Object.keys(monthly).find(k => monthly[k] === mn) || '';
-  document.getElementById(id).innerHTML = `
-    <div class="metric"><div class="metric-label">Total período</div><div class="metric-value ${total<0?'neg':'pos'}">${fmt(total)}</div></div>
-    <div class="metric"><div class="metric-label">Promedio mensual</div><div class="metric-value ${avg<0?'neg':''}">${fmt(avg)}</div></div>
-    <div class="metric"><div class="metric-label">Mejor mes</div><div class="metric-value pos">${fmt(mx)}<br><small style="font-size:11px;font-weight:400;color:var(--text2)">${mxName}</small></div></div>
-    <div class="metric"><div class="metric-label">Peor mes</div><div class="metric-value ${mn<0?'neg':''}">${fmt(mn)}<br><small style="font-size:11px;font-weight:400;color:var(--text2)">${mnName}</small></div></div>
-  `;
+function setMetrics(id, field, filterMonth = 'all') {
+  const rows = getRows().filter(d => filterMonth === 'all' || d.month === filterMonth);
+  
+  if (filterMonth === 'all') {
+    const monthly = byMonth(rows, field);
+    const vals = Object.values(monthly);
+    const total = vals.reduce((s,v) => s+v, 0);
+    const avg = vals.length ? total / vals.length : 0;
+    const mx = Math.max(...vals);
+    const mn = Math.min(...vals);
+    const mxName = Object.keys(monthly).find(k => monthly[k] === mx) || '';
+    const mnName = Object.keys(monthly).find(k => monthly[k] === mn) || '';
+    document.getElementById(id).innerHTML = `
+      <div class="metric"><div class="metric-label">Total histórico</div><div class="metric-value ${total<0?'neg':'pos'}">${fmt(total)}</div></div>
+      <div class="metric"><div class="metric-label">Promedio mensual</div><div class="metric-value ${avg<0?'neg':''}">${fmt(avg)}</div></div>
+      <div class="metric"><div class="metric-label">Mejor mes</div><div class="metric-value pos">${fmt(mx)}<br><small style="font-size:11px;font-weight:400;color:var(--text2)">${mxName}</small></div></div>
+      <div class="metric"><div class="metric-label">Peor mes</div><div class="metric-value ${mn<0?'neg':''}">${fmt(mn)}<br><small style="font-size:11px;font-weight:400;color:var(--text2)">${mnName}</small></div></div>
+    `;
+  } else {
+    const total = rows.reduce((s, r) => s + (r[field] || 0), 0);
+    const avg = rows.length ? total / rows.length : 0;
+    const vals = rows.map(r => r[field] || 0);
+    const mx = rows.length ? Math.max(...vals) : 0;
+    const mn = rows.length ? Math.min(...vals) : 0;
+    
+    const mxRow = rows.find(r => r[field] === mx);
+    const mnRow = rows.find(r => r[field] === mn);
+    const mxLabel = mxRow ? mxRow.label : '';
+    const mnLabel = mnRow ? mnRow.label : '';
+    
+    document.getElementById(id).innerHTML = `
+      <div class="metric"><div class="metric-label">Total del mes</div><div class="metric-value ${total<0?'neg':'pos'}">${fmt(total)}</div></div>
+      <div class="metric"><div class="metric-label">Promedio diario</div><div class="metric-value ${avg<0?'neg':''}">${fmt(avg)}</div></div>
+      <div class="metric"><div class="metric-label">Mejor día</div><div class="metric-value pos">${fmt(mx)}<br><small style="font-size:11px;font-weight:400;color:var(--text2)">${mxLabel}</small></div></div>
+      <div class="metric"><div class="metric-label">Peor día</div><div class="metric-value ${mn<0?'neg':''}">${fmt(mn)}<br><small style="font-size:11px;font-weight:400;color:var(--text2)">${mnLabel}</small></div></div>
+    `;
+  }
 }
  
 // ─── CHARTS ───────────────────────────────────────────────────────────────────
@@ -1347,6 +1387,26 @@ function buildComparativo() {
       }
     }
   });
+
+  const tableBody = document.querySelector('#table-resumen-mensual tbody');
+  if (tableBody) {
+    tableBody.innerHTML = '';
+    const reverseMonths = [...months].reverse();
+    reverseMonths.forEach(m => {
+      const sales = vM[m] || 0;
+      const expenses = gM[m] || 0;
+      const profits = gaM[m] || 0;
+      
+      const tr = document.createElement('tr');
+      tr.innerHTML = `
+        <td><strong>${m}</strong></td>
+        <td style="color:var(--text1)">${fmt(sales)}</td>
+        <td style="color:var(--amber)">${fmt(expenses)}</td>
+        <td class="${profits < 0 ? 'neg' : 'pos'}" style="font-weight:600;">${fmt(profits)}</td>
+      `;
+      tableBody.appendChild(tr);
+    });
+  }
 }
  
 function populateSelects() {
@@ -1777,21 +1837,20 @@ function buildAll() {
     }
   }
 
-  setMetrics('metrics-ventas','ventas');
-  setMetrics('metrics-gastos','gastos');
-  setMetrics('metrics-ganancias','ganancias');
-  
   const filterVentas = document.getElementById('sel-ventas-mes')?.value || 'all';
+  setMetrics('metrics-ventas','ventas', filterVentas);
   buildDailyChart('chart-ventas-dia','ventas',COLORS.ventas, filterVentas);
   buildWeeklyChart('chart-ventas-sem','ventas',COLORS.ventas, filterVentas);
   buildMonthlyChart('chart-ventas-mes','ventas',COLORS.ventas, filterVentas);
   
   const filterGastos = document.getElementById('sel-gastos-mes')?.value || 'all';
+  setMetrics('metrics-gastos','gastos', filterGastos);
   buildDailyChart('chart-gastos-dia','gastos',COLORS.gastos, filterGastos);
   buildWeeklyChart('chart-gastos-sem','gastos',COLORS.gastos, filterGastos);
   buildMonthlyChart('chart-gastos-mes','gastos',COLORS.gastos, filterGastos);
   
   const filterGanancias = document.getElementById('sel-ganancias-mes')?.value || 'all';
+  setMetrics('metrics-ganancias','ganancias', filterGanancias);
   buildDailyChart('chart-ganancias-dia','ganancias',COLORS.ganancias, filterGanancias);
   buildWeeklyChart('chart-ganancias-sem','ganancias',COLORS.ganancias, filterGanancias);
   buildMonthlyChart('chart-ganancias-mes','ganancias',COLORS.ganancias, filterGanancias);
@@ -1831,6 +1890,7 @@ document.getElementById('store-tabs').addEventListener('click', e => {
 ['ventas','gastos','ganancias'].forEach(field => {
   document.getElementById('sel-' + field + '-mes').addEventListener('change', e => {
     const val = e.target.value;
+    setMetrics('metrics-' + field, field, val);
     buildDailyChart('chart-' + field + '-dia', field, COLORS[field], val);
     buildWeeklyChart('chart-' + field + '-sem', field, COLORS[field], val);
     buildMonthlyChart('chart-' + field + '-mes', field, COLORS[field], val);

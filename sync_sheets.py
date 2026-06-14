@@ -267,6 +267,12 @@ FINANCIAL_CORRECTIONS = {
     (2025, 7, 26): {
         "ventas_tm": 21280.00,
         "ventas_tt": 30907.47
+    },
+    (2025, 8, 12): {
+        "gastos_tt": 80876.60
+    },
+    (2025, 8, 30): {
+        "ventas_tm": 23219.30
     }
 }
 

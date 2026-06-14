@@ -396,47 +396,117 @@
   <!-- VENTAS -->
   <div id="tab-ventas" class="panel active">
     <div class="metrics" id="metrics-ventas"></div>
-    <div class="section-row" style="margin-bottom: 15px;">
-      <span class="section-title">Filtro de período</span>
-      <select id="sel-ventas-mes"><option value="all">Todos los meses</option></select>
+    <div class="section-row" style="flex-wrap: wrap; gap: 10px; margin-bottom: 15px;">
+      <span class="section-title">Ventas Diarias — Showroom</span>
+      <div style="display: flex; gap: 10px; flex-wrap: wrap; align-items: center;">
+        <select id="sel-ventas-mes" class="sel-mes-global">
+          <option value="all">Todos los meses</option>
+        </select>
+        <input type="text" id="inp-ventas-fecha" class="inp-fecha-global" placeholder="Buscar fecha... (ej: lun 1)" style="background: var(--bg-card); border: 1px solid var(--border); color: var(--text1); padding: 8px 12px; border-radius: 8px; font-size: 14px; outline: none; width: 200px;">
+      </div>
     </div>
-    <div class="section-row"><span class="section-title">Vista diaria</span></div>
-    <div class="chart-card"><div class="chart-wrap" style="height:280px"><canvas id="chart-ventas-dia"></canvas></div></div>
-    <div class="section-row"><span class="section-title">Vista semanal</span></div>
-    <div class="chart-card"><div class="chart-wrap" style="height:220px"><canvas id="chart-ventas-sem"></canvas></div></div>
-    <div class="section-row"><span class="section-title">Vista mensual — anual</span></div>
-    <div class="chart-card"><div class="chart-wrap" style="height:220px"><canvas id="chart-ventas-mes"></canvas></div></div>
+    
+    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(350px, 1fr)); gap: 20px;">
+      <!-- Gráfico Diario de Ventas -->
+      <div class="chart-card" style="margin: 0;">
+        <div style="font-weight: 600; margin-bottom: 15px; font-size: 15px; color: var(--text1);">Gráfico de Ventas Diarias</div>
+        <div class="chart-wrap" style="height:320px"><canvas id="chart-ventas-dia"></canvas></div>
+      </div>
+      
+      <!-- Tabla de Ventas Diarias -->
+      <div class="chart-card" style="overflow-x: auto; margin: 0;">
+        <div style="font-weight: 600; margin-bottom: 15px; font-size: 15px; color: var(--green);">Detalle de Ventas Diarias</div>
+        <table class="personal-table" id="table-ventas-diarias">
+          <thead>
+            <tr>
+              <th>Día / Bloque</th>
+              <th>Total Ventas (Verde)</th>
+            </tr>
+          </thead>
+          <tbody>
+            <!-- Rellenado dinámicamente -->
+          </tbody>
+        </table>
+      </div>
+    </div>
   </div>
  
   <!-- GASTOS -->
   <div id="tab-gastos" class="panel">
     <div class="metrics" id="metrics-gastos"></div>
-    <div class="section-row" style="margin-bottom: 15px;">
-      <span class="section-title">Filtro de período</span>
-      <select id="sel-gastos-mes"><option value="all">Todos los meses</option></select>
+    <div class="section-row" style="flex-wrap: wrap; gap: 10px; margin-bottom: 15px;">
+      <span class="section-title">Gastos Diarios — Showroom</span>
+      <div style="display: flex; gap: 10px; flex-wrap: wrap; align-items: center;">
+        <select id="sel-gastos-mes" class="sel-mes-global">
+          <option value="all">Todos los meses</option>
+        </select>
+        <input type="text" id="inp-gastos-fecha" class="inp-fecha-global" placeholder="Buscar fecha... (ej: lun 1)" style="background: var(--bg-card); border: 1px solid var(--border); color: var(--text1); padding: 8px 12px; border-radius: 8px; font-size: 14px; outline: none; width: 200px;">
+      </div>
     </div>
-    <div class="section-row"><span class="section-title">Vista diaria</span></div>
-    <div class="chart-card"><div class="chart-wrap" style="height:280px"><canvas id="chart-gastos-dia"></canvas></div></div>
-    <div class="section-row"><span class="section-title">Vista semanal</span></div>
-    <div class="chart-card"><div class="chart-wrap" style="height:220px"><canvas id="chart-gastos-sem"></canvas></div></div>
-    <div class="section-row"><span class="section-title">Vista mensual — anual</span></div>
-    <div class="chart-card"><div class="chart-wrap" style="height:220px"><canvas id="chart-gastos-mes"></canvas></div></div>
+    
+    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(350px, 1fr)); gap: 20px;">
+      <!-- Gráfico Diario de Gastos -->
+      <div class="chart-card" style="margin: 0;">
+        <div style="font-weight: 600; margin-bottom: 15px; font-size: 15px; color: var(--text1);">Gráfico de Gastos Diarios</div>
+        <div class="chart-wrap" style="height:320px"><canvas id="chart-gastos-dia"></canvas></div>
+      </div>
+      
+      <!-- Tabla de Gastos Diarias -->
+      <div class="chart-card" style="overflow-x: auto; margin: 0;">
+        <div style="font-weight: 600; margin-bottom: 15px; font-size: 15px; color: #ef4444;">Detalle de Gastos Diarios</div>
+        <table class="personal-table" id="table-gastos-diarios">
+          <thead>
+            <tr>
+              <th>Día / Bloque</th>
+              <th>Total Gastos (Rojo)</th>
+            </tr>
+          </thead>
+          <tbody>
+            <!-- Rellenado dinámicamente -->
+          </tbody>
+        </table>
+      </div>
+    </div>
   </div>
  
   <!-- GANANCIAS -->
   <div id="tab-ganancias" class="panel">
     <div class="metrics" id="metrics-ganancias"></div>
-    <div class="section-row" style="margin-bottom: 15px;">
-      <span class="section-title">Filtro de período</span>
-      <select id="sel-ganancias-mes"><option value="all">Todos los meses</option></select>
+    <div class="section-row" style="flex-wrap: wrap; gap: 10px; margin-bottom: 15px;">
+      <span class="section-title">Ganancias Diarias — Showroom</span>
+      <div style="display: flex; gap: 10px; flex-wrap: wrap; align-items: center;">
+        <select id="sel-ganancias-mes" class="sel-mes-global">
+          <option value="all">Todos los meses</option>
+        </select>
+        <input type="text" id="inp-ganancias-fecha" class="inp-fecha-global" placeholder="Buscar fecha... (ej: lun 1)" style="background: var(--bg-card); border: 1px solid var(--border); color: var(--text1); padding: 8px 12px; border-radius: 8px; font-size: 14px; outline: none; width: 200px;">
+      </div>
     </div>
-    <div class="section-row"><span class="section-title">Vista diaria</span></div>
-    <div class="chart-card"><div class="chart-wrap" style="height:280px"><canvas id="chart-ganancias-dia"></canvas></div></div>
-    <div class="section-row"><span class="section-title">Vista semanal</span></div>
-    <div class="chart-card"><div class="chart-wrap" style="height:220px"><canvas id="chart-ganancias-sem"></canvas></div></div>
-    <div class="section-row"><span class="section-title">Vista mensual — anual</span></div>
-    <div class="chart-card"><div class="chart-wrap" style="height:220px"><canvas id="chart-ganancias-mes"></canvas></div></div>
+    
+    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(350px, 1fr)); gap: 20px;">
+      <!-- Gráfico Diario de Ganancias -->
+      <div class="chart-card" style="margin: 0;">
+        <div style="font-weight: 600; margin-bottom: 15px; font-size: 15px; color: var(--text1);">Gráfico de Ganancias Diarias</div>
+        <div class="chart-wrap" style="height:320px"><canvas id="chart-ganancias-dia"></canvas></div>
+      </div>
+      
+      <!-- Tabla de Ganancias Diarias -->
+      <div class="chart-card" style="overflow-x: auto; margin: 0;">
+        <div style="font-weight: 600; margin-bottom: 15px; font-size: 15px; color: #38bdf8;">Detalle de Ganancias Diarias</div>
+        <table class="personal-table" id="table-ganancias-diarias">
+          <thead>
+            <tr>
+              <th>Día / Bloque</th>
+              <th>Ganancia (Celeste)</th>
+            </tr>
+          </thead>
+          <tbody>
+            <!-- Rellenado dinámicamente -->
+          </tbody>
+        </table>
+      </div>
+    </div>
   </div>
+
  
   <!-- COMPARATIVO -->
   <div id="tab-comparativo" class="panel">
@@ -472,7 +542,7 @@
     <div class="metrics" id="metrics-personal"></div>
     <div class="section-row" style="margin-bottom: 15px;">
       <span class="section-title">Filtro de período</span>
-      <select id="sel-personal-mes"><option value="all">Todos los meses</option></select>
+      <select id="sel-personal-mes" class="sel-mes-global"><option value="all">Todos los meses</option></select>
     </div>
     
     <!-- Nueva sección: Resumen de Asistencia por Empleado -->
@@ -569,24 +639,10 @@
     <div class="section-row" style="flex-wrap: wrap; gap: 10px;">
       <span class="section-title">Auditoría de Turnos — Exclusivo Showroom</span>
       <div style="display: flex; gap: 10px; flex-wrap: wrap; align-items: center;">
-        <select id="sel-auditoria-mes">
-          <option value="Jun/26">Junio 2026</option>
-          <option value="May/26">Mayo 2026</option>
-          <option value="Abril/26">Abril 2026</option>
-          <option value="Marz/26">Marzo 2026</option>
-          <option value="feb/26">Febrero 2026</option>
-          <option value="ene/26">Enero 2026</option>
-          <option value="Dic/25">Diciembre 2025</option>
-          <option value="Nov/25">Noviembre 2025</option>
-          <option value="Oct/25">Octubre 2025</option>
-          <option value="SEP/25">Septiembre 2025</option>
-          <option value="Agos/25">Agosto 2025</option>
-          <option value="JUL/25">Julio 2025</option>
-          <option value="JUN/25">Junio 2025</option>
-          <option value="Mayo/25">Mayo 2025</option>
+        <select id="sel-auditoria-mes" class="sel-mes-global">
         </select>
         
-        <input type="text" id="inp-auditoria-fecha" placeholder="Buscar fecha... (ej: lun 1)" style="background: var(--bg-card); border: 1px solid var(--border); color: var(--text1); padding: 8px 12px; border-radius: 8px; font-size: 14px; outline: none; width: 200px;">
+        <input type="text" id="inp-auditoria-fecha" class="inp-fecha-global" placeholder="Buscar fecha... (ej: lun 1)" style="background: var(--bg-card); border: 1px solid var(--border); color: var(--text1); padding: 8px 12px; border-radius: 8px; font-size: 14px; outline: none; width: 200px;">
         
         <select id="sel-auditoria-tipo">
           <option value="all">Todos los registros</option>
@@ -1658,8 +1714,12 @@ function makeChart(id, labels, values, color, type='bar', rawRows=[]) {
   });
 }
  
-function buildDailyChart(canvasId, field, color, filterMonth) {
-  const rows = getRows().filter(d => filterMonth === 'all' || d.month === filterMonth);
+function buildDailyChart(canvasId, field, color, filterMonth, searchVal = "") {
+  const rows = getRows().filter(d => {
+    const matchesMonth = filterMonth === 'all' || d.month === filterMonth;
+    const matchesSearch = !searchVal || d.label.toLowerCase().includes(searchVal);
+    return matchesMonth && matchesSearch;
+  });
   makeChart(canvasId, rows.map(d=>d.label), rows.map(d=>d[field]), color, 'bar', rows);
 }
  
@@ -1741,15 +1801,57 @@ function buildComparativo() {
 function populateSelects() {
   const rows = getRows();
   const months = getMonths(rows);
-  ['sel-ventas-mes','sel-gastos-mes','sel-ganancias-mes', 'sel-personal-mes'].forEach(id => {
-    const sel = document.getElementById(id);
-    if (!sel) return;
-    sel.innerHTML = '<option value="all">Todos los meses</option>';
+  document.querySelectorAll('.sel-mes-global').forEach(sel => {
+    const currentVal = sel.value;
+    const isBalance = sel.id === 'sel-auditoria-mes';
+    sel.innerHTML = isBalance ? '' : '<option value="all">Todos los meses</option>';
     months.forEach(m => {
       const opt = document.createElement('option');
       opt.value = m; opt.textContent = m;
       sel.appendChild(opt);
     });
+    if (currentVal && [...sel.options].some(o => o.value === currentVal)) {
+      sel.value = currentVal;
+    } else {
+      if (isBalance && months.length > 0) {
+        sel.value = months[months.length - 1];
+      } else {
+        sel.value = isBalance ? '' : 'all';
+      }
+    }
+  });
+}
+
+function renderDailyTable(tableId, field, colorClass, rows, filterMonth, searchVal) {
+  const tbody = document.querySelector(`#${tableId} tbody`);
+  if (!tbody) return;
+  tbody.innerHTML = "";
+  
+  let filtered = rows.filter(d => {
+    const matchesMonth = filterMonth === 'all' || d.month === filterMonth;
+    const matchesSearch = !searchVal || d.label.toLowerCase().includes(searchVal);
+    return matchesMonth && matchesSearch;
+  });
+  
+  if (filtered.length === 0) {
+    tbody.innerHTML = `<tr><td colspan="2" style="text-align:center;color:var(--text2);padding:15px;">No hay registros para este período.</td></tr>`;
+    return;
+  }
+  
+  filtered.forEach(d => {
+    const tr = document.createElement('tr');
+    const val = d[field];
+    
+    let colorStyle = "";
+    if (colorClass === 'green') colorStyle = "color:var(--green)";
+    else if (colorClass === 'red') colorStyle = "color:#ef4444";
+    else if (colorClass === 'blue') colorStyle = "color:#38bdf8;font-weight:700";
+    
+    tr.innerHTML = `
+      <td><strong>${d.label}</strong></td>
+      <td style="${colorStyle}">${fmtExact(val)}</td>
+    `;
+    tbody.appendChild(tr);
   });
 }
 
@@ -2147,8 +2249,6 @@ async function renderCierreJunio() {
 }
  
 function buildAll() {
-  populateSelects();
-  
   // Mostrar u ocultar pestaña de personal y cierre de junio según la tienda (solo Showroom tiene personal/turnos en este sheet)
   const tabBtnPersonal = document.getElementById('tab-btn-personal');
   const tabBtnCierreJunio = document.getElementById('tab-btn-cierre-junio');
@@ -2159,30 +2259,30 @@ function buildAll() {
   } else {
     if (tabBtnPersonal) tabBtnPersonal.style.display = 'none';
     if (tabBtnCierreJunio) tabBtnCierreJunio.style.display = 'none';
-    // Si la pestaña actual era personal o cierre-junio, volver a ventas
     const activeTab = document.querySelector('.tab-btn.active');
     if (activeTab && (activeTab.dataset.tab === 'personal' || activeTab.dataset.tab === 'cierre-junio')) {
       document.querySelector('.tab-btn[data-tab="ventas"]').click();
     }
   }
 
-  const filterVentas = document.getElementById('sel-ventas-mes')?.value || 'all';
-  setMetrics('metrics-ventas','ventas', filterVentas);
-  buildDailyChart('chart-ventas-dia','ventas',COLORS.ventas, filterVentas);
-  buildWeeklyChart('chart-ventas-sem','ventas',COLORS.ventas, filterVentas);
-  buildMonthlyChart('chart-ventas-mes','ventas',COLORS.ventas, filterVentas);
+  const filterMonth = document.querySelector('.sel-mes-global')?.value || 'all';
+  const searchVal = (document.querySelector('.inp-fecha-global')?.value || '').toLowerCase().trim();
+  const rows = getRows();
+
+  // Ventas
+  setMetrics('metrics-ventas', 'ventas', filterMonth);
+  buildDailyChart('chart-ventas-dia', 'ventas', COLORS.ventas, filterMonth, searchVal);
+  renderDailyTable('table-ventas-diarias', 'ventas', 'green', rows, filterMonth, searchVal);
   
-  const filterGastos = document.getElementById('sel-gastos-mes')?.value || 'all';
-  setMetrics('metrics-gastos','gastos', filterGastos);
-  buildDailyChart('chart-gastos-dia','gastos',COLORS.gastos, filterGastos);
-  buildWeeklyChart('chart-gastos-sem','gastos',COLORS.gastos, filterGastos);
-  buildMonthlyChart('chart-gastos-mes','gastos',COLORS.gastos, filterGastos);
+  // Gastos
+  setMetrics('metrics-gastos', 'gastos', filterMonth);
+  buildDailyChart('chart-gastos-dia', 'gastos', COLORS.gastos, filterMonth, searchVal);
+  renderDailyTable('table-gastos-diarios', 'gastos', 'red', rows, filterMonth, searchVal);
   
-  const filterGanancias = document.getElementById('sel-ganancias-mes')?.value || 'all';
-  setMetrics('metrics-ganancias','ganancias', filterGanancias);
-  buildDailyChart('chart-ganancias-dia','ganancias',COLORS.ganancias, filterGanancias);
-  buildWeeklyChart('chart-ganancias-sem','ganancias',COLORS.ganancias, filterGanancias);
-  buildMonthlyChart('chart-ganancias-mes','ganancias',COLORS.ganancias, filterGanancias);
+  // Ganancias
+  setMetrics('metrics-ganancias', 'ganancias', filterMonth);
+  buildDailyChart('chart-ganancias-dia', 'ganancias', COLORS.ganancias, filterMonth, searchVal);
+  renderDailyTable('table-ganancias-diarias', 'ganancias', 'blue', rows, filterMonth, searchVal);
   
   buildComparativo();
   
@@ -2214,32 +2314,54 @@ document.getElementById('store-tabs').addEventListener('click', e => {
   currentStore = store;
   document.querySelectorAll('.store-btn').forEach(b => b.classList.remove('active'));
   e.target.classList.add('active');
+  populateSelects();
   buildAll();
 });
- 
-['ventas','gastos','ganancias'].forEach(field => {
-  document.getElementById('sel-' + field + '-mes').addEventListener('change', async e => {
+
+// Listener unificado de cambio de mes global
+document.addEventListener('change', async e => {
+  if (e.target.classList.contains('sel-mes-global')) {
     const val = e.target.value;
-    const sheetName = mesAPestaña[val];
-    if (sheetName) {
-      if (!asistenciaEnTiempoReal[sheetName] || !gastosEmpleadosTiempoReal[sheetName]) {
-        await fetchMonthlyDataRealTime(sheetName);
+    
+    if (val !== 'all') {
+      const sheetName = mesAPestaña[val];
+      if (sheetName) {
+        if (!asistenciaEnTiempoReal[sheetName] || !gastosEmpleadosTiempoReal[sheetName]) {
+          const tableBody = document.querySelector('#table-cierre-junio tbody');
+          if (tableBody) {
+            tableBody.innerHTML = `<tr><td colspan="4" style="text-align:center;color:var(--text2)">Cargando datos en vivo de Google Sheets...</td></tr>`;
+          }
+          await fetchMonthlyDataRealTime(sheetName);
+        }
       }
     }
-    setMetrics('metrics-' + field, field, val);
-    buildDailyChart('chart-' + field + '-dia', field, COLORS[field], val);
-    buildWeeklyChart('chart-' + field + '-sem', field, COLORS[field], val);
-    buildMonthlyChart('chart-' + field + '-mes', field, COLORS[field], val);
-  });
+    
+    // Sincronizar todos los selectores de mes
+    document.querySelectorAll('.sel-mes-global').forEach(sel => {
+      if (sel.value !== val) {
+        sel.value = val;
+      }
+    });
+    
+    buildAll();
+  }
 });
 
-document.getElementById('sel-personal-mes').addEventListener('change', renderPersonal);
-document.getElementById('sel-auditoria-mes').addEventListener('change', renderCierreJunio);
-
-const inpFecha = document.getElementById('inp-auditoria-fecha');
-if (inpFecha) {
-  inpFecha.addEventListener('input', renderCierreJunio);
-}
+// Listener unificado de búsqueda por fecha global
+document.addEventListener('input', e => {
+  if (e.target.classList.contains('inp-fecha-global')) {
+    const val = e.target.value;
+    
+    // Sincronizar todos los inputs de búsqueda
+    document.querySelectorAll('.inp-fecha-global').forEach(inp => {
+      if (inp.value !== val) {
+        inp.value = val;
+      }
+    });
+    
+    buildAll();
+  }
+});
 
 const selTipo = document.getElementById('sel-auditoria-tipo');
 if (selTipo) {
@@ -2275,6 +2397,7 @@ if (thFila) {
 window.addEventListener('DOMContentLoaded', () => {
   initManualCorrections();
   initAjustesForm();
+  populateSelects();
   const txtUpdate = document.getElementById('txt-actualizacion');
   if (txtUpdate && typeof DATOS_SINCRONIZADOS !== 'undefined') {
     txtUpdate.textContent = `Sincronizado: ${DATOS_SINCRONIZADOS.ultima_actualizacion || '—'}`;

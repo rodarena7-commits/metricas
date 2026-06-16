@@ -356,6 +356,79 @@
       margin-top: 40px; 
       background: rgba(11, 13, 20, 0.9);
     }
+
+    /* Estilos para botones de acción del gráfico y pantalla completa */
+    .chart-action-btn {
+      background: rgba(255, 255, 255, 0.04);
+      border: 1px solid var(--border);
+      color: var(--text2);
+      padding: 6px;
+      border-radius: 8px;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      transition: var(--transition);
+    }
+    .chart-action-btn:hover {
+      background: rgba(255, 255, 255, 0.1);
+      color: var(--text);
+      border-color: var(--border-hover);
+    }
+    
+    .chart-card.fullscreen {
+      position: fixed;
+      top: 0; left: 0;
+      width: 100vw; height: 100vh;
+      z-index: 9999;
+      background: #0b0d14;
+      margin: 0 !important;
+      padding: 24px;
+      box-sizing: border-box;
+      display: flex;
+      flex-direction: column;
+      border-radius: 0;
+      border: none;
+    }
+    .chart-card.fullscreen .chart-wrap {
+      flex: 1;
+      height: calc(100% - 60px) !important;
+    }
+    .chart-card.fullscreen .maximize-icon {
+      display: none !important;
+    }
+    .chart-card.fullscreen .minimize-icon {
+      display: inline-block !important;
+    }
+
+    /* Estilos para el Toast */
+    .toast-container {
+      position: fixed;
+      bottom: 24px;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 10000;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      pointer-events: none;
+    }
+    .toast-message {
+      background: rgba(28, 31, 48, 0.95);
+      border: 1px solid var(--border);
+      color: var(--text1);
+      padding: 12px 24px;
+      border-radius: 8px;
+      font-size: 14px;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
+      opacity: 0;
+      transform: translateY(20px);
+      transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    }
+    .toast-message.show {
+      opacity: 1;
+      transform: translateY(0);
+    }
   </style>
 </head>
 <body>
@@ -408,8 +481,33 @@
     
     <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(350px, 1fr)); gap: 20px;">
       <!-- Gráfico Diario de Ventas -->
-      <div class="chart-card" style="margin: 0;">
-        <div style="font-weight: 600; margin-bottom: 15px; font-size: 15px; color: var(--text1);">Gráfico de Ventas Diarias</div>
+      <div class="chart-card" id="card-ventas-dia" style="margin: 0;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+          <div style="font-weight: 600; font-size: 15px; color: var(--text1);">Gráfico de Ventas Diarias</div>
+          <div style="display: flex; gap: 8px;">
+            <button class="chart-action-btn" onclick="shareChart('chart-ventas-dia', 'ventas')" title="Compartir Gráfico">
+              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"></path>
+                <polyline points="16 6 12 2 8 6"></polyline>
+                <line x1="12" y1="2" x2="12" y2="15"></line>
+              </svg>
+            </button>
+            <button class="chart-action-btn" onclick="toggleFullscreenChart('card-ventas-dia', 'chart-ventas-dia')" title="Pantalla Completa">
+              <svg class="maximize-icon" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M15 3h6v6"></path>
+                <path d="M9 21H3v-6"></path>
+                <path d="M21 3l-7 7"></path>
+                <path d="M3 21l7-7"></path>
+              </svg>
+              <svg class="minimize-icon" style="display: none;" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M4 14h6v6"></path>
+                <path d="M20 10h-6V4"></path>
+                <path d="M14 10l7-7"></path>
+                <path d="M10 14l-7 7"></path>
+              </svg>
+            </button>
+          </div>
+        </div>
         <div class="chart-wrap" style="height:320px"><canvas id="chart-ventas-dia"></canvas></div>
       </div>
       
@@ -446,8 +544,33 @@
     
     <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(350px, 1fr)); gap: 20px;">
       <!-- Gráfico Diario de Gastos -->
-      <div class="chart-card" style="margin: 0;">
-        <div style="font-weight: 600; margin-bottom: 15px; font-size: 15px; color: var(--text1);">Gráfico de Gastos Diarios</div>
+      <div class="chart-card" id="card-gastos-dia" style="margin: 0;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+          <div style="font-weight: 600; font-size: 15px; color: var(--text1);">Gráfico de Gastos Diarios</div>
+          <div style="display: flex; gap: 8px;">
+            <button class="chart-action-btn" onclick="shareChart('chart-gastos-dia', 'gastos')" title="Compartir Gráfico">
+              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"></path>
+                <polyline points="16 6 12 2 8 6"></polyline>
+                <line x1="12" y1="2" x2="12" y2="15"></line>
+              </svg>
+            </button>
+            <button class="chart-action-btn" onclick="toggleFullscreenChart('card-gastos-dia', 'chart-gastos-dia')" title="Pantalla Completa">
+              <svg class="maximize-icon" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M15 3h6v6"></path>
+                <path d="M9 21H3v-6"></path>
+                <path d="M21 3l-7 7"></path>
+                <path d="M3 21l7-7"></path>
+              </svg>
+              <svg class="minimize-icon" style="display: none;" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M4 14h6v6"></path>
+                <path d="M20 10h-6V4"></path>
+                <path d="M14 10l7-7"></path>
+                <path d="M10 14l-7 7"></path>
+              </svg>
+            </button>
+          </div>
+        </div>
         <div class="chart-wrap" style="height:320px"><canvas id="chart-gastos-dia"></canvas></div>
       </div>
       
@@ -484,8 +607,33 @@
     
     <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(350px, 1fr)); gap: 20px;">
       <!-- Gráfico Diario de Ganancias -->
-      <div class="chart-card" style="margin: 0;">
-        <div style="font-weight: 600; margin-bottom: 15px; font-size: 15px; color: var(--text1);">Gráfico de Ganancias Diarias</div>
+      <div class="chart-card" id="card-ganancias-dia" style="margin: 0;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+          <div style="font-weight: 600; font-size: 15px; color: var(--text1);">Gráfico de Ganancias Diarias</div>
+          <div style="display: flex; gap: 8px;">
+            <button class="chart-action-btn" onclick="shareChart('chart-ganancias-dia', 'ganancias')" title="Compartir Gráfico">
+              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"></path>
+                <polyline points="16 6 12 2 8 6"></polyline>
+                <line x1="12" y1="2" x2="12" y2="15"></line>
+              </svg>
+            </button>
+            <button class="chart-action-btn" onclick="toggleFullscreenChart('card-ganancias-dia', 'chart-ganancias-dia')" title="Pantalla Completa">
+              <svg class="maximize-icon" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M15 3h6v6"></path>
+                <path d="M9 21H3v-6"></path>
+                <path d="M21 3l-7 7"></path>
+                <path d="M3 21l7-7"></path>
+              </svg>
+              <svg class="minimize-icon" style="display: none;" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M4 14h6v6"></path>
+                <path d="M20 10h-6V4"></path>
+                <path d="M14 10l7-7"></path>
+                <path d="M10 14l-7 7"></path>
+              </svg>
+            </button>
+          </div>
+        </div>
         <div class="chart-wrap" style="height:320px"><canvas id="chart-ganancias-dia"></canvas></div>
       </div>
       
@@ -2391,6 +2539,113 @@ if (thFila) {
     cierreSortDir = null;
     renderCierreJunio();
   });
+}
+
+// ─── ACCIONES DE GRÁFICOS (ZOOM, MINIMIZAR Y COMPARTIR) ────────────────────────
+function toggleFullscreenChart(cardId, chartId) {
+  const card = document.getElementById(cardId);
+  if (!card) return;
+  const isFullscreen = card.classList.toggle('fullscreen');
+  
+  if (isFullscreen) {
+    document.body.style.overflow = 'hidden';
+  } else {
+    document.body.style.overflow = '';
+  }
+  
+  setTimeout(() => {
+    if (chartInstances && chartInstances[chartId]) {
+      chartInstances[chartId].resize();
+    }
+  }, 50);
+}
+
+function showToast(message) {
+  let container = document.getElementById('toast-container');
+  if (!container) {
+    container = document.createElement('div');
+    container.id = 'toast-container';
+    container.className = 'toast-container';
+    document.body.appendChild(container);
+  }
+  
+  const toast = document.createElement('div');
+  toast.className = 'toast-message';
+  toast.textContent = message;
+  container.appendChild(toast);
+  
+  setTimeout(() => {
+    toast.classList.add('show');
+  }, 10);
+  
+  setTimeout(() => {
+    toast.classList.remove('show');
+    setTimeout(() => {
+      toast.remove();
+    }, 300);
+  }, 3000);
+}
+
+function shareChart(canvasId, titlePrefix) {
+  const canvas = document.getElementById(canvasId);
+  if (!canvas) {
+    showToast('Error: No se encontró el gráfico.');
+    return;
+  }
+
+  // Crear un canvas temporal para rellenar el fondo oscuro
+  const tempCanvas = document.createElement('canvas');
+  tempCanvas.width = canvas.width;
+  tempCanvas.height = canvas.height;
+  const tempCtx = tempCanvas.getContext('2d');
+  
+  // Fondo oscuro (#0b0d14)
+  tempCtx.fillStyle = '#0b0d14';
+  tempCtx.fillRect(0, 0, tempCanvas.width, tempCanvas.height);
+  
+  // Dibujar el gráfico sobre el fondo
+  tempCtx.drawImage(canvas, 0, 0);
+
+  tempCanvas.toBlob((blob) => {
+    if (!blob) {
+      showToast('Error al generar la imagen del gráfico.');
+      return;
+    }
+    
+    const fileName = `${titlePrefix}_diarias.png`;
+    
+    // Si la API de Compartir está disponible (principalmente en dispositivos móviles)
+    if (navigator.share && navigator.canShare && navigator.canShare({ files: [new File([blob], fileName, { type: 'image/png' })] })) {
+      const file = new File([blob], fileName, { type: 'image/png' });
+      navigator.share({
+        files: [file],
+        title: `Gráfico de ${titlePrefix.charAt(0).toUpperCase() + titlePrefix.slice(1)} Diarias`,
+        text: `Aquí tienes el gráfico diario de ${titlePrefix} de Métricas Showroom.`
+      })
+      .then(() => showToast('Gráfico compartido con éxito'))
+      .catch((err) => {
+        if (err.name !== 'AbortError') {
+          console.error('Error al compartir:', err);
+          downloadChartBlob(blob, fileName);
+        }
+      });
+    } else {
+      // Si no está disponible (ej. en PCs de escritorio), procedemos con la descarga directa
+      downloadChartBlob(blob, fileName);
+    }
+  }, 'image/png');
+}
+
+function downloadChartBlob(blob, fileName) {
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = fileName;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+  showToast('Gráfico descargado como PNG.');
 }
  
 // ─── INIT ─────────────────────────────────────────────────────────────────────

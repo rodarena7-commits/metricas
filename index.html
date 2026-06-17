@@ -2092,12 +2092,7 @@ async function renderPersonal() {
   const filterMonth = document.getElementById('sel-personal-mes').value;
   const sheetName = mesAPestaña[filterMonth];
   
-  if (sheetName) {
-    if (!asistenciaEnTiempoReal[sheetName] || !gastosEmpleadosTiempoReal[sheetName]) {
-      tableBody.innerHTML = '<tr><td colspan="6" style="text-align:center;color:var(--text2)">Cargando asistencia y gastos en vivo de Google Sheets...</td></tr>';
-      await fetchMonthlyDataRealTime(sheetName);
-    }
-  }
+
   
   const rows = getRows().filter(d => filterMonth === 'all' || d.month === filterMonth);
   
@@ -2231,8 +2226,9 @@ async function renderPersonal() {
         expenses = DATOS_SINCRONIZADOS.gastos_empleados;
       }
     } else {
-      if (sheetName && gastosEmpleadosTiempoReal[sheetName]) {
-        expenses = gastosEmpleadosTiempoReal[sheetName];
+      if (typeof DATOS_SINCRONIZADOS !== 'undefined' && DATOS_SINCRONIZADOS.gastos_empleados && sheetName) {
+        const cleanSheetName = sheetName.replace('/', '').toLowerCase();
+        expenses = DATOS_SINCRONIZADOS.gastos_empleados.filter(x => x[0].replace('/', '').toLowerCase() === cleanSheetName);
       }
     }
     
@@ -2298,23 +2294,23 @@ async function renderCierreJunio() {
   const tableGananciasBody = document.querySelector('#table-cierre-ganancias tbody');
   if (!tableBody) return;
   
-  const selectedSheet = document.getElementById('sel-auditoria-mes').value; // "Jun/26", "May/26", ...
+  const selectedSheet = document.getElementById('sel-auditoria-mes').value; // e.g. "Junio 2026", "Mayo 2026", ...
   
   const sheetMeta = {
-    "Jun/26": { title: "Junio 2026", fallback: "cierre_junio_2026", label: "jun 26" },
-    "May/26": { title: "Mayo 2026", fallback: "cierre_mayo_2026", label: "may 26" },
-    "Abril/26": { title: "Abril 2026", fallback: "cierre_abril_2026", label: "abr 26" },
-    "Marz/26": { title: "Marzo 2026", fallback: "cierre_marzo_2026", label: "mar 26" },
-    "feb/26": { title: "Febrero 2026", fallback: "cierre_febrero_2026", label: "feb 26" },
-    "ene/26": { title: "Enero 2026", fallback: "cierre_enero_2026", label: "ene 26" },
-    "Dic/25": { title: "Diciembre 2025", fallback: "cierre_diciembre_2025", label: "dic 25" },
-    "Nov/25": { title: "Noviembre 2025", fallback: "cierre_noviembre_2025", label: "nov 25" },
-    "Oct/25": { title: "Octubre 2025", fallback: "cierre_octubre_2025", label: "oct 25" },
-    "SEP/25": { title: "Septiembre 2025", fallback: "cierre_septiembre_2025", label: "sep 25" },
-    "Agos/25": { title: "Agosto 2025", fallback: "cierre_agosto_2025", label: "ago 25" },
-    "JUL/25": { title: "Julio 2025", fallback: "cierre_julio_2025", label: "jul 25" },
-    "JUN/25": { title: "Junio 2025", fallback: "cierre_junio_2025", label: "jun 25" },
-    "Mayo/25": { title: "Mayo 2025", fallback: "cierre_mayo_2025", label: "may 25" }
+    "Junio 2026": { title: "Junio 2026", fallback: "cierre_junio_2026", label: "jun 26" },
+    "Mayo 2026": { title: "Mayo 2026", fallback: "cierre_mayo_2026", label: "may 26" },
+    "Abril 2026": { title: "Abril 2026", fallback: "cierre_abril_2026", label: "abr 26" },
+    "Marzo 2026": { title: "Marzo 2026", fallback: "cierre_marzo_2026", label: "mar 26" },
+    "Febrero 2026": { title: "Febrero 2026", fallback: "cierre_febrero_2026", label: "feb 26" },
+    "Enero 2026": { title: "Enero 2026", fallback: "cierre_enero_2026", label: "ene 26" },
+    "Diciembre 2025": { title: "Diciembre 2025", fallback: "cierre_diciembre_2025", label: "dic 25" },
+    "Noviembre 2025": { title: "Noviembre 2025", fallback: "cierre_noviembre_2025", label: "nov 25" },
+    "Octubre 2025": { title: "Octubre 2025", fallback: "cierre_octubre_2025", label: "oct 25" },
+    "Septiembre 2025": { title: "Septiembre 2025", fallback: "cierre_septiembre_2025", label: "sep 25" },
+    "Agosto 2025": { title: "Agosto 2025", fallback: "cierre_agosto_2025", label: "ago 25" },
+    "Julio 2025": { title: "Julio 2025", fallback: "cierre_julio_2025", label: "jul 25" },
+    "Junio 2025": { title: "Junio 2025", fallback: "cierre_junio_2025", label: "jun 25" },
+    "Mayo 2025": { title: "Mayo 2025", fallback: "cierre_mayo_2025", label: "may 25" }
   };
   
   const meta = sheetMeta[selectedSheet] || { title: "Junio 2026", fallback: "cierre_junio_2026", label: "jun 26" };
@@ -2322,19 +2318,8 @@ async function renderCierreJunio() {
   const fallbackKey = meta.fallback;
   const mesLabel = meta.label;
   
-  tableBody.innerHTML = `<tr><td colspan="4" style="text-align:center;color:var(--text2)">Cargando datos en vivo de Google Sheets...</td></tr>`;
-  if (tableGananciasBody) {
-    tableGananciasBody.innerHTML = `<tr><td colspan="4" style="text-align:center;color:var(--text2)">Cargando...</td></tr>`;
-  }
-  
-  if (!auditoriaEnTiempoReal[selectedSheet]) {
-    await fetchMonthlyDataRealTime(selectedSheet);
-  }
-  
   let data = [];
-  if (auditoriaEnTiempoReal[selectedSheet]) {
-    data = auditoriaEnTiempoReal[selectedSheet];
-  } else if (typeof DATOS_SINCRONIZADOS !== 'undefined') {
+  if (typeof DATOS_SINCRONIZADOS !== 'undefined') {
     data = DATOS_SINCRONIZADOS[fallbackKey] || [];
   }
   
@@ -2565,22 +2550,9 @@ document.getElementById('store-tabs').addEventListener('click', e => {
 });
 
 // Listener unificado de cambio de mes global
-document.addEventListener('change', async e => {
+document.addEventListener('change', e => {
   if (e.target.classList.contains('sel-mes-global')) {
     const val = e.target.value;
-    
-    if (val !== 'all') {
-      const sheetName = mesAPestaña[val];
-      if (sheetName) {
-        if (!asistenciaEnTiempoReal[sheetName] || !gastosEmpleadosTiempoReal[sheetName]) {
-          const tableBody = document.querySelector('#table-cierre-junio tbody');
-          if (tableBody) {
-            tableBody.innerHTML = `<tr><td colspan="4" style="text-align:center;color:var(--text2)">Cargando datos en vivo de Google Sheets...</td></tr>`;
-          }
-          await fetchMonthlyDataRealTime(sheetName);
-        }
-      }
-    }
     
     // Sincronizar todos los selectores de mes
     document.querySelectorAll('.sel-mes-global').forEach(sel => {

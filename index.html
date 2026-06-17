@@ -1207,20 +1207,20 @@ const MES_CODE_JS = {
 
 const DIA_SEMANA_JS = ["dom", "lun", "mar", "mie", "jue", "vie", "sab"];
 const mesAPestaña = {
-  'Junio 2026': 'Jun/26',
-  'Mayo 2026': 'May/26',
-  'Abril 2026': 'Abril/26',
-  'Marzo 2026': 'Marz/26',
-  'Febrero 2026': 'feb/26',
-  'Enero 2026': 'ene/26',
-  'Diciembre 2025': 'Dic/25',
-  'Noviembre 2025': 'Nov/25',
-  'Octubre 2025': 'Oct/25',
-  'Septiembre 2025': 'SEP/25',
-  'Agosto 2025': 'Agos/25',
-  'Julio 2025': 'JUL/25',
-  'Junio 2025': 'JUN/25',
-  'Mayo 2025': 'Mayo/25'
+  'Junio 2026': 'Jun26',
+  'Mayo 2026': 'May26',
+  'Abril 2026': 'Abril26',
+  'Marzo 2026': 'Marz26',
+  'Febrero 2026': 'Feb26',
+  'Enero 2026': 'Ene26',
+  'Diciembre 2025': 'Dic25',
+  'Noviembre 2025': 'Nov25',
+  'Octubre 2025': 'Oct25',
+  'Septiembre 2025': 'SEP25',
+  'Agosto 2025': 'Agos25',
+  'Julio 2025': 'JUL25',
+  'Junio 2025': 'JUN25',
+  'Mayo 2025': 'Mayo25'
 };
 
 let asistenciaEnTiempoReal = {};
@@ -2226,7 +2226,9 @@ async function renderPersonal() {
         expenses = DATOS_SINCRONIZADOS.gastos_empleados;
       }
     } else {
-      if (typeof DATOS_SINCRONIZADOS !== 'undefined' && DATOS_SINCRONIZADOS.gastos_empleados && sheetName) {
+      if (sheetName && gastosEmpleadosTiempoReal[sheetName]) {
+        expenses = gastosEmpleadosTiempoReal[sheetName];
+      } else if (typeof DATOS_SINCRONIZADOS !== 'undefined' && DATOS_SINCRONIZADOS.gastos_empleados && sheetName) {
         const cleanSheetName = sheetName.replace('/', '').toLowerCase();
         expenses = DATOS_SINCRONIZADOS.gastos_empleados.filter(x => x[0].replace('/', '').toLowerCase() === cleanSheetName);
       }
@@ -2318,8 +2320,11 @@ async function renderCierreJunio() {
   const fallbackKey = meta.fallback;
   const mesLabel = meta.label;
   
+  const sheetName = mesAPestaña[selectedSheet];
   let data = [];
-  if (typeof DATOS_SINCRONIZADOS !== 'undefined') {
+  if (sheetName && auditoriaEnTiempoReal[sheetName]) {
+    data = auditoriaEnTiempoReal[sheetName];
+  } else if (typeof DATOS_SINCRONIZADOS !== 'undefined') {
     data = DATOS_SINCRONIZADOS[fallbackKey] || [];
   }
   
@@ -2562,6 +2567,19 @@ document.addEventListener('change', e => {
     });
     
     buildAll();
+    
+    // Disparar sincronización en tiempo real en segundo plano si hay conexión
+    if (val !== 'all') {
+      const sheetName = mesAPestaña[val];
+      if (sheetName) {
+        fetchMonthlyDataRealTime(sheetName).then(success => {
+          if (success) {
+            console.log(`Sincronización en tiempo real exitosa para: ${sheetName}`);
+            buildAll();
+          }
+        });
+      }
+    }
   }
 });
 
@@ -2763,6 +2781,20 @@ window.addEventListener('DOMContentLoaded', () => {
     txtUpdate.textContent = `Sincronizado: ${DATOS_SINCRONIZADOS.ultima_actualizacion || '—'}`;
   }
   buildAll();
+  
+  // Sincronizar en segundo plano el mes seleccionado por defecto al iniciar
+  const filterMonth = document.querySelector('.sel-mes-global')?.value;
+  if (filterMonth && filterMonth !== 'all') {
+    const sheetName = mesAPestaña[filterMonth];
+    if (sheetName) {
+      fetchMonthlyDataRealTime(sheetName).then(success => {
+        if (success) {
+          console.log(`Sincronización inicial exitosa para: ${sheetName}`);
+          buildAll();
+        }
+      });
+    }
+  }
 });
 </script>
 </body>

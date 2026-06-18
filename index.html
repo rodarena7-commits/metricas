@@ -458,6 +458,30 @@
       color: var(--text1);
       box-shadow: 0 1px 3px rgba(0,0,0,0.2);
     }
+    
+    /* Estilos para el plegado/desplegado de tarjetas */
+    .chart-card.collapsed > *:not(.card-header-ctrl) {
+      display: none !important;
+    }
+    .chart-card.collapsed {
+      min-height: 0 !important;
+      height: auto !important;
+      padding-bottom: 12px !important;
+    }
+    .collapse-icon {
+      transition: transform 0.2s ease;
+    }
+    .chart-card.collapsed .collapse-icon {
+      transform: rotate(180deg);
+    }
+    /* Estilos para botones de control generales */
+    .card-ctrl-btn {
+      opacity: 0.7;
+      transition: opacity 0.2s ease, background-color 0.2s ease;
+    }
+    .card-ctrl-btn:hover {
+      opacity: 1;
+    }
   </style>
 </head>
 <body>
@@ -994,6 +1018,49 @@
         </div>
       </div>
       
+      <!-- Seguridad de Secciones -->
+      <div class="chart-card" style="margin: 0; display: flex; flex-direction: column;">
+        <div style="font-weight: 600; margin-bottom: 15px; font-size: 15px; color: var(--text1);">
+          Seguridad de Secciones
+        </div>
+        <form id="form-seguridad" style="display: flex; flex-direction: column; gap: 12px;">
+          <div style="font-size: 12px; color: var(--text2); margin-bottom: 5px; line-height: 1.4;">
+            Defina una contraseña para restringir el acceso a cada sección. Deje el campo vacío si no desea proteger la sección.
+          </div>
+          
+          <div style="display: flex; flex-direction: column; gap: 10px; max-height: 300px; overflow-y: auto; padding-right: 5px;">
+            <div style="display: flex; align-items: center; justify-content: space-between; gap: 10px;">
+              <span style="font-size: 13px; color: var(--text1);">Ventas:</span>
+              <input type="password" id="sec-pass-ventas" placeholder="Sin contraseña" style="background: var(--bg-card); border: 1px solid var(--border); color: var(--text1); padding: 6px 10px; border-radius: 6px; font-size: 13px; outline: none; width: 150px;">
+            </div>
+            <div style="display: flex; align-items: center; justify-content: space-between; gap: 10px;">
+              <span style="font-size: 13px; color: var(--text1);">Gastos:</span>
+              <input type="password" id="sec-pass-gastos" placeholder="Sin contraseña" style="background: var(--bg-card); border: 1px solid var(--border); color: var(--text1); padding: 6px 10px; border-radius: 6px; font-size: 13px; outline: none; width: 150px;">
+            </div>
+            <div style="display: flex; align-items: center; justify-content: space-between; gap: 10px;">
+              <span style="font-size: 13px; color: var(--text1);">Ganancias:</span>
+              <input type="password" id="sec-pass-ganancias" placeholder="Sin contraseña" style="background: var(--bg-card); border: 1px solid var(--border); color: var(--text1); padding: 6px 10px; border-radius: 6px; font-size: 13px; outline: none; width: 150px;">
+            </div>
+            <div style="display: flex; align-items: center; justify-content: space-between; gap: 10px;">
+              <span style="font-size: 13px; color: var(--text1);">Comparativo anual:</span>
+              <input type="password" id="sec-pass-comparativo" placeholder="Sin contraseña" style="background: var(--bg-card); border: 1px solid var(--border); color: var(--text1); padding: 6px 10px; border-radius: 6px; font-size: 13px; outline: none; width: 150px;">
+            </div>
+            <div style="display: flex; align-items: center; justify-content: space-between; gap: 10px;">
+              <span style="font-size: 13px; color: var(--text1);">Empleados:</span>
+              <input type="password" id="sec-pass-personal" placeholder="Sin contraseña" style="background: var(--bg-card); border: 1px solid var(--border); color: var(--text1); padding: 6px 10px; border-radius: 6px; font-size: 13px; outline: none; width: 150px;">
+            </div>
+            <div style="display: flex; align-items: center; justify-content: space-between; gap: 10px;">
+              <span style="font-size: 13px; color: var(--text1);">Balance:</span>
+              <input type="password" id="sec-pass-cierre-junio" placeholder="Sin contraseña" style="background: var(--bg-card); border: 1px solid var(--border); color: var(--text1); padding: 6px 10px; border-radius: 6px; font-size: 13px; outline: none; width: 150px;">
+            </div>
+          </div>
+          
+          <button type="submit" style="background: var(--accent); border: none; color: white; padding: 10px; border-radius: 8px; font-weight: 600; font-size: 13px; cursor: pointer; transition: background 0.2s; margin-top: 5px;">
+            Guardar Configuración
+          </button>
+        </form>
+      </div>
+      
     </div>
   </div>
  
@@ -1002,6 +1069,249 @@
 <footer>+Roma Showroom &amp; Outlet · Dashboard interno · Temporada 2025/26</footer>
  
 <script>
+// ─── CONFIGURACIÓN DE SEGURIDAD Y CONTRASEÑAS ────────────────────────────────
+const SECURITY_CONFIG_KEY = "ROMA_SEC_SECURITY_CONFIG";
+
+function getSecurityConfig() {
+  const data = localStorage.getItem(SECURITY_CONFIG_KEY);
+  if (!data) return {};
+  try {
+    return JSON.parse(data);
+  } catch (e) {
+    return {};
+  }
+}
+
+function saveSecurityConfig(config) {
+  localStorage.setItem(SECURITY_CONFIG_KEY, JSON.stringify(config));
+}
+
+function getUnlockedSections() {
+  const data = sessionStorage.getItem("ROMA_SEC_UNLOCKED_SECTIONS");
+  if (!data) return { ajustes: false };
+  try {
+    return JSON.parse(data);
+  } catch (e) {
+    return { ajustes: false };
+  }
+}
+
+function setSectionUnlocked(tab, isUnlocked) {
+  const unlocked = getUnlockedSections();
+  unlocked[tab] = isUnlocked;
+  sessionStorage.setItem("ROMA_SEC_UNLOCKED_SECTIONS", JSON.stringify(unlocked));
+}
+
+function initSecurityForm() {
+  const form = document.getElementById('form-seguridad');
+  if (!form) return;
+  
+  // Cargar valores actuales
+  const config = getSecurityConfig();
+  const keys = ['ventas', 'gastos', 'ganancias', 'comparativo', 'personal', 'cierre-junio'];
+  keys.forEach(k => {
+    const el = document.getElementById('sec-pass-' + k);
+    if (el) {
+      el.value = config[k] || '';
+    }
+  });
+  
+  form.addEventListener('submit', (e) => {
+    e.preventDefault();
+    const newConfig = {};
+    keys.forEach(k => {
+      const el = document.getElementById('sec-pass-' + k);
+      if (el && el.value.trim() !== '') {
+        newConfig[k] = el.value.trim();
+      }
+    });
+    saveSecurityConfig(newConfig);
+    showToast('Configuración de seguridad guardada.');
+  });
+}
+
+// ─── CONTROL DE VENTANAS (PLEGADO Y MAXIMIZADO) ──────────────────────────────
+function toggleCardCollapse(cardId) {
+  const card = document.getElementById(cardId);
+  if (!card) return;
+  card.classList.toggle('collapsed');
+}
+
+function toggleCardFullscreenNew(cardId) {
+  const card = document.getElementById(cardId);
+  if (!card) return;
+  const isFullscreen = card.classList.toggle('fullscreen');
+  
+  if (isFullscreen) {
+    document.body.style.overflow = 'hidden';
+  } else {
+    document.body.style.overflow = '';
+  }
+  
+  // Si hay algún canvas/gráfico interno, redimensionarlo
+  const canvas = card.querySelector('canvas');
+  if (canvas) {
+    const chartId = canvas.id;
+    setTimeout(() => {
+      if (chartInstances && chartInstances[chartId]) {
+        chartInstances[chartId].resize();
+      }
+    }, 50);
+  }
+}
+
+function initCardControls() {
+  document.querySelectorAll('.chart-card').forEach((card, index) => {
+    if (!card.id) {
+      card.id = 'card-auto-' + index;
+    }
+    
+    // Evitar duplicados
+    let header = card.querySelector('.card-header-ctrl');
+    if (header) return;
+    
+    let firstChild = card.firstElementChild;
+    let titleText = '';
+    let hasExistingButtons = false;
+    let actionButtonsContainer = null;
+    
+    // Detectar si el primer hijo ya es un contenedor de cabecera flexible con botones
+    if (firstChild && firstChild.style.display === 'flex' && firstChild.style.justifyContent === 'space-between') {
+      hasExistingButtons = true;
+      const btns = firstChild.querySelectorAll('.chart-action-btn, button');
+      if (btns.length > 0) {
+        actionButtonsContainer = btns[0].parentElement;
+      } else {
+        actionButtonsContainer = document.createElement('div');
+        actionButtonsContainer.style.display = 'flex';
+        actionButtonsContainer.style.gap = '8px';
+        firstChild.appendChild(actionButtonsContainer);
+      }
+      header = firstChild;
+      header.classList.add('card-header-ctrl');
+    } else if (firstChild && firstChild.tagName === 'DIV' && (firstChild.style.fontWeight === '600' || (firstChild.textContent.trim().length < 100 && !firstChild.querySelector('table')))) {
+      // Tiene un div de título como primer hijo
+      titleText = firstChild.innerHTML;
+      
+      header = document.createElement('div');
+      header.className = 'card-header-ctrl';
+      header.style.display = 'flex';
+      header.style.justifyContent = 'space-between';
+      header.style.alignItems = 'center';
+      header.style.marginBottom = '15px';
+      header.style.gap = '10px';
+      header.style.flexWrap = 'wrap';
+      
+      const titleEl = document.createElement('div');
+      titleEl.style.fontWeight = '600';
+      titleEl.style.fontSize = '15px';
+      titleEl.style.color = firstChild.style.color || 'var(--text1)';
+      titleEl.innerHTML = titleText;
+      header.appendChild(titleEl);
+      
+      actionButtonsContainer = document.createElement('div');
+      actionButtonsContainer.style.display = 'flex';
+      actionButtonsContainer.style.gap = '8px';
+      header.appendChild(actionButtonsContainer);
+      
+      card.replaceChild(header, firstChild);
+    } else {
+      // No tiene cabecera. Buscamos el título de sección anterior
+      let prev = card.previousElementSibling;
+      while (prev && !prev.classList.contains('section-row')) {
+        prev = prev.previousElementSibling;
+      }
+      if (prev && prev.querySelector('.section-title')) {
+        titleText = prev.querySelector('.section-title').textContent.trim();
+      } else {
+        titleText = 'Detalles';
+      }
+      
+      header = document.createElement('div');
+      header.className = 'card-header-ctrl';
+      header.style.display = 'flex';
+      header.style.justifyContent = 'space-between';
+      header.style.alignItems = 'center';
+      header.style.marginBottom = '15px';
+      header.style.gap = '10px';
+      header.style.flexWrap = 'wrap';
+      
+      const titleEl = document.createElement('div');
+      titleEl.style.fontWeight = '600';
+      titleEl.style.fontSize = '15px';
+      titleEl.style.color = 'var(--text1)';
+      titleEl.textContent = titleText;
+      header.appendChild(titleEl);
+      
+      actionButtonsContainer = document.createElement('div');
+      actionButtonsContainer.style.display = 'flex';
+      actionButtonsContainer.style.gap = '8px';
+      header.appendChild(actionButtonsContainer);
+      
+      card.insertBefore(header, card.firstChild);
+    }
+    
+    // Botón de Plegar (Minimizar/Desplegar tarjeta)
+    const collapseBtn = document.createElement('button');
+    collapseBtn.className = 'chart-action-btn card-ctrl-btn';
+    collapseBtn.title = 'Minimizar/Desplegar';
+    collapseBtn.type = 'button';
+    collapseBtn.innerHTML = `
+      <svg class="collapse-icon" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <polyline points="18 15 12 9 6 15"></polyline>
+      </svg>
+    `;
+    collapseBtn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      toggleCardCollapse(card.id);
+    });
+    
+    // Botón de Pantalla Completa (solo si no tenía botón de pantalla completa ya en el HTML)
+    let hasFullscreenBtn = false;
+    if (hasExistingButtons) {
+      const btns = actionButtonsContainer.querySelectorAll('button');
+      btns.forEach(btn => {
+        if (btn.getAttribute('onclick') && btn.getAttribute('onclick').includes('toggleFullscreenChart')) {
+          hasFullscreenBtn = true;
+        }
+      });
+    }
+    
+    if (!hasFullscreenBtn) {
+      const fullscreenBtn = document.createElement('button');
+      fullscreenBtn.className = 'chart-action-btn card-ctrl-btn';
+      fullscreenBtn.title = 'Pantalla Completa';
+      fullscreenBtn.type = 'button';
+      fullscreenBtn.innerHTML = `
+        <svg class="maximize-icon" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M15 3h6v6"></path>
+          <path d="M9 21H3v-6"></path>
+          <path d="M21 3l-7 7"></path>
+          <path d="M3 21l7-7"></path>
+        </svg>
+        <svg class="minimize-icon" style="display: none;" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M4 14h6v6"></path>
+          <path d="M20 10h-6V4"></path>
+          <path d="M14 10l7-7"></path>
+          <path d="M10 14l-7 7"></path>
+        </svg>
+      `;
+      fullscreenBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        toggleCardFullscreenNew(card.id);
+      });
+      actionButtonsContainer.appendChild(fullscreenBtn);
+    }
+    
+    // Insertar el botón de plegar al inicio
+    if (actionButtonsContainer.firstChild) {
+      actionButtonsContainer.insertBefore(collapseBtn, actionButtonsContainer.firstChild);
+    } else {
+      actionButtonsContainer.appendChild(collapseBtn);
+    }
+  });
+}
+
 // ─── MANUAL CORRECTIONS STATE & HELPERS ───────────────────────────────────────
 let manualCorrections = {};
 
@@ -2792,7 +3102,43 @@ function downloadChartBlob(blob, fileName) {
 window.addEventListener('DOMContentLoaded', () => {
   initManualCorrections();
   initAjustesForm();
+  initSecurityForm();
+  initCardControls();
   populateSelects();
+  
+  // Verificar seguridad de la pestaña inicial activa
+  const activeTabBtn = document.querySelector('.tab-btn.active');
+  if (activeTabBtn) {
+    const tab = activeTabBtn.dataset.tab;
+    const secConfig = getSecurityConfig();
+    const unlocked = getUnlockedSections();
+    if (secConfig[tab] && !unlocked[tab]) {
+      const password = prompt("Ingrese la contraseña de esta sección:");
+      if (password === secConfig[tab]) {
+        setSectionUnlocked(tab, true);
+      } else {
+        if (password !== null) {
+          alert("Contraseña incorrecta");
+        }
+        // Redirigir a una pestaña no protegida
+        let redirected = false;
+        const allTabBtns = document.querySelectorAll('.tab-btn');
+        for (const btn of allTabBtns) {
+          const t = btn.dataset.tab;
+          if (t !== 'ajustes' && !secConfig[t]) {
+            btn.click();
+            redirected = true;
+            break;
+          }
+        }
+        if (!redirected) {
+          document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+          document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+        }
+      }
+    }
+  }
+  
   const txtUpdate = document.getElementById('txt-actualizacion');
   if (txtUpdate && typeof DATOS_SINCRONIZADOS !== 'undefined') {
     txtUpdate.textContent = `Sincronizado: ${DATOS_SINCRONIZADOS.ultima_actualizacion || '—'}`;

@@ -1088,19 +1088,50 @@ function saveSecurityConfig(config) {
 }
 
 function getUnlockedSections() {
-  const data = sessionStorage.getItem("ROMA_SEC_UNLOCKED_SECTIONS");
+  const data = localStorage.getItem("ROMA_SEC_UNLOCKED_TIMESTAMPS");
   if (!data) return { ajustes: false };
   try {
-    return JSON.parse(data);
+    const unlocked = JSON.parse(data);
+    const now = Date.now();
+    const result = {};
+    let hasChanges = false;
+    for (const tab in unlocked) {
+      if (unlocked[tab] > now) {
+        result[tab] = true;
+      } else {
+        hasChanges = true;
+      }
+    }
+    // Limpiar expirados de localStorage para mantenerlo limpio
+    if (hasChanges) {
+      const cleanUnlocked = {};
+      for (const tab in unlocked) {
+        if (unlocked[tab] > now) {
+          cleanUnlocked[tab] = unlocked[tab];
+        }
+      }
+      localStorage.setItem("ROMA_SEC_UNLOCKED_TIMESTAMPS", JSON.stringify(cleanUnlocked));
+    }
+    return result;
   } catch (e) {
     return { ajustes: false };
   }
 }
 
 function setSectionUnlocked(tab, isUnlocked) {
-  const unlocked = getUnlockedSections();
-  unlocked[tab] = isUnlocked;
-  sessionStorage.setItem("ROMA_SEC_UNLOCKED_SECTIONS", JSON.stringify(unlocked));
+  const data = localStorage.getItem("ROMA_SEC_UNLOCKED_TIMESTAMPS");
+  let unlocked = {};
+  if (data) {
+    try {
+      unlocked = JSON.parse(data);
+    } catch (e) {}
+  }
+  if (isUnlocked) {
+    unlocked[tab] = Date.now() + (60 * 60 * 1000); // Expiración en 1 hora
+  } else {
+    delete unlocked[tab];
+  }
+  localStorage.setItem("ROMA_SEC_UNLOCKED_TIMESTAMPS", JSON.stringify(unlocked));
 }
 
 function initSecurityForm() {
@@ -2795,9 +2826,10 @@ async function renderCierreJunio() {
           <td style="font-weight:700;color:#38bdf8">${fmtExact(ganancia)}</td>
         `;
         tableGananciasBody.appendChild(tr);
-      });
-    }
   }
+  
+  // Actualizar también la tabla de asistencia diaria que ahora está en la pestaña de Balance
+  renderPersonal();
 }
  
 function buildAll() {

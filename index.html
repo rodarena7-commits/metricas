@@ -818,30 +818,9 @@
       </table>
     </div>
     
-    <div class="section-row">
-      <span class="section-title">Detalle Diario de Asistencia y Turnos</span>
-    </div>
-    <div class="chart-card" style="overflow-x: auto;">
-      <table class="personal-table" id="table-personal-data">
-        <thead>
-          <tr>
-            <th>Fecha</th>
-            <th>Turno Mañana</th>
-            <th>Turno Tarde</th>
-            <th>Ventas</th>
-            <th>Gastos</th>
-            <th>Ganancias</th>
-          </tr>
-        </thead>
-        <tbody>
-          <!-- Rellenado dinámicamente -->
-        </tbody>
-      </table>
-    </div>
-
-    <!-- Nueva sección: Gastos y Adelantos de Empleados -->
+    <!-- Nueva sección: Sueldos -->
     <div class="section-row" style="margin-top: 32px;">
-      <span class="section-title">Gastos y Adelantos de Empleados</span>
+      <span class="section-title">Sueldos</span>
     </div>
     
     <div style="display: flex; flex-direction: row; gap: 24px; flex-wrap: wrap; margin-bottom: 24px;">
@@ -946,6 +925,28 @@
           </tbody>
         </table>
       </div>
+    </div>
+
+    <!-- Detalle Diario de Asistencia y Turnos -->
+    <div class="section-row" style="margin-top: 32px;">
+      <span class="section-title">Detalle Diario de Asistencia y Turnos</span>
+    </div>
+    <div class="chart-card" style="overflow-x: auto; margin-bottom: 24px;">
+      <table class="personal-table" id="table-personal-data">
+        <thead>
+          <tr>
+            <th>Fecha</th>
+            <th>Turno Mañana</th>
+            <th>Turno Tarde</th>
+            <th>Ventas</th>
+            <th>Gastos</th>
+            <th>Ganancias</th>
+          </tr>
+        </thead>
+        <tbody>
+          <!-- Rellenado dinámicamente -->
+        </tbody>
+      </table>
     </div>
   </div>
 
@@ -2399,7 +2400,13 @@ async function renderPersonal() {
   const summaryBody = document.querySelector('#table-personal-summary tbody');
   if (!tableBody) return;
   
-  const filterMonth = document.getElementById('sel-personal-mes').value;
+  const activeTab = document.querySelector('.tab-btn.active')?.dataset.tab;
+  let filterMonth = 'all';
+  if (activeTab === 'cierre-junio') {
+    filterMonth = document.getElementById('sel-auditoria-mes')?.value || 'all';
+  } else {
+    filterMonth = document.getElementById('sel-personal-mes')?.value || 'all';
+  }
   const sheetName = mesAPestaña[filterMonth];
   
   if (sheetName) {
@@ -2866,6 +2873,7 @@ document.getElementById('main-tabs').addEventListener('click', e => {
     renderPersonal();
   } else if (tab === 'cierre-junio') {
     renderCierreJunio();
+    renderPersonal();
   } else if (tab === 'ajustes') {
     renderAjustes();
   }

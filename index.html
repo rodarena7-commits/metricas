@@ -482,9 +482,174 @@
     .card-ctrl-btn:hover {
       opacity: 1;
     }
+    
+    /* Estilos del Selector de Inicio (Home Selector) */
+    .home-selector-overlay {
+      position: fixed;
+      top: 0; left: 0;
+      width: 100vw; height: 100vh;
+      z-index: 100000;
+      background: linear-gradient(135deg, #0b0d14 0%, #151a2d 100%);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+      box-sizing: border-box;
+      transition: opacity 0.3s ease, visibility 0.3s ease;
+    }
+    .home-selector-overlay.hidden {
+      opacity: 0;
+      visibility: hidden;
+      pointer-events: none;
+    }
+    .home-selector-card {
+      background: rgba(28, 31, 48, 0.45);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: 20px;
+      padding: 40px;
+      max-width: 600px;
+      width: 100%;
+      text-align: center;
+      backdrop-filter: blur(20px);
+      box-shadow: 0 20px 50px rgba(0, 0, 0, 0.4);
+    }
+    .home-logo-wrap {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 12px;
+      margin-bottom: 8px;
+    }
+    .home-logo-dot {
+      width: 12px;
+      height: 12px;
+      border-radius: 50%;
+      background: var(--accent);
+      box-shadow: 0 0 12px var(--accent);
+    }
+    .home-logo-text {
+      font-size: 36px;
+      font-weight: 800;
+      background: linear-gradient(135deg, #10b981 0%, #3b82f6 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      letter-spacing: -1px;
+    }
+    .home-subtitle {
+      font-size: 14px;
+      color: var(--text2);
+      margin-bottom: 35px;
+      font-weight: 500;
+    }
+    .home-options-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 20px;
+    }
+    @media (max-width: 480px) {
+      .home-options-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+    .home-opt-btn {
+      background: rgba(255, 255, 255, 0.03);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 30px 20px;
+      cursor: pointer;
+      transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      text-align: center;
+      color: var(--text1);
+      outline: none;
+    }
+    .home-opt-btn:hover {
+      background: rgba(255, 255, 255, 0.06);
+      border-color: var(--border-hover);
+      transform: translateY(-4px);
+      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3);
+    }
+    .home-opt-btn-lock:hover {
+      border-color: var(--accent);
+      box-shadow: 0 10px 25px rgba(16, 185, 129, 0.15);
+    }
+    .home-btn-icon {
+      width: 64px;
+      height: 64px;
+      border-radius: 50%;
+      background: rgba(255, 255, 255, 0.04);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-bottom: 15px;
+      color: var(--text2);
+      transition: all 0.25s ease;
+    }
+    .home-opt-btn:hover .home-btn-icon {
+      color: var(--text1);
+      background: rgba(255, 255, 255, 0.08);
+      transform: scale(1.05);
+    }
+    .home-opt-btn-lock .home-btn-icon {
+      color: #10b981;
+      background: rgba(16, 185, 129, 0.08);
+    }
+    .home-opt-btn-lock:hover .home-btn-icon {
+      background: rgba(16, 185, 129, 0.15);
+      box-shadow: 0 0 15px rgba(16, 185, 129, 0.2);
+    }
+    .home-btn-title {
+      font-size: 18px;
+      font-weight: 700;
+      margin-bottom: 8px;
+    }
+    .home-btn-desc {
+      font-size: 12px;
+      color: var(--text2);
+      line-height: 1.4;
+    }
   </style>
 </head>
 <body>
+
+  <!-- Selector de Inicio (Home Selector) -->
+  <div id="home-selector" class="home-selector-overlay">
+    <div class="home-selector-card">
+      <div class="home-logo-wrap">
+        <div class="home-logo-dot"></div>
+        <span class="home-logo-text">+Roma</span>
+      </div>
+      <div class="home-subtitle">Panel de Control &amp; Métricas Internas</div>
+      
+      <div class="home-options-grid">
+        <button id="home-btn-personal" class="home-opt-btn">
+          <div class="home-btn-icon">
+            <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+              <circle cx="9" cy="7" r="4"></circle>
+              <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
+              <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
+            </svg>
+          </div>
+          <div class="home-btn-title">Empleados</div>
+          <div class="home-btn-desc">Asistencia, turnos y sueldos de personal</div>
+        </button>
+        
+        <button id="home-btn-balance" class="home-opt-btn home-opt-btn-lock">
+          <div class="home-btn-icon">
+            <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
+              <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+            </svg>
+          </div>
+          <div class="home-btn-title">Balance</div>
+          <div class="home-btn-desc">Auditoría, ventas, gastos y finanzas (Requiere clave)</div>
+        </button>
+      </div>
+    </div>
+  </div>
  
 <header>
   <div class="header-title-wrap">
@@ -1070,6 +1235,115 @@
 <footer>+Roma Showroom &amp; Outlet · Dashboard interno · Temporada 2025/26</footer>
  
 <script>
+let descargasEnProgreso = {};
+
+// ─── SELECTOR DE INICIO (HOME SELECTOR) ──────────────────────────────────────
+function showHomeSelector() {
+  const selector = document.getElementById('home-selector');
+  if (selector) {
+    selector.classList.remove('hidden');
+  }
+  updateTabsVisibility();
+}
+
+function hideHomeSelector() {
+  const selector = document.getElementById('home-selector');
+  if (selector) {
+    selector.classList.add('hidden');
+  }
+  updateTabsVisibility();
+}
+
+function updateTabsVisibility() {
+  const mode = sessionStorage.getItem("ROMA_CURRENT_MODE");
+  const allTabBtns = document.querySelectorAll('#main-tabs .tab-btn');
+  
+  allTabBtns.forEach(btn => {
+    const t = btn.dataset.tab;
+    if (mode === 'personal') {
+      if (t === 'personal') {
+        btn.style.display = 'block';
+      } else {
+        btn.style.display = 'none';
+      }
+    } else if (mode === 'balance') {
+      if (t === 'personal') {
+        btn.style.display = (currentStore === 'showroom') ? 'block' : 'none';
+      } else {
+        btn.style.display = 'block';
+      }
+    } else {
+      btn.style.display = 'none';
+    }
+  });
+}
+
+function initHomeSelector() {
+  const btnPersonal = document.getElementById('home-btn-personal');
+  const btnBalance = document.getElementById('home-btn-balance');
+  
+  if (btnPersonal) {
+    btnPersonal.addEventListener('click', () => {
+      sessionStorage.setItem("ROMA_CURRENT_MODE", "personal");
+      hideHomeSelector();
+      const btn = document.getElementById('tab-btn-personal');
+      if (btn) btn.click();
+    });
+  }
+  
+  if (btnBalance) {
+    btnBalance.addEventListener('click', () => {
+      const unlocked = getUnlockedSections();
+      if (!unlocked['ajustes']) {
+        const pin = prompt("Ingrese la clave para acceder a Balance:");
+        if (pin === '0803') {
+          setSectionUnlocked('ajustes', true);
+          setSectionUnlocked('cierre-junio', true);
+        } else {
+          if (pin !== null) {
+            alert("Clave incorrecta");
+          }
+          return;
+        }
+      } else {
+        setSectionUnlocked('cierre-junio', true);
+      }
+      
+      sessionStorage.setItem("ROMA_CURRENT_MODE", "balance");
+      hideHomeSelector();
+      const btn = document.getElementById('tab-btn-cierre-junio');
+      if (btn) btn.click();
+    });
+  }
+  
+  // Agregar clic en el título del header para volver al selector de inicio
+  const header = document.querySelector('header');
+  if (header) {
+    header.style.cursor = 'pointer';
+    header.title = 'Volver al menú de inicio';
+    header.addEventListener('click', (e) => {
+      if (e.target.closest('button') || e.target.closest('select') || e.target.closest('input')) return;
+      sessionStorage.removeItem("ROMA_CURRENT_MODE");
+      showHomeSelector();
+    });
+  }
+  
+  // Comprobar estado inicial
+  const mode = sessionStorage.getItem("ROMA_CURRENT_MODE");
+  if (!mode) {
+    showHomeSelector();
+  } else {
+    hideHomeSelector();
+    if (mode === 'personal') {
+      const btn = document.getElementById('tab-btn-personal');
+      if (btn) btn.click();
+    } else {
+      const btn = document.getElementById('tab-btn-cierre-junio');
+      if (btn) btn.click();
+    }
+  }
+}
+
 // ─── CONFIGURACIÓN DE SEGURIDAD Y CONTRASEÑAS ────────────────────────────────
 const SECURITY_CONFIG_KEY = "ROMA_SEC_SECURITY_CONFIG";
 
@@ -2442,8 +2716,16 @@ async function renderPersonal() {
   
   if (sheetName) {
     if (!asistenciaEnTiempoReal[sheetName] || !gastosEmpleadosTiempoReal[sheetName]) {
+      if (!descargasEnProgreso[sheetName]) {
+        descargasEnProgreso[sheetName] = true;
+        fetchMonthlyDataRealTime(sheetName).then(success => {
+          descargasEnProgreso[sheetName] = false;
+          if (success) {
+            renderPersonal();
+          }
+        });
+      }
       tableBody.innerHTML = '<tr><td colspan="6" style="text-align:center;color:var(--text2)">Cargando asistencia y gastos en vivo de Google Sheets...</td></tr>';
-      await fetchMonthlyDataRealTime(sheetName);
     }
   }
   
@@ -2679,11 +2961,24 @@ async function renderCierreJunio() {
   
   if (sheetName) {
     if (!auditoriaEnTiempoReal[sheetName]) {
-      tableBody.innerHTML = `<tr><td colspan="4" style="text-align:center;color:var(--text2)">Cargando datos en vivo de Google Sheets...</td></tr>`;
-      if (tableGananciasBody) {
-        tableGananciasBody.innerHTML = `<tr><td colspan="4" style="text-align:center;color:var(--text2)">Cargando...</td></tr>`;
+      if (!descargasEnProgreso[sheetName]) {
+        descargasEnProgreso[sheetName] = true;
+        fetchMonthlyDataRealTime(sheetName).then(success => {
+          descargasEnProgreso[sheetName] = false;
+          if (success) {
+            renderCierreJunio();
+          }
+        });
       }
-      await fetchMonthlyDataRealTime(sheetName);
+      
+      const hasOfflineData = typeof DATOS_SINCRONIZADOS !== 'undefined' && DATOS_SINCRONIZADOS[fallbackKey];
+      if (!hasOfflineData) {
+        tableBody.innerHTML = `<tr><td colspan="4" style="text-align:center;color:var(--text2)">Cargando datos en vivo de Google Sheets...</td></tr>`;
+        if (tableGananciasBody) {
+          tableGananciasBody.innerHTML = `<tr><td colspan="4" style="text-align:center;color:var(--text2)">Cargando...</td></tr>`;
+        }
+        return;
+      }
     }
   }
   let data = [];
@@ -3144,6 +3439,7 @@ window.addEventListener('DOMContentLoaded', () => {
   initAjustesForm();
   initSecurityForm();
   initCardControls();
+  initHomeSelector();
   populateSelects();
   
   // Verificar seguridad de la pestaña inicial activa

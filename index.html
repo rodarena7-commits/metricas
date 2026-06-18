@@ -1207,20 +1207,20 @@ const MES_CODE_JS = {
 
 const DIA_SEMANA_JS = ["dom", "lun", "mar", "mie", "jue", "vie", "sab"];
 const mesAPestaña = {
-  'Junio 2026': 'Jun26',
-  'Mayo 2026': 'May26',
-  'Abril 2026': 'Abril26',
-  'Marzo 2026': 'Marz26',
-  'Febrero 2026': 'Feb26',
-  'Enero 2026': 'Ene26',
-  'Diciembre 2025': 'Dic25',
-  'Noviembre 2025': 'Nov25',
-  'Octubre 2025': 'Oct25',
-  'Septiembre 2025': 'SEP25',
-  'Agosto 2025': 'Agos25',
-  'Julio 2025': 'JUL25',
-  'Junio 2025': 'JUN25',
-  'Mayo 2025': 'Mayo25'
+  'Junio 2026': 'Jun/26',
+  'Mayo 2026': 'May/26',
+  'Abril 2026': 'Abril/26',
+  'Marzo 2026': 'Marz/26',
+  'Febrero 2026': 'Feb/26',
+  'Enero 2026': 'Ene/26',
+  'Diciembre 2025': 'Dic/25',
+  'Noviembre 2025': 'Nov/25',
+  'Octubre 2025': 'Oct/25',
+  'Septiembre 2025': 'SEP/25',
+  'Agosto 2025': 'Agos/25',
+  'Julio 2025': 'JUL/25',
+  'Junio 2025': 'JUN/25',
+  'Mayo 2025': 'Mayo/25'
 };
 
 let asistenciaEnTiempoReal = {};
@@ -2092,6 +2092,13 @@ async function renderPersonal() {
   const filterMonth = document.getElementById('sel-personal-mes').value;
   const sheetName = mesAPestaña[filterMonth];
   
+  if (sheetName) {
+    if (!asistenciaEnTiempoReal[sheetName] || !gastosEmpleadosTiempoReal[sheetName]) {
+      tableBody.innerHTML = '<tr><td colspan="6" style="text-align:center;color:var(--text2)">Cargando asistencia y gastos en vivo de Google Sheets...</td></tr>';
+      await fetchMonthlyDataRealTime(sheetName);
+    }
+  }
+  
 
   
   const rows = getRows().filter(d => filterMonth === 'all' || d.month === filterMonth);
@@ -2321,6 +2328,16 @@ async function renderCierreJunio() {
   const mesLabel = meta.label;
   
   const sheetName = mesAPestaña[selectedSheet];
+  
+  if (sheetName) {
+    if (!auditoriaEnTiempoReal[sheetName]) {
+      tableBody.innerHTML = `<tr><td colspan="4" style="text-align:center;color:var(--text2)">Cargando datos en vivo de Google Sheets...</td></tr>`;
+      if (tableGananciasBody) {
+        tableGananciasBody.innerHTML = `<tr><td colspan="4" style="text-align:center;color:var(--text2)">Cargando...</td></tr>`;
+      }
+      await fetchMonthlyDataRealTime(sheetName);
+    }
+  }
   let data = [];
   if (sheetName && auditoriaEnTiempoReal[sheetName]) {
     data = auditoriaEnTiempoReal[sheetName];
@@ -2555,9 +2572,22 @@ document.getElementById('store-tabs').addEventListener('click', e => {
 });
 
 // Listener unificado de cambio de mes global
-document.addEventListener('change', e => {
+document.addEventListener('change', async e => {
   if (e.target.classList.contains('sel-mes-global')) {
     const val = e.target.value;
+    
+    if (val !== 'all') {
+      const sheetName = mesAPestaña[val];
+      if (sheetName) {
+        if (!asistenciaEnTiempoReal[sheetName] || !gastosEmpleadosTiempoReal[sheetName]) {
+          const tableBody = document.querySelector('#table-cierre-junio tbody');
+          if (tableBody) {
+            tableBody.innerHTML = `<tr><td colspan="4" style="text-align:center;color:var(--text2)">Cargando datos en vivo de Google Sheets...</td></tr>`;
+          }
+          await fetchMonthlyDataRealTime(sheetName);
+        }
+      }
+    }
     
     // Sincronizar todos los selectores de mes
     document.querySelectorAll('.sel-mes-global').forEach(sel => {
@@ -2567,19 +2597,6 @@ document.addEventListener('change', e => {
     });
     
     buildAll();
-    
-    // Disparar sincronización en tiempo real en segundo plano si hay conexión
-    if (val !== 'all') {
-      const sheetName = mesAPestaña[val];
-      if (sheetName) {
-        fetchMonthlyDataRealTime(sheetName).then(success => {
-          if (success) {
-            console.log(`Sincronización en tiempo real exitosa para: ${sheetName}`);
-            buildAll();
-          }
-        });
-      }
-    }
   }
 });
 

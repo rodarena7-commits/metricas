@@ -984,8 +984,28 @@
     </div>
     
     <!-- Nueva sección: Sueldos -->
-    <div class="section-row" style="margin-top: 32px;">
-      <span class="section-title">Sueldos</span>
+    <div class="section-row" style="margin-top: 32px; flex-wrap: wrap; gap: 10px; align-items: center; justify-content: space-between;">
+      <span class="section-title" style="margin: 0;">Sueldos</span>
+      <div style="display: flex; gap: 10px; flex-wrap: wrap; align-items: center;">
+        <div class="timeframe-selector">
+          <button id="btn-sueldos-tf-mensual" class="timeframe-btn active" onclick="setSueldosTimeframe('mensual')">Mensual</button>
+          <button id="btn-sueldos-tf-semanal" class="timeframe-btn" onclick="setSueldosTimeframe('semanal')">Semanal</button>
+        </div>
+        <select id="sel-sueldos-mes" style="background: var(--bg-card); border: 1px solid var(--border); color: var(--text1); padding: 8px 12px; border-radius: 8px; font-size: 14px; outline: none; cursor: pointer;">
+          <!-- Se rellenará dinámicamente -->
+        </select>
+        <select id="sel-sueldos-semana" style="background: var(--bg-card); border: 1px solid var(--border); color: var(--text1); padding: 8px 12px; border-radius: 8px; font-size: 14px; outline: none; cursor: pointer; display: none;">
+          <option value="1">Semana 1 (Días 1-7)</option>
+          <option value="2">Semana 2 (Días 8-14)</option>
+          <option value="3">Semana 3 (Días 15-21)</option>
+          <option value="4">Semana 4 (Días 22-28)</option>
+          <option value="5">Semana 5 (Días 29+)</option>
+        </select>
+        <select id="sel-sueldos-empleado" style="background: var(--bg-card); border: 1px solid var(--border); color: var(--text1); padding: 8px 12px; border-radius: 8px; font-size: 14px; outline: none; cursor: pointer;">
+          <option value="all">Todos los empleados</option>
+        </select>
+        <input type="text" id="inp-sueldos-buscar" placeholder="Buscar empleado o concepto..." style="background: var(--bg-card); border: 1px solid var(--border); color: var(--text1); padding: 8px 12px; border-radius: 8px; font-size: 14px; outline: none; width: 220px;">
+      </div>
     </div>
     
     <div style="display: flex; flex-direction: row; gap: 24px; flex-wrap: wrap; margin-bottom: 24px;">
@@ -1276,7 +1296,38 @@ function updateTabsVisibility() {
       btn.style.display = 'none';
     }
   });
+
+  // Ocultar selector de local/tienda si estamos en modo empleados para evitar confusión
+  const storeTabs = document.getElementById('store-tabs');
+  if (storeTabs) {
+    if (mode === 'personal') {
+      storeTabs.style.display = 'none';
+    } else {
+      storeTabs.style.display = 'flex';
+    }
+  }
 }
+
+let timeframeSueldos = 'mensual';
+
+function setSueldosTimeframe(tf) {
+  timeframeSueldos = tf;
+  const btnMensual = document.getElementById('btn-sueldos-tf-mensual');
+  const btnSemanal = document.getElementById('btn-sueldos-tf-semanal');
+  const selSemana = document.getElementById('sel-sueldos-semana');
+  
+  if (tf === 'mensual') {
+    if (btnMensual) btnMensual.classList.add('active');
+    if (btnSemanal) btnSemanal.classList.remove('active');
+    if (selSemana) selSemana.style.display = 'none';
+  } else {
+    if (btnMensual) btnMensual.classList.remove('active');
+    if (btnSemanal) btnSemanal.classList.add('active');
+    if (selSemana) selSemana.style.display = 'block';
+  }
+  renderPersonal();
+}
+
 
 function initHomeSelector() {
   const btnPersonal = document.getElementById('home-btn-personal');
@@ -2664,6 +2715,22 @@ function populateSelects() {
       }
     }
   });
+  
+  const selSueldosMes = document.getElementById('sel-sueldos-mes');
+  if (selSueldosMes) {
+    const currentVal = selSueldosMes.value;
+    selSueldosMes.innerHTML = '';
+    months.forEach(m => {
+      const opt = document.createElement('option');
+      opt.value = m; opt.textContent = m;
+      selSueldosMes.appendChild(opt);
+    });
+    if (currentVal && [...selSueldosMes.options].some(o => o.value === currentVal)) {
+      selSueldosMes.value = currentVal;
+    } else if (months.length > 0) {
+      selSueldosMes.value = months[months.length - 1];
+    }
+  }
 }
 
 function renderDailyTable(tableId, field, colorClass, rows, filterMonth, searchVal) {
@@ -2726,6 +2793,25 @@ async function renderPersonal() {
         });
       }
       tableBody.innerHTML = '<tr><td colspan="6" style="text-align:center;color:var(--text2)">Cargando asistencia y gastos en vivo de Google Sheets...</td></tr>';
+    }
+  }
+  
+  // Lógica de descarga en vivo independiente para Sueldos
+  const selSueldosMes = document.getElementById('sel-sueldos-mes');
+  const sueldosMonth = selSueldosMes ? selSueldosMes.value : 'all';
+  const sueldosSheetName = mesAPestaña[sueldosMonth];
+  
+  if (sueldosSheetName && sueldosSheetName !== sheetName) {
+    if (!gastosEmpleadosTiempoReal[sueldosSheetName]) {
+      if (!descargasEnProgreso[sueldosSheetName]) {
+        descargasEnProgreso[sueldosSheetName] = true;
+        fetchMonthlyDataRealTime(sueldosSheetName).then(success => {
+          descargasEnProgreso[sueldosSheetName] = false;
+          if (success) {
+            renderPersonal();
+          }
+        });
+      }
     }
   }
   
@@ -2856,24 +2942,99 @@ async function renderPersonal() {
     detalleBody.innerHTML = '';
     resumenBody.innerHTML = '';
     
+    // Obtener mes y hoja seleccionados para Sueldos
+    const selSueldosMes = document.getElementById('sel-sueldos-mes');
+    const sueldosMonth = selSueldosMes ? selSueldosMes.value : 'all';
+    const sueldosSheetName = mesAPestaña[sueldosMonth];
+    
     let expenses = [];
     
-    if (filterMonth === 'all') {
+    if (sueldosMonth === 'all') {
       if (typeof DATOS_SINCRONIZADOS !== 'undefined' && DATOS_SINCRONIZADOS.gastos_empleados) {
         expenses = DATOS_SINCRONIZADOS.gastos_empleados;
       }
     } else {
-      if (sheetName && gastosEmpleadosTiempoReal[sheetName]) {
-        expenses = gastosEmpleadosTiempoReal[sheetName];
-      } else if (typeof DATOS_SINCRONIZADOS !== 'undefined' && DATOS_SINCRONIZADOS.gastos_empleados && sheetName) {
-        const cleanSheetName = sheetName.replace('/', '').toLowerCase();
-        expenses = DATOS_SINCRONIZADOS.gastos_empleados.filter(x => x[0].replace('/', '').toLowerCase() === cleanSheetName);
+      if (sueldosSheetName && gastosEmpleadosTiempoReal[sueldosSheetName]) {
+        expenses = gastosEmpleadosTiempoReal[sueldosSheetName];
+      } else {
+        if (typeof DATOS_SINCRONIZADOS !== 'undefined' && DATOS_SINCRONIZADOS.gastos_empleados && sueldosSheetName) {
+          const cleanSheetName = sueldosSheetName.replace('/', '').toLowerCase();
+          expenses = DATOS_SINCRONIZADOS.gastos_empleados.filter(x => x[0].replace('/', '').toLowerCase() === cleanSheetName);
+        }
+        
+        if (expenses.length === 0 && sueldosSheetName && !gastosEmpleadosTiempoReal[sueldosSheetName]) {
+          detalleBody.innerHTML = '<tr><td colspan="7" style="text-align:center;color:var(--text2)">Cargando sueldos en vivo de Google Sheets...</td></tr>';
+          resumenBody.innerHTML = '<tr><td colspan="4" style="text-align:center;color:var(--text2)">Cargando...</td></tr>';
+          return;
+        }
       }
     }
     
+    // Si el timeframe de sueldos es semanal, filtrar según la semana seleccionada
+    if (timeframeSueldos === 'semanal') {
+      const selSemanaVal = parseInt(document.getElementById('sel-sueldos-semana')?.value || "1");
+      expenses = expenses.filter(x => {
+        const dayNum = parseInt(x[2].match(/\d+/)?.[0] || "0");
+        if (dayNum >= 1 && dayNum <= 7) return selSemanaVal === 1;
+        if (dayNum >= 8 && dayNum <= 14) return selSemanaVal === 2;
+        if (dayNum >= 15 && dayNum <= 21) return selSemanaVal === 3;
+        if (dayNum >= 22 && dayNum <= 28) return selSemanaVal === 4;
+        return selSemanaVal === 5;
+      });
+    }
+    
+    // Poblar dinámicamente el select de empleados para Sueldos
+    const selSueldosEmp = document.getElementById('sel-sueldos-empleado');
+    let sueldosEmpVal = 'all';
+    if (selSueldosEmp) {
+      sueldosEmpVal = selSueldosEmp.value;
+      const empsSet = new Set();
+      expenses.forEach(x => {
+        const name = (x[5] || "").trim().toUpperCase();
+        if (name && name !== '—') {
+          empsSet.add(name);
+        }
+      });
+      const empsList = Array.from(empsSet).sort();
+      
+      // Limpiar y repoblar
+      selSueldosEmp.innerHTML = '<option value="all">Todos los empleados</option>';
+      empsList.forEach(emp => {
+        const opt = document.createElement('option');
+        opt.value = emp;
+        opt.textContent = emp;
+        selSueldosEmp.appendChild(opt);
+      });
+      
+      // Mantener seleccionado si todavía está disponible
+      if (empsList.includes(sueldosEmpVal)) {
+        selSueldosEmp.value = sueldosEmpVal;
+      } else {
+        selSueldosEmp.value = 'all';
+        sueldosEmpVal = 'all';
+      }
+    }
+
+    // Filtrar por empleado seleccionado
+    if (sueldosEmpVal !== 'all') {
+      expenses = expenses.filter(x => (x[5] || "").trim().toUpperCase() === sueldosEmpVal);
+    }
+
+    // Filtrar por texto de búsqueda
+    const inpSueldosBuscar = document.getElementById('inp-sueldos-buscar');
+    const sueldosBuscarVal = inpSueldosBuscar ? inpSueldosBuscar.value.toLowerCase().trim() : '';
+    if (sueldosBuscarVal) {
+      expenses = expenses.filter(x => {
+        const empName = (x[5] || "").toLowerCase();
+        const concepto = (x[4] || "").toLowerCase();
+        const fecha = (x[2] || "").toLowerCase();
+        return empName.includes(sueldosBuscarVal) || concepto.includes(sueldosBuscarVal) || fecha.includes(sueldosBuscarVal);
+      });
+    }
+
     if (expenses.length === 0) {
-      detalleBody.innerHTML = '<tr><td colspan="7" style="text-align:center;color:var(--text2)">No hay gastos de empleados en este período.</td></tr>';
-      resumenBody.innerHTML = '<tr><td colspan="4" style="text-align:center;color:var(--text2)">No hay gastos de empleados en este período.</td></tr>';
+      detalleBody.innerHTML = '<tr><td colspan="7" style="text-align:center;color:var(--text2)">No hay gastos de empleados que coincidan con los filtros.</td></tr>';
+      resumenBody.innerHTML = '<tr><td colspan="4" style="text-align:center;color:var(--text2)">No hay gastos de empleados que coincidan con los filtros.</td></tr>';
     } else {
       const resumenMap = {};
       
@@ -2881,7 +3042,7 @@ async function renderPersonal() {
         // x format: [sheetName, r_idx, day_label, current_turno, concepto, emp_name, gastoJ, gastoK, total]
         const shName = x[0];
         const filaExcel = x[1];
-        const fechaLabel = filterMonth === 'all' ? `${x[2]} (${shName})` : x[2];
+        const fechaLabel = sueldosMonth === 'all' ? `${x[2]} (${shName})` : x[2];
         const turno = x[3];
         const concepto = x[4];
         const empName = x[5];
@@ -3130,19 +3291,13 @@ async function renderCierreJunio() {
 }
  
 function buildAll() {
-  // Mostrar u ocultar pestaña de personal y cierre de junio según la tienda (solo Showroom tiene personal/turnos en este sheet)
-  const tabBtnPersonal = document.getElementById('tab-btn-personal');
-  const tabBtnCierreJunio = document.getElementById('tab-btn-cierre-junio');
-  
-  if (currentStore === 'showroom') {
-    if (tabBtnPersonal) tabBtnPersonal.style.display = 'block';
-    if (tabBtnCierreJunio) tabBtnCierreJunio.style.display = 'block';
-  } else {
-    if (tabBtnPersonal) tabBtnPersonal.style.display = 'none';
-    if (tabBtnCierreJunio) tabBtnCierreJunio.style.display = 'none';
+  updateTabsVisibility();
+  const mode = sessionStorage.getItem("ROMA_CURRENT_MODE");
+  if (currentStore !== 'showroom' && mode === 'balance') {
     const activeTab = document.querySelector('.tab-btn.active');
     if (activeTab && (activeTab.dataset.tab === 'personal' || activeTab.dataset.tab === 'cierre-junio')) {
-      document.querySelector('.tab-btn[data-tab="ventas"]').click();
+      const vBtn = document.querySelector('.tab-btn[data-tab="ventas"]');
+      if (vBtn) vBtn.click();
     }
   }
 
@@ -3192,11 +3347,36 @@ function buildAll() {
 }
  
 document.getElementById('main-tabs').addEventListener('click', e => {
-  const tab = e.target.dataset.tab;
+  const btn = e.target.closest('.tab-btn');
+  if (!btn) return;
+  const tab = btn.dataset.tab;
   if (!tab) return;
+  
+  const mode = sessionStorage.getItem("ROMA_CURRENT_MODE");
+  
+  // Si estamos en modo balance, comprobamos la seguridad de la pestaña a la que se quiere entrar
+  if (mode === 'balance') {
+    const secConfig = getSecurityConfig();
+    const unlocked = getUnlockedSections();
+    if (secConfig[tab] && !unlocked[tab]) {
+      const password = prompt("Ingrese la contraseña de esta sección:");
+      if (password === secConfig[tab]) {
+        setSectionUnlocked(tab, true);
+      } else {
+        if (password !== null) {
+          alert("Contraseña incorrecta");
+        }
+        // Detener la acción para no cambiar de pestaña
+        e.stopPropagation();
+        e.preventDefault();
+        return;
+      }
+    }
+  }
+  
   document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
   document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
-  e.target.classList.add('active');
+  btn.classList.add('active');
   document.getElementById('tab-' + tab).classList.add('active');
   if (tab === 'personal') {
     renderPersonal();
@@ -3444,34 +3624,74 @@ window.addEventListener('DOMContentLoaded', () => {
   initHomeSelector();
   populateSelects();
   
-  // Verificar seguridad de la pestaña inicial activa
-  const activeTabBtn = document.querySelector('.tab-btn.active');
-  if (activeTabBtn) {
-    const tab = activeTabBtn.dataset.tab;
-    const secConfig = getSecurityConfig();
-    const unlocked = getUnlockedSections();
-    if (secConfig[tab] && !unlocked[tab]) {
-      const password = prompt("Ingrese la contraseña de esta sección:");
-      if (password === secConfig[tab]) {
-        setSectionUnlocked(tab, true);
-      } else {
-        if (password !== null) {
-          alert("Contraseña incorrecta");
-        }
-        // Redirigir a una pestaña no protegida
-        let redirected = false;
-        const allTabBtns = document.querySelectorAll('.tab-btn');
-        for (const btn of allTabBtns) {
-          const t = btn.dataset.tab;
-          if (t !== 'ajustes' && !secConfig[t]) {
-            btn.click();
-            redirected = true;
-            break;
+  const selSueldosMes = document.getElementById('sel-sueldos-mes');
+  if (selSueldosMes) {
+    selSueldosMes.addEventListener('change', () => {
+      const val = selSueldosMes.value;
+      const sheetName = mesAPestaña[val];
+      if (sheetName) {
+        fetchMonthlyDataRealTime(sheetName).then(success => {
+          if (success) {
+            renderPersonal();
           }
-        }
-        if (!redirected) {
-          document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
-          document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+        });
+      }
+      renderPersonal();
+    });
+  }
+  
+  const selSueldosSemana = document.getElementById('sel-sueldos-semana');
+  if (selSueldosSemana) {
+    selSueldosSemana.addEventListener('change', () => {
+      renderPersonal();
+    });
+  }
+  
+  const selSueldosEmpleado = document.getElementById('sel-sueldos-empleado');
+  if (selSueldosEmpleado) {
+    selSueldosEmpleado.addEventListener('change', () => {
+      renderPersonal();
+    });
+  }
+  
+  const inpSueldosBuscar = document.getElementById('inp-sueldos-buscar');
+  if (inpSueldosBuscar) {
+    inpSueldosBuscar.addEventListener('input', () => {
+      renderPersonal();
+    });
+  }
+  
+  // Verificar seguridad de la pestaña inicial activa (solo en modo balance)
+  const mode = sessionStorage.getItem("ROMA_CURRENT_MODE");
+  if (mode === 'balance') {
+    const activeTabBtn = document.querySelector('.tab-btn.active');
+    if (activeTabBtn) {
+      const tab = activeTabBtn.dataset.tab;
+      const secConfig = getSecurityConfig();
+      const unlocked = getUnlockedSections();
+      if (secConfig[tab] && !unlocked[tab]) {
+        const password = prompt("Ingrese la contraseña de esta sección:");
+        if (password === secConfig[tab]) {
+          setSectionUnlocked(tab, true);
+        } else {
+          if (password !== null) {
+            alert("Contraseña incorrecta");
+          }
+          // Redirigir a una pestaña no protegida
+          let redirected = false;
+          const allTabBtns = document.querySelectorAll('.tab-btn');
+          for (const btn of allTabBtns) {
+            const t = btn.dataset.tab;
+            if (t !== 'ajustes' && !secConfig[t]) {
+              btn.click();
+              redirected = true;
+              break;
+            }
+          }
+          if (!redirected) {
+            document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+            document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+          }
         }
       }
     }

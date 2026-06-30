@@ -286,6 +286,33 @@
       border-color: var(--blue);
       box-shadow: 0 0 8px var(--blue-glow);
     }
+
+    select option {
+      background-color: var(--bg2) !important;
+      color: var(--text) !important;
+    }
+
+    .btn-back-home {
+      display: none;
+      align-items: center;
+      gap: 8px;
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid var(--border);
+      color: var(--text);
+      padding: 8px 16px;
+      border-radius: 8px;
+      font-size: 13px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: var(--transition);
+      outline: none;
+    }
+
+    .btn-back-home:hover {
+      background: rgba(255, 255, 255, 0.1);
+      border-color: var(--border-hover);
+      transform: translateX(-2px);
+    }
  
     /* Chart Cards */
     .chart-card {
@@ -661,6 +688,13 @@
       <span id="txt-actualizacion">Cargando datos...</span>
     </div>
   </div>
+  <button id="btn-back-home" class="btn-back-home">
+    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <line x1="19" y1="12" x2="5" y2="12"></line>
+      <polyline points="12 19 5 12 12 5"></polyline>
+    </svg>
+    Volver al inicio
+  </button>
 </header>
  
 <main>
@@ -1263,6 +1297,10 @@ function showHomeSelector() {
   if (selector) {
     selector.classList.remove('hidden');
   }
+  const btnBack = document.getElementById('btn-back-home');
+  if (btnBack) {
+    btnBack.style.display = 'none';
+  }
   updateTabsVisibility();
 }
 
@@ -1270,6 +1308,10 @@ function hideHomeSelector() {
   const selector = document.getElementById('home-selector');
   if (selector) {
     selector.classList.add('hidden');
+  }
+  const btnBack = document.getElementById('btn-back-home');
+  if (btnBack) {
+    btnBack.style.display = 'flex';
   }
   updateTabsVisibility();
 }
@@ -1379,20 +1421,9 @@ function initHomeSelector() {
     });
   }
   
-  // Comprobar estado inicial
-  const mode = sessionStorage.getItem("ROMA_CURRENT_MODE");
-  if (!mode) {
-    showHomeSelector();
-  } else {
-    hideHomeSelector();
-    if (mode === 'personal') {
-      const btn = document.getElementById('tab-btn-personal');
-      if (btn) btn.click();
-    } else {
-      const btn = document.getElementById('tab-btn-cierre-junio');
-      if (btn) btn.click();
-    }
-  }
+  // Comprobar estado inicial (siempre limpiamos al iniciar/recargar para permitir elegir modo)
+  sessionStorage.removeItem("ROMA_CURRENT_MODE");
+  showHomeSelector();
 }
 
 // ─── CONFIGURACIÓN DE SEGURIDAD Y CONTRASEÑAS ────────────────────────────────
@@ -1874,6 +1905,7 @@ const MES_CODE_JS = {
 
 const DIA_SEMANA_JS = ["dom", "lun", "mar", "mie", "jue", "vie", "sab"];
 const mesAPestaña = {
+  'Julio 2026': 'Jul/26',
   'Junio 2026': 'Jun/26',
   'Mayo 2026': 'May/26',
   'Abril 2026': 'Abril/26',
@@ -2387,7 +2419,7 @@ function parseFinancialsFromMonthlyCSV(csvText, sheetName) {
 
 const monthOrder = [
   'Mayo 2025', 'Junio 2025', 'Julio 2025', 'Agosto 2025', 'Septiembre 2025', 'Octubre 2025', 'Noviembre 2025', 'Diciembre 2025',
-  'Enero 2026', 'Febrero 2026', 'Marzo 2026', 'Abril 2026', 'Mayo 2026', 'Junio 2026'
+  'Enero 2026', 'Febrero 2026', 'Marzo 2026', 'Abril 2026', 'Mayo 2026', 'Junio 2026', 'Julio 2026'
 ];
 const monthMap = { 
   ene:'Enero',feb:'Febrero',mar:'Marzo',abr:'Abril',may:'Mayo',jun:'Junio',
@@ -3097,6 +3129,7 @@ async function renderCierreJunio() {
   const selectedSheet = document.getElementById('sel-auditoria-mes').value; // e.g. "Junio 2026", "Mayo 2026", ...
   
   const sheetMeta = {
+    "Julio 2026": { title: "Julio 2026", fallback: "cierre_julio_2026", label: "jul 26" },
     "Junio 2026": { title: "Junio 2026", fallback: "cierre_junio_2026", label: "jun 26" },
     "Mayo 2026": { title: "Mayo 2026", fallback: "cierre_mayo_2026", label: "may 26" },
     "Abril 2026": { title: "Abril 2026", fallback: "cierre_abril_2026", label: "abr 26" },
@@ -3661,6 +3694,14 @@ window.addEventListener('DOMContentLoaded', () => {
     });
   }
   
+  const btnBackHome = document.getElementById('btn-back-home');
+  if (btnBackHome) {
+    btnBackHome.addEventListener('click', () => {
+      sessionStorage.removeItem("ROMA_CURRENT_MODE");
+      showHomeSelector();
+    });
+  }
+
   // Verificar seguridad de la pestaña inicial activa (solo en modo balance)
   const mode = sessionStorage.getItem("ROMA_CURRENT_MODE");
   if (mode === 'balance') {

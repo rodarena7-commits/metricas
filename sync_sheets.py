@@ -411,7 +411,7 @@ def parse_employee_expenses(wb, sheet_name):
         if not current_day_num or not current_turno:
             continue
             
-        # Detectar filas de total de ventas o gastos de turno
+        # 1. Detectar si es una fila de cierre
         is_total_tm = "venta total tm" in colC_str or "facturacion total tm" in colC_str or "facturación total tm" in colC_str or "venta total tm" in colA_str or "facturacion total tm" in colA_str
         is_total_tt = "venta total tt" in colC_str or "facturacion total tt" in colC_str or "facturación total tt" in colC_str or "venta total tt" in colA_str or "facturacion total tt" in colA_str or "gasto total del dia" in colC_str or "gasto total del dia" in colA_str
         
@@ -420,39 +420,70 @@ def parse_employee_expenses(wb, sheet_name):
         
         is_cierre_row = is_total_tm or is_total_tt or is_gasto_tm or is_gasto_tt
         
-        if is_cierre_row:
-            valJ = sheet.cell(row=r_idx, column=10).value
-            valK = sheet.cell(row=r_idx, column=11).value
-            valL = sheet.cell(row=r_idx, column=12).value
-            
-            gastoJ = clean_num(valJ)
-            gastoK = clean_num(valK)
-            total = gastoJ + gastoK
-            
-            if total > 0:
-                emp_name = "—"
-                # Regla: si en col L hay un nombre importarlo, sino sacar de asistencia del turno
-                if valL is not None and not isinstance(valL, (int, float)) and str(valL).strip():
-                    valL_str = str(valL).strip()
-                    valL_lower = valL_str.lower()
-                    is_money = "$" in valL_str or (valL_lower.replace('-','').replace('.','').replace(',','').isdigit() and len(valL_str) > 0)
-                    is_stock_header = any(x in valL_lower for x in ["stock", "showroom", "outlet"])
-                    is_omit = valL_lower in ["", "empleado", "nombre", "nan", "null"]
-                    
-                    if not is_money and not is_stock_header and not is_omit:
-                        emp_name = valL_str.upper()
-                    else:
-                        emp_name = asistencia.get((current_day_num, current_turno), "—")
-                else:
-                    emp_name = asistencia.get((current_day_num, current_turno), "—")
+        valJ = sheet.cell(row=r_idx, column=10).value
+        valK = sheet.cell(row=r_idx, column=11).value
+        valL = sheet.cell(row=r_idx, column=12).value
+        
+        gastoJ = clean_num(valJ)
+        gastoK = clean_num(valK)
+        total = gastoJ + gastoK
+        
+        if total > 0:
+            # Validar si hay un empleado en la columna L
+            emp_name = "—"
+            has_emp_in_L = False
+            if valL is not None and not isinstance(valL, (int, float)) and str(valL).strip():
+                valL_str = str(valL).strip()
+                valL_lower = valL_str.lower()
+                is_money = "$" in valL_str or (valL_lower.replace('-','').replace('.','').replace(',','').isdigit() and len(valL_str) > 0)
+                is_stock_header = any(x in valL_lower for x in ["stock", "showroom", "outlet"])
+                is_omit = valL_lower in ["", "empleado", "nombre", "nan", "null"]
                 
+                if not is_money and not is_stock_header and not is_omit:
+                    emp_name = valL_str.upper()
+                    has_emp_in_L = True
+            
+            # Decidir si procesamos la fila
+            should_process = False
+            concept_extracted = ""
+            
+            if is_cierre_row:
+                # Mantener lógica histórica de cierre
+                should_process = True
+                concept_extracted = str(colC or colA).strip()
+                if not has_emp_in_L:
+                    emp_name = asistencia.get((current_day_num, current_turno), "—")
+            else:
+                # Lógica de filas individuales del día (no de cierre)
+                # Debe tener un empleado en L para ser adelanto individual
+                if has_emp_in_L:
+                    EXCLUDE_CONCEPTS = ["prenda", "importado", "seña", "sena", "apertura", "cierre", "total", "sobrante", "faltante", "ciere", "oferta", "liquidacion", "liquidación", "liq", "cambio", "venta", "ventas", "abono", "ingreso", "efectivo", "transferencia", "posnet", "factura"]
+                    
+                    # Rellenar concepto si la fila actual está vacía en col C
+                    curr_concept = colC_str
+                    if not curr_concept:
+                        # Buscar hacia arriba el concepto anterior no vacío
+                        for prev_r in range(r_idx - 1, 0, -1):
+                            prev_c = sheet.cell(row=prev_r, column=3).value
+                            if prev_c is not None and str(prev_c).strip():
+                                curr_concept = str(prev_c).strip().lower()
+                                concept_extracted = str(prev_c).strip()
+                                break
+                    else:
+                        concept_extracted = str(colC).strip()
+                        
+                    is_sale_or_cierre = any(x in curr_concept for x in EXCLUDE_CONCEPTS) or any(x in colA_str for x in EXCLUDE_CONCEPTS)
+                    if not is_sale_or_cierre:
+                        should_process = True
+            
+            if should_process:
                 day_label = f"{current_day_name} {current_day_num}"
                 expenses.append([
                     sheet_name,
                     r_idx,
                     day_label,
                     current_turno,
-                    str(colC or colA).strip(),
+                    concept_extracted or "Retiro/Adelanto",
                     emp_name,
                     gastoJ,
                     gastoK,

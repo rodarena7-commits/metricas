@@ -2345,12 +2345,9 @@ function parseEmployeeExpensesCSV(csvText, sheetName) {
     const isTotalTM = colC.includes("venta total tm") || colC.includes("facturacion total tm") || colC.includes("facturación total tm") || colA.includes("venta total tm") || colA.includes("facturacion total tm");
     const isTotalTT = colC.includes("venta total tt") || colC.includes("facturacion total tt") || colC.includes("facturación total tt") || colA.includes("venta total tt") || colA.includes("facturacion total tt") || colC.includes("gasto total del dia") || colA.includes("gasto total del dia");
     
-    const isGastoTM = colC.includes("gasto total tm") || colA.includes("gasto total tm") || colC.includes("gasto total del dia") || colA.includes("gasto total del dia") || colC.includes("gastos total tm") || colA.includes("gastos total tm");
-    const isGastoTT = colC.includes("gasto total tt") || colA.includes("gasto total tt") || colC.includes("gastos total tt") || colA.includes("gastos total tt");
+    const isCobroRow = isTotalTM || isTotalTT;
     
-    const isCierreRow = isTotalTM || isTotalTT || isGastoTM || isGastoTT;
-    
-    if (row.length > 10) {
+    if (isCobroRow && row.length > 10) {
       const valJ = row[9];
       const valK = row[10];
       const valL = row[11] ? row[11].trim() : "";
@@ -2361,8 +2358,6 @@ function parseEmployeeExpensesCSV(csvText, sheetName) {
       
       if (total > 0) {
         let empName = "—";
-        let hasEmpInL = false;
-        
         if (valL) {
           const valLLower = valL.toLowerCase();
           const isMoney = valL.includes('$') || (!isNaN(parseFloat(valL.replace(/\./g,'').replace(',','.'))) && valL.includes(','));
@@ -2371,51 +2366,25 @@ function parseEmployeeExpensesCSV(csvText, sheetName) {
           
           if (!isMoney && !isStockHeader && !isOmit) {
             empName = valL.toUpperCase();
-            hasEmpInL = true;
-          }
-        }
-        
-        let shouldProcess = false;
-        let conceptExtracted = "";
-        
-        if (isCierreRow) {
-          // Solo procesamos cierres correspondientes a gastos
-          if (isGastoTM || isGastoTT || (!isTotalTM && !isTotalTT)) {
-            shouldProcess = true;
-            conceptExtracted = (row[2] || row[0] || "").trim();
-            if (!hasEmpInL) {
-              empName = asistencia[currentDayNum + "_" + currentTurno] || "—";
-            }
+          } else {
+            empName = asistencia[currentDayNum + "_" + currentTurno] || "—";
           }
         } else {
-          // Lógica de filas de retiro/adelanto individuales del día
-          if (hasEmpInL) {
-            const EXCLUDE_CONCEPTS = ["prenda", "importado", "seña", "sena", "apertura", "cierre", "total", "sobrante", "faltante", "ciere", "oferta", "liquidacion", "liquidación", "liq", "cambio", "venta", "ventas", "abono", "ingreso", "efectivo", "transferencia", "posnet", "factura"];
-            
-            const currConcept = colC || lastNonEmptyConcept.toLowerCase();
-            const isSaleOrCierre = EXCLUDE_CONCEPTS.some(x => currConcept.includes(x)) || EXCLUDE_CONCEPTS.some(x => colA.includes(x));
-            
-            if (!isSaleOrCierre) {
-              shouldProcess = true;
-              conceptExtracted = row[2] ? row[2].trim() : lastNonEmptyConcept;
-            }
-          }
+          empName = asistencia[currentDayNum + "_" + currentTurno] || "—";
         }
         
-        if (shouldProcess) {
-          const dayLabel = `${currentDayName} ${currentDayNum}`;
-          expenses.push([
-            sheetName,
-            idx + 1,
-            dayLabel,
-            currentTurno,
-            conceptExtracted || "Retiro/Adelanto",
-            empName,
-            gastoJ,
-            gastoK,
-            total
-          ]);
-        }
+        const dayLabel = `${currentDayName} ${currentDayNum}`;
+        expenses.push([
+          sheetName,
+          idx + 1,
+          dayLabel,
+          currentTurno,
+          "Cobro Sueldo / Adelanto",
+          empName,
+          gastoJ,
+          gastoK,
+          total
+        ]);
       }
     }
   });

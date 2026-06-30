@@ -448,11 +448,12 @@ def parse_employee_expenses(wb, sheet_name):
             concept_extracted = ""
             
             if is_cierre_row:
-                # Mantener lógica histórica de cierre
-                should_process = True
-                concept_extracted = str(colC or colA).strip()
-                if not has_emp_in_L:
-                    emp_name = asistencia.get((current_day_num, current_turno), "—")
+                # Solo procesamos cierres correspondientes a gastos, no a ventas totales
+                if is_gasto_tm or is_gasto_tt or (not is_total_tm and not is_total_tt):
+                    should_process = True
+                    concept_extracted = str(colC or colA).strip()
+                    if not has_emp_in_L:
+                        emp_name = asistencia.get((current_day_num, current_turno), "—")
             else:
                 # Lógica de filas individuales del día (no de cierre)
                 # Debe tener un empleado en L para ser adelanto individual

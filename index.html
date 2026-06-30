@@ -2302,6 +2302,9 @@ function parseEmployeeExpensesCSV(csvText, sheetName) {
   currentTurno = "";
   const expenses = [];
   
+  // Mantener el concepto de la fila de arriba si la actual está vacía
+  let lastNonEmptyConcept = "";
+  
   lines.forEach((line, idx) => {
     const row = parseCSVLine(line);
     if (row.length === 0) return;
@@ -2309,6 +2312,10 @@ function parseEmployeeExpensesCSV(csvText, sheetName) {
     const colA = row[0] ? row[0].trim().toLowerCase() : "";
     const colB = row[1] ? row[1].trim() : "";
     const colC = row[2] ? row[2].trim().toLowerCase() : "";
+    
+    if (row[2] && row[2].trim()) {
+      lastNonEmptyConcept = row[2].trim();
+    }
     
     const isNovedades = colC.includes("novedades del dia") || colC.includes("novedades");
     const isNewDay = (DIA_MAP_JS[colA] && isDayNum(colB)) || (isNovedades && isDayNum(colB));
@@ -2343,7 +2350,7 @@ function parseEmployeeExpensesCSV(csvText, sheetName) {
     
     const isCierreRow = isTotalTM || isTotalTT || isGastoTM || isGastoTT;
     
-    if (isCierreRow && row.length > 10) {
+    if (row.length > 10) {
       const valJ = row[9];
       const valK = row[10];
       const valL = row[11] ? row[11].trim() : "";
@@ -2354,6 +2361,8 @@ function parseEmployeeExpensesCSV(csvText, sheetName) {
       
       if (total > 0) {
         let empName = "—";
+        let hasEmpInL = false;
+        
         if (valL) {
           const valLLower = valL.toLowerCase();
           const isMoney = valL.includes('$') || (!isNaN(parseFloat(valL.replace(/\./g,'').replace(',','.'))) && valL.includes(','));
@@ -2362,25 +2371,51 @@ function parseEmployeeExpensesCSV(csvText, sheetName) {
           
           if (!isMoney && !isStockHeader && !isOmit) {
             empName = valL.toUpperCase();
-          } else {
-            empName = asistencia[currentDayNum + "_" + currentTurno] || "—";
+            hasEmpInL = true;
           }
-        } else {
-          empName = asistencia[currentDayNum + "_" + currentTurno] || "—";
         }
         
-        const dayLabel = `${currentDayName} ${currentDayNum}`;
-        expenses.push([
-          sheetName,
-          idx + 1,
-          dayLabel,
-          currentTurno,
-          (row[2] || row[0] || "").trim(),
-          empName,
-          gastoJ,
-          gastoK,
-          total
-        ]);
+        let shouldProcess = false;
+        let conceptExtracted = "";
+        
+        if (isCierreRow) {
+          // Solo procesamos cierres correspondientes a gastos
+          if (isGastoTM || isGastoTT || (!isTotalTM && !isTotalTT)) {
+            shouldProcess = true;
+            conceptExtracted = (row[2] || row[0] || "").trim();
+            if (!hasEmpInL) {
+              empName = asistencia[currentDayNum + "_" + currentTurno] || "—";
+            }
+          }
+        } else {
+          // Lógica de filas de retiro/adelanto individuales del día
+          if (hasEmpInL) {
+            const EXCLUDE_CONCEPTS = ["prenda", "importado", "seña", "sena", "apertura", "cierre", "total", "sobrante", "faltante", "ciere", "oferta", "liquidacion", "liquidación", "liq", "cambio", "venta", "ventas", "abono", "ingreso", "efectivo", "transferencia", "posnet", "factura"];
+            
+            const currConcept = colC || lastNonEmptyConcept.toLowerCase();
+            const isSaleOrCierre = EXCLUDE_CONCEPTS.some(x => currConcept.includes(x)) || EXCLUDE_CONCEPTS.some(x => colA.includes(x));
+            
+            if (!isSaleOrCierre) {
+              shouldProcess = true;
+              conceptExtracted = row[2] ? row[2].trim() : lastNonEmptyConcept;
+            }
+          }
+        }
+        
+        if (shouldProcess) {
+          const dayLabel = `${currentDayName} ${currentDayNum}`;
+          expenses.push([
+            sheetName,
+            idx + 1,
+            dayLabel,
+            currentTurno,
+            conceptExtracted || "Retiro/Adelanto",
+            empName,
+            gastoJ,
+            gastoK,
+            total
+          ]);
+        }
       }
     }
   });

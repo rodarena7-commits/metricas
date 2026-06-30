@@ -2032,10 +2032,22 @@ async function fetchMonthlyDataRealTime(sheetName) {
   try {
     const res = await fetch(url);
     if (!res.ok) throw new Error("Status " + res.status);
-    const text = await res.text();
-    asistenciaEnTiempoReal[sheetName] = parseMonthCSV(text, sheetName);
-    auditoriaEnTiempoReal[sheetName] = parseAuditCSV(text, sheetName);
-    gastosEmpleadosTiempoReal[sheetName] = parseEmployeeExpensesCSV(text, sheetName);
+     const text = await res.text();
+     
+     const parsedAsistencia = parseMonthCSV(text, sheetName);
+     if (parsedAsistencia && Object.keys(parsedAsistencia).length > 0) {
+       asistenciaEnTiempoReal[sheetName] = parsedAsistencia;
+     }
+     
+     const parsedAuditoria = parseAuditCSV(text, sheetName);
+     if (parsedAuditoria && parsedAuditoria.length > 0) {
+       auditoriaEnTiempoReal[sheetName] = parsedAuditoria;
+     }
+     
+     const parsedExpenses = parseEmployeeExpensesCSV(text, sheetName);
+     if (parsedExpenses && parsedExpenses.length > 0) {
+       gastosEmpleadosTiempoReal[sheetName] = parsedExpenses;
+     }
     
     // Obtener y actualizar en tiempo real los datos financieros desde el balance de la pestaña mensual
     const financials = parseFinancialsFromMonthlyCSV(text, sheetName);
@@ -2856,7 +2868,7 @@ function populateSelects() {
   const selSueldosMes = document.getElementById('sel-sueldos-mes');
   if (selSueldosMes) {
     const currentVal = selSueldosMes.value;
-    selSueldosMes.innerHTML = '';
+    selSueldosMes.innerHTML = '<option value="all">Todos los meses</option>';
     months.forEach(m => {
       const opt = document.createElement('option');
       opt.value = m; opt.textContent = m;

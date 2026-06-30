@@ -1039,13 +1039,14 @@
           <option value="all">Todos los empleados</option>
         </select>
         <input type="text" id="inp-sueldos-buscar" placeholder="Buscar empleado o concepto..." style="background: var(--bg-card); border: 1px solid var(--border); color: var(--text1); padding: 8px 12px; border-radius: 8px; font-size: 14px; outline: none; width: 220px;">
+        <input type="password" id="inp-sueldos-pass" placeholder="Clave de privacidad" style="background: var(--bg-card); border: 1px solid var(--border); color: var(--text1); padding: 8px 12px; border-radius: 8px; font-size: 14px; outline: none; width: 170px; display: none;">
       </div>
     </div>
     
     <div style="display: flex; flex-direction: row; gap: 24px; flex-wrap: wrap; margin-bottom: 24px;">
       <!-- Detalle de Adelantos -->
       <div class="chart-card" style="flex: 1 1 500px; overflow-x: auto;">
-        <div style="margin-bottom: 12px; font-weight: 600; color: var(--text1); font-size: 15px;">Detalle de Adelantos</div>
+        <div style="margin-bottom: 12px; font-weight: 600; color: var(--text1); font-size: 15px;">Sueldos</div>
         <table class="personal-table" id="table-gastos-empleados-detalle">
           <thead>
             <tr>
@@ -1066,7 +1067,7 @@
       
       <!-- Resumen por Empleado -->
       <div class="chart-card" style="flex: 1 1 400px; overflow-x: auto;">
-        <div style="margin-bottom: 12px; font-weight: 600; color: var(--text1); font-size: 15px;">Resumen de Gastos por Empleado</div>
+        <div style="margin-bottom: 12px; font-weight: 600; color: var(--text1); font-size: 15px;">Resumen de Sueldo por Empleado</div>
         <table class="personal-table" id="table-gastos-empleados-resumen">
           <thead>
             <tr>
@@ -1081,6 +1082,36 @@
           </tbody>
         </table>
       </div>
+    </div>
+
+    <!-- Tarjeta: Mini Portal de Privacidad de Sueldos -->
+    <div class="chart-card" style="margin-bottom: 24px; max-width: 600px;">
+      <div style="font-weight: 600; margin-bottom: 12px; font-size: 15px; color: var(--text1); display: flex; align-items: center; gap: 8px;">
+        <span>🔒 Privacidad de mi Sueldo</span>
+      </div>
+      <div style="font-size: 13px; color: var(--text2); margin-bottom: 15px; line-height: 1.4;">
+        Si deseas que tus adelantos y montos mensuales sean privados para el público general, configura una contraseña personal. Tus datos aparecerán bloqueados como <strong>Privado</strong> y solo se revelarán al introducir tu clave.
+      </div>
+      <form id="form-privacidad-empleado" style="display: flex; flex-wrap: wrap; gap: 12px; align-items: flex-end;">
+        <div style="display: flex; flex-direction: column; gap: 6px; flex: 1 1 150px;">
+          <label for="sel-priv-empleado" style="font-size: 12px; color: var(--text2); font-weight: 500;">Selecciona tu nombre:</label>
+          <select id="sel-priv-empleado" required style="background: var(--bg-card); border: 1px solid var(--border); color: var(--text1); padding: 8px 12px; border-radius: 8px; font-size: 14px; outline: none; cursor: pointer;">
+            <!-- Se rellenará dinámicamente -->
+          </select>
+        </div>
+        <div style="display: flex; flex-direction: column; gap: 6px; flex: 1 1 150px;">
+          <label for="inp-priv-actual" style="font-size: 12px; color: var(--text2); font-weight: 500;">Contraseña actual (si ya tiene):</label>
+          <input type="password" id="inp-priv-actual" placeholder="Clave actual" style="background: var(--bg-card); border: 1px solid var(--border); color: var(--text1); padding: 8px 12px; border-radius: 8px; font-size: 14px; outline: none;">
+        </div>
+        <div style="display: flex; flex-direction: column; gap: 6px; flex: 1 1 150px;">
+          <label for="inp-priv-nueva" style="font-size: 12px; color: var(--text2); font-weight: 500;">Nueva contraseña:</label>
+          <input type="password" id="inp-priv-nueva" placeholder="Nueva clave" style="background: var(--bg-card); border: 1px solid var(--border); color: var(--text1); padding: 8px 12px; border-radius: 8px; font-size: 14px; outline: none;">
+        </div>
+        <div style="display: flex; gap: 10px; flex: 1 1 200px; justify-content: flex-end;">
+          <button type="button" id="btn-priv-publico" style="background: rgba(239, 68, 68, 0.15); border: 1px solid var(--red); color: var(--red); padding: 8px 16px; border-radius: 8px; font-size: 13px; font-weight: 600; cursor: pointer; transition: all 0.2s;">Hacer Público</button>
+          <button type="submit" style="background: var(--accent); border: none; color: white; padding: 9px 16px; border-radius: 8px; font-size: 13px; font-weight: 600; cursor: pointer; transition: all 0.2s;">Establecer Privacidad</button>
+        </div>
+      </form>
     </div>
   </div>
 
@@ -1279,6 +1310,30 @@
             Guardar Configuración
           </button>
         </form>
+      </div>
+      
+      <!-- Contraseñas de Privacidad de Empleados -->
+      <div class="chart-card" style="margin: 0; display: flex; flex-direction: column;">
+        <div style="font-weight: 600; margin-bottom: 15px; font-size: 15px; color: var(--text1);">
+          Privacidad de Empleados (Claves)
+        </div>
+        <div style="flex-grow: 1; overflow-y: auto; max-height: 250px;">
+          <table class="personal-table" id="table-empleados-claves" style="margin: 0; width: 100%;">
+            <thead>
+              <tr>
+                <th>Empleado</th>
+                <th>Contraseña</th>
+                <th style="text-align: center;">Acción</th>
+              </tr>
+            </thead>
+            <tbody>
+              <!-- Se rellenará dinámicamente -->
+            </tbody>
+          </table>
+        </div>
+        <div style="margin-top: 15px; font-size: 12px; color: var(--text2); line-height: 1.4;">
+          💡 <strong>Nota:</strong> Aquí se muestran las claves de privacidad creadas por cada empleado. Puedes visualizarlas o restablecerlas si el empleado las olvida.
+        </div>
       </div>
       
     </div>
@@ -1739,39 +1794,85 @@ function renderAjustes() {
   const sortedKeys = Object.keys(manualCorrections).sort();
   if (sortedKeys.length === 0) {
     tbody.innerHTML = `<tr><td colspan="4" style="text-align:center;color:var(--text2);padding:15px;">No hay correcciones manuales activas.</td></tr>`;
+  } else {
+    sortedKeys.forEach(dateKey => {
+      const corr = manualCorrections[dateKey];
+      
+      if (corr.ventas !== undefined) {
+        const tr = document.createElement("tr");
+        tr.innerHTML = `
+          <td>${dateKey}</td>
+          <td><span style="background:rgba(59,130,246,0.1);color:#60a5fa;padding:2px 8px;border-radius:4px;font-size:11px;">Ventas Diarias</span></td>
+          <td>$${Math.round(corr.ventas).toLocaleString('es-AR')}</td>
+          <td style="text-align:center;">
+            <button onclick="deleteAjuste('${dateKey}', 'ventas')" style="background:none;border:none;color:#ef4444;cursor:pointer;font-size:14px;font-weight:600;padding:2px 6px;" title="Eliminar">✕</button>
+          </td>
+        `;
+        tbody.appendChild(tr);
+      }
+      
+      if (corr.gastos !== undefined) {
+        const tr = document.createElement("tr");
+        tr.innerHTML = `
+          <td>${dateKey}</td>
+          <td><span style="background:rgba(245,158,11,0.1);color:#fbbf24;padding:2px 8px;border-radius:4px;font-size:11px;">Gastos Diarios</span></td>
+          <td>$${Math.round(corr.gastos).toLocaleString('es-AR')}</td>
+          <td style="text-align:center;">
+            <button onclick="deleteAjuste('${dateKey}', 'gastos')" style="background:none;border:none;color:#ef4444;cursor:pointer;font-size:14px;font-weight:600;padding:2px 6px;" title="Eliminar">✕</button>
+          </td>
+        `;
+        tbody.appendChild(tr);
+      }
+    });
+  }
+  
+  // Renderizar claves de privacidad de empleados en Ajustes
+  renderClavesAdmin();
+}
+
+function renderClavesAdmin() {
+  const tbody = document.querySelector('#table-empleados-claves tbody');
+  if (!tbody) return;
+  tbody.innerHTML = '';
+  
+  let config = {};
+  try {
+    config = JSON.parse(localStorage.getItem("ROMA_EMP_PRIV_PASS") || "{}");
+  } catch (err) {}
+  
+  const entries = Object.entries(config);
+  if (entries.length === 0) {
+    tbody.innerHTML = '<tr><td colspan="3" style="text-align:center;color:var(--text2);padding:15px;">Ningún empleado ha configurado clave de privacidad.</td></tr>';
     return;
   }
   
-  sortedKeys.forEach(dateKey => {
-    const corr = manualCorrections[dateKey];
-    
-    if (corr.ventas !== undefined) {
-      const tr = document.createElement("tr");
-      tr.innerHTML = `
-        <td>${dateKey}</td>
-        <td><span style="background:rgba(59,130,246,0.1);color:#60a5fa;padding:2px 8px;border-radius:4px;font-size:11px;">Ventas Diarias</span></td>
-        <td>$${Math.round(corr.ventas).toLocaleString('es-AR')}</td>
-        <td style="text-align:center;">
-          <button onclick="deleteAjuste('${dateKey}', 'ventas')" style="background:none;border:none;color:#ef4444;cursor:pointer;font-size:14px;font-weight:600;padding:2px 6px;" title="Eliminar">✕</button>
-        </td>
-      `;
-      tbody.appendChild(tr);
-    }
-    
-    if (corr.gastos !== undefined) {
-      const tr = document.createElement("tr");
-      tr.innerHTML = `
-        <td>${dateKey}</td>
-        <td><span style="background:rgba(245,158,11,0.1);color:#fbbf24;padding:2px 8px;border-radius:4px;font-size:11px;">Gastos Diarios</span></td>
-        <td>$${Math.round(corr.gastos).toLocaleString('es-AR')}</td>
-        <td style="text-align:center;">
-          <button onclick="deleteAjuste('${dateKey}', 'gastos')" style="background:none;border:none;color:#ef4444;cursor:pointer;font-size:14px;font-weight:600;padding:2px 6px;" title="Eliminar">✕</button>
-        </td>
-      `;
-      tbody.appendChild(tr);
-    }
+  entries.forEach(([emp, pass]) => {
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td><span class="badge-emp">${emp}</span></td>
+      <td><code>${pass}</code></td>
+      <td style="text-align:center;">
+        <button onclick="resetEmpleadoPrivacidad('${emp}')" style="background:transparent;border:none;color:var(--red);cursor:pointer;font-weight:600;font-size:14px;">✕</button>
+      </td>
+    `;
+    tbody.appendChild(tr);
   });
 }
+
+function resetEmpleadoPrivacidad(emp) {
+  if (confirm(`¿Estás seguro de que deseas eliminar la contraseña de privacidad de ${emp} y hacer su sueldo público?`)) {
+    let config = {};
+    try {
+      config = JSON.parse(localStorage.getItem("ROMA_EMP_PRIV_PASS") || "{}");
+    } catch (err) {}
+    delete config[emp];
+    localStorage.setItem("ROMA_EMP_PRIV_PASS", JSON.stringify(config));
+    showToast(`Contraseña de privacidad eliminada para ${emp}.`);
+    renderPersonal();
+    renderClavesAdmin();
+  }
+}
+window.resetEmpleadoPrivacidad = resetEmpleadoPrivacidad;
 
 function deleteAjuste(dateKey, field) {
   if (manualCorrections[dateKey]) {
@@ -3045,6 +3146,54 @@ async function renderPersonal() {
         selSueldosEmp.value = 'all';
         sueldosEmpVal = 'all';
       }
+
+      // También poblar el select de privacidad del empleado (el del mini portal)
+      const privSel = document.getElementById('sel-priv-empleado');
+      if (privSel) {
+        const currentPrivVal = privSel.value;
+        privSel.innerHTML = '<option value="" disabled selected>Selecciona tu nombre...</option>';
+        empsList.forEach(emp => {
+          const opt = document.createElement('option');
+          opt.value = emp;
+          opt.textContent = emp;
+          privSel.appendChild(opt);
+        });
+        if (currentPrivVal && empsList.includes(currentPrivVal)) {
+          privSel.value = currentPrivVal;
+        }
+      }
+    }
+
+    // Lógica de privacidad y contraseñas de empleados
+    let privConfig = {};
+    try {
+      privConfig = JSON.parse(localStorage.getItem("ROMA_EMP_PRIV_PASS") || "{}");
+    } catch (e) {}
+
+    const currentMode = sessionStorage.getItem("ROMA_CURRENT_MODE");
+    const isAdmin = currentMode === 'balance';
+
+    const checkCensorship = (empName) => {
+      if (isAdmin) return false; // Administrador en Balance ve todo
+      const empClean = (empName || "").trim().toUpperCase();
+      if (!privConfig[empClean]) return false; // Público por defecto
+      
+      const providedPass = document.getElementById('inp-sueldos-pass')?.value || '';
+      return providedPass !== privConfig[empClean]; // Censurado si no coincide
+    };
+
+    // Controlar visibilidad del input de contraseña de privacidad
+    const anyPrivate = expenses.some(x => {
+      const name = (x[5] || "").trim().toUpperCase();
+      return name && name !== '—' && privConfig[name];
+    });
+    const passInput = document.getElementById('inp-sueldos-pass');
+    if (passInput) {
+      if (anyPrivate && !isAdmin) {
+        passInput.style.display = 'block';
+      } else {
+        passInput.style.display = 'none';
+      }
     }
 
     // Filtrar por empleado seleccionado
@@ -3071,7 +3220,6 @@ async function renderPersonal() {
       const resumenMap = {};
       
       expenses.forEach(x => {
-        // x format: [sheetName, r_idx, day_label, current_turno, concepto, emp_name, gastoJ, gastoK, total]
         const shName = x[0];
         const filaExcel = x[1];
         const fechaLabel = sueldosMonth === 'all' ? `${x[2]} (${shName})` : x[2];
@@ -3091,6 +3239,11 @@ async function renderPersonal() {
           resumenMap[empClean].K += gastoK;
           resumenMap[empClean].total += total;
         }
+
+        const isCensored = checkCensorship(empName);
+        const displayJ = isCensored ? '<span style="color:var(--text2);font-style:italic;">🔒 Privado</span>' : fmtExact(gastoJ);
+        const displayK = isCensored ? '<span style="color:var(--text2);font-style:italic;">🔒 Privado</span>' : fmtExact(gastoK);
+        const displayTotal = isCensored ? '<span style="color:var(--text2);font-style:italic;">🔒 Privado</span>' : fmtExact(total);
         
         const tr = document.createElement('tr');
         tr.innerHTML = `
@@ -3098,9 +3251,9 @@ async function renderPersonal() {
           <td><strong>${fechaLabel} (${turno === 'MAÑANA' ? 'TM' : 'TT'})</strong></td>
           <td><span class="badge-emp">${empName}</span></td>
           <td style="font-size:12px;color:var(--text2)">${concepto}</td>
-          <td style="color:var(--text1)">${fmtExact(gastoJ)}</td>
-          <td style="color:var(--text1)">${fmtExact(gastoK)}</td>
-          <td style="color:var(--amber);font-weight:600;">${fmtExact(total)}</td>
+          <td style="color:var(--text1)">${displayJ}</td>
+          <td style="color:var(--text1)">${displayK}</td>
+          <td style="color:var(--amber);font-weight:600;">${displayTotal}</td>
         `;
         detalleBody.appendChild(tr);
       });
@@ -3108,12 +3261,17 @@ async function renderPersonal() {
       const sortedResumen = Object.entries(resumenMap).sort((a, b) => b[1].total - a[1].total);
       
       sortedResumen.forEach(([emp, totals]) => {
+        const isCensored = checkCensorship(emp);
+        const displayJ = isCensored ? '<span style="color:var(--text2);font-style:italic;">🔒 Privado</span>' : fmtExact(totals.J);
+        const displayK = isCensored ? '<span style="color:var(--text2);font-style:italic;">🔒 Privado</span>' : fmtExact(totals.K);
+        const displayTotal = isCensored ? '<span style="color:var(--text2);font-style:italic;">🔒 Privado</span>' : fmtExact(totals.total);
+
         const tr = document.createElement('tr');
         tr.innerHTML = `
           <td><span class="badge-emp">${emp}</span></td>
-          <td style="color:var(--text1)">${fmtExact(totals.J)}</td>
-          <td style="color:var(--text1)">${fmtExact(totals.K)}</td>
-          <td style="color:var(--amber);font-weight:700;font-size:14px;">${fmtExact(totals.total)}</td>
+          <td style="color:var(--text1)">${displayJ}</td>
+          <td style="color:var(--text1)">${displayK}</td>
+          <td style="color:var(--amber);font-weight:700;font-size:14px;">${displayTotal}</td>
         `;
         resumenBody.appendChild(tr);
       });
@@ -3699,6 +3857,95 @@ window.addEventListener('DOMContentLoaded', () => {
     btnBackHome.addEventListener('click', () => {
       sessionStorage.removeItem("ROMA_CURRENT_MODE");
       showHomeSelector();
+    });
+  }
+
+  const inpSueldosPass = document.getElementById('inp-sueldos-pass');
+  if (inpSueldosPass) {
+    inpSueldosPass.addEventListener('input', () => {
+      renderPersonal();
+    });
+  }
+
+  // Manejar el formulario de configuración de privacidad de sueldos
+  const formPriv = document.getElementById('form-privacidad-empleado');
+  if (formPriv) {
+    formPriv.addEventListener('submit', (e) => {
+      e.preventDefault();
+      const emp = document.getElementById('sel-priv-empleado').value;
+      const actual = document.getElementById('inp-priv-actual').value;
+      const nueva = document.getElementById('inp-priv-nueva').value;
+      
+      if (!emp) {
+        showToast('Por favor selecciona tu nombre.');
+        return;
+      }
+      if (!nueva) {
+        showToast('Por favor escribe la nueva contraseña.');
+        return;
+      }
+      
+      let config = {};
+      try {
+        config = JSON.parse(localStorage.getItem("ROMA_EMP_PRIV_PASS") || "{}");
+      } catch (err) {}
+      
+      // Si ya tiene contraseña, verificar que la actual sea correcta
+      if (config[emp] && config[emp] !== actual) {
+        showToast('Contraseña actual incorrecta.');
+        return;
+      }
+      
+      config[emp] = nueva;
+      localStorage.setItem("ROMA_EMP_PRIV_PASS", JSON.stringify(config));
+      showToast(`Privacidad activada para ${emp}.`);
+      
+      // Limpiar campos
+      document.getElementById('inp-priv-actual').value = '';
+      document.getElementById('inp-priv-nueva').value = '';
+      
+      // Re-renderizar
+      renderPersonal();
+      renderClavesAdmin();
+    });
+  }
+  
+  // Manejar el botón de hacer sueldo público
+  const btnPublico = document.getElementById('btn-priv-publico');
+  if (btnPublico) {
+    btnPublico.addEventListener('click', () => {
+      const emp = document.getElementById('sel-priv-empleado').value;
+      const actual = document.getElementById('inp-priv-actual').value;
+      
+      if (!emp) {
+        showToast('Por favor selecciona tu nombre.');
+        return;
+      }
+      
+      let config = {};
+      try {
+        config = JSON.parse(localStorage.getItem("ROMA_EMP_PRIV_PASS") || "{}");
+      } catch (err) {}
+      
+      if (config[emp]) {
+        if (config[emp] !== actual) {
+          showToast('Contraseña actual incorrecta.');
+          return;
+        }
+        delete config[emp];
+        localStorage.setItem("ROMA_EMP_PRIV_PASS", JSON.stringify(config));
+        showToast(`El sueldo de ${emp} ahora es público.`);
+      } else {
+        showToast(`El sueldo de ${emp} ya es público.`);
+      }
+      
+      // Limpiar campos
+      document.getElementById('inp-priv-actual').value = '';
+      document.getElementById('inp-priv-nueva').value = '';
+      
+      // Re-renderizar
+      renderPersonal();
+      renderClavesAdmin();
     });
   }
 

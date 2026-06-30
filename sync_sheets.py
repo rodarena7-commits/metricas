@@ -39,13 +39,14 @@ MES_MAP = {
     "Marz26": "mar",
     "Abril26": "abr",
     "May26": "may",
-    "Jun26": "jun"
+    "Jun26": "jun",
+    "Jul26": "jul"
 }
 
 # El orden en el que se listan los meses en el dashboard comparativo
 MONTH_ORDER = [
     "Mayo25", "JUN25", "JUL25", "Agos25", "SEP25", "Oct25", "Nov25", "Dic25",
-    "Ene26", "Feb26", "Marz26", "Abril26", "May26", "Jun26"
+    "Ene26", "Feb26", "Marz26", "Abril26", "May26", "Jun26", "Jul26"
 ]
 
 # Datos históricos de Outlet extraídos de index.html original
@@ -243,7 +244,8 @@ MONTH_YEAR_MAP = {
     "Marz26": (2026, 3),
     "Abril26": (2026, 4),
     "May26": (2026, 5),
-    "Jun26": (2026, 6)
+    "Jun26": (2026, 6),
+    "Jul26": (2026, 7)
 }
 
 # Correcciones específicas para montos con ceros de más (typos en planillas mensuales)
@@ -618,7 +620,8 @@ def main():
     showroom_data = compile_showroom_data_from_months(wb)
     print(f"Total de registros de Showroom consolidados desde Balance: {len(showroom_data)}")
     
-    # 3. Generar la solapa exclusiva de auditoría de turnos para Junio, Mayo, Abril y Marzo 2026
+    # 3. Generar la solapa exclusiva de auditoría de turnos para Julio, Junio, Mayo, Abril y Marzo 2026
+    cierre_julio_data = parse_cierre_auditoria(wb, "Jul26")
     cierre_junio_data = parse_cierre_auditoria(wb, "Jun26")
     cierre_mayo_data = parse_cierre_auditoria(wb, "May26")
     cierre_abril_data = parse_cierre_auditoria(wb, "Abril26")
@@ -628,9 +631,9 @@ def main():
     gastos_empleados_data = []
     print("Procesando adelantos y gastos de empleados en pestañas mensuales...")
     for month_sheet in MONTH_ORDER:
-        print(f"Procesando gastos de {month_sheet}...")
-        expenses = parse_employee_expenses(wb, month_sheet)
-        gastos_empleados_data.extend(expenses)
+      print(f"Procesando gastos de {month_sheet}...")
+      expenses = parse_employee_expenses(wb, month_sheet)
+      gastos_empleados_data.extend(expenses)
     print(f"Total de registros de adelantos extraídos: {len(gastos_empleados_data)}")
             
     # Generar el archivo data.js
@@ -643,6 +646,7 @@ const DATOS_SINCRONIZADOS = {{
   ultima_actualizacion: "{timestamp}",
   showroom: {json.dumps(showroom_data)},
   outlet: {json.dumps(OUTLET_HISTORIC_DATA)},
+  cierre_julio_2026: {json.dumps(cierre_julio_data)},
   cierre_junio_2026: {json.dumps(cierre_junio_data)},
   cierre_mayo_2026: {json.dumps(cierre_mayo_data)},
   cierre_abril_2026: {json.dumps(cierre_abril_data)},

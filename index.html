@@ -806,6 +806,30 @@
     }
     .pnl-acumulado-stat-val.pos { color: #10b981; }
     .pnl-acumulado-stat-val.neg { color: #ef4444; }
+    
+    .pnl-calendar-day.sales-view {
+      background: rgba(59, 130, 246, 0.04);
+      border-color: rgba(59, 130, 246, 0.15);
+    }
+    .pnl-calendar-day.sales-view:hover {
+      border-color: rgba(59, 130, 246, 0.4);
+      background: rgba(59, 130, 246, 0.08);
+    }
+    .pnl-calendar-day-pnl.sales-color {
+      color: #38bdf8;
+    }
+    
+    .pnl-calendar-day.expenses-view {
+      background: rgba(245, 158, 11, 0.04);
+      border-color: rgba(245, 158, 11, 0.15);
+    }
+    .pnl-calendar-day.expenses-view:hover {
+      border-color: rgba(245, 158, 11, 0.4);
+      background: rgba(245, 158, 11, 0.08);
+    }
+    .pnl-calendar-day-pnl.expenses-color {
+      color: var(--amber);
+    }
   </style>
 </head>
 <body>
@@ -3837,7 +3861,10 @@ document.addEventListener('input', e => {
 
 const selTipo = document.getElementById('sel-auditoria-tipo');
 if (selTipo) {
-  selTipo.addEventListener('change', renderCierreJunio);
+  selTipo.addEventListener('change', () => {
+    renderCierreJunio();
+    renderPersonal();
+  });
 }
 
 const thMonto = document.getElementById('th-cierre-monto');
@@ -4042,6 +4069,8 @@ function renderBalanceCalendar(rows, filterMonth) {
   
   container.innerHTML = '';
   
+  const filterTipo = document.getElementById('sel-auditoria-tipo')?.value || "all";
+  
   if (filterMonth === 'all') {
     // MODO 2: Todos los meses (tarjetas consolidadas mensuales)
     const monthStats = {};
@@ -4061,8 +4090,19 @@ function renderBalanceCalendar(rows, filterMonth) {
       return;
     }
     
-    // Crear el layout de tarjetas
-    const title = `<div style="font-weight: 600; margin-bottom: 15px; font-size: 15px; color: var(--text1);">Consolidado Mensual de Ganancias</div>`;
+    // Título de la sección de consolidado
+    let sectionTitle = "Consolidado Mensual de Ganancias";
+    if (filterTipo === 'VENTAS') sectionTitle = "Consolidado Mensual de Ventas";
+    else if (filterTipo === 'GASTOS') sectionTitle = "Consolidado Mensual de Gastos";
+    
+    const headerTitle = document.createElement('div');
+    headerTitle.style.fontWeight = '600';
+    headerTitle.style.marginBottom = '15px';
+    headerTitle.style.fontSize = '15px';
+    headerTitle.style.color = 'var(--text1)';
+    headerTitle.textContent = sectionTitle;
+    container.appendChild(headerTitle);
+    
     const grid = document.createElement('div');
     grid.style.display = 'grid';
     grid.style.gridTemplateColumns = 'repeat(auto-fit, minmax(280px, 1fr))';
@@ -4074,8 +4114,31 @@ function renderBalanceCalendar(rows, filterMonth) {
       card.style.minHeight = '120px';
       card.style.cursor = 'pointer';
       
-      const isPos = stats.ganancias >= 0;
-      card.classList.add(isPos ? 'pos' : 'neg');
+      let cardClass = '';
+      let displayValueHtml = '';
+      
+      if (filterTipo === 'VENTAS') {
+        cardClass = 'sales-view';
+        displayValueHtml = `
+          <strong style="color:var(--text2);">Ventas del mes:</strong>
+          <strong class="sales-color">${fmtExact(stats.ventas)}</strong>
+        `;
+      } else if (filterTipo === 'GASTOS') {
+        cardClass = 'expenses-view';
+        displayValueHtml = `
+          <strong style="color:var(--text2);">Gastos del mes:</strong>
+          <strong class="expenses-color">${fmtExact(stats.gastos)}</strong>
+        `;
+      } else {
+        const isPos = stats.ganancias >= 0;
+        cardClass = isPos ? 'pos' : 'neg';
+        displayValueHtml = `
+          <strong style="color:var(--text2);">Neto mensual:</strong>
+          <strong class="${isPos ? 'pos' : 'neg'}">${fmtExact(stats.ganancias)}</strong>
+        `;
+      }
+      
+      card.classList.add(cardClass);
       
       card.innerHTML = `
         <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
@@ -4086,8 +4149,7 @@ function renderBalanceCalendar(rows, filterMonth) {
           <div style="display:flex;justify-content:space-between;"><span style="color:var(--text2);">Ventas Totales:</span><span style="font-weight:600;color:var(--text1);">${fmtExact(stats.ventas)}</span></div>
           <div style="display:flex;justify-content:space-between;"><span style="color:var(--text2);">Gastos Totales:</span><span style="font-weight:600;color:var(--amber);">${fmtExact(stats.gastos)}</span></div>
           <div style="display:flex;justify-content:space-between;border-top:1px solid var(--border);padding-top:4px;margin-top:4px;font-size:13px;">
-            <strong style="color:var(--text2);">Neto mensual:</strong>
-            <strong class="${isPos ? 'pos' : 'neg'}">${fmtExact(stats.ganancias)}</strong>
+            ${displayValueHtml}
           </div>
         </div>
       `;
@@ -4097,7 +4159,6 @@ function renderBalanceCalendar(rows, filterMonth) {
         const selMes = document.getElementById('sel-auditoria-mes');
         if (selMes) {
           selMes.value = m;
-          // Disparar evento de cambio para descargar/renderizar
           const event = new Event('change');
           selMes.dispatchEvent(event);
         }
@@ -4172,12 +4233,30 @@ function renderBalanceCalendar(rows, filterMonth) {
       dayDiv.appendChild(dayLabel);
       
       if (r) {
-        const isPos = r.ganancias >= 0;
-        dayDiv.classList.add(isPos ? 'pos' : 'neg');
+        let dayClass = 'pos';
+        let dayPnlText = '';
+        let dayPnlClass = '';
+        
+        if (filterTipo === 'VENTAS') {
+          dayClass = 'sales-view';
+          dayPnlText = Math.round(r.ventas).toLocaleString('es-AR');
+          dayPnlClass = 'sales-color';
+        } else if (filterTipo === 'GASTOS') {
+          dayClass = 'expenses-view';
+          dayPnlText = Math.round(r.gastos).toLocaleString('es-AR');
+          dayPnlClass = 'expenses-color';
+        } else {
+          const isPos = r.ganancias >= 0;
+          dayClass = isPos ? 'pos' : 'neg';
+          dayPnlText = (isPos ? '+' : '') + Math.round(r.ganancias).toLocaleString('es-AR');
+          dayPnlClass = isPos ? 'pos' : 'neg';
+        }
+        
+        dayDiv.classList.add(dayClass);
         
         const pnlValue = document.createElement('div');
-        pnlValue.className = `pnl-calendar-day-pnl ${isPos ? 'pos' : 'neg'}`;
-        pnlValue.textContent = (isPos ? '+' : '') + Math.round(r.ganancias).toLocaleString('es-AR');
+        pnlValue.className = `pnl-calendar-day-pnl ${dayPnlClass}`;
+        pnlValue.textContent = dayPnlText;
         dayDiv.appendChild(pnlValue);
         
         // Crear Tooltip
@@ -4188,7 +4267,7 @@ function renderBalanceCalendar(rows, filterMonth) {
           <div class="pnl-tooltip-row"><span class="label">Ventas:</span><span class="val">${fmtExact(r.ventas)}</span></div>
           <div class="pnl-tooltip-row"><span class="label">Gastos:</span><span class="val" style="color:var(--amber);">${fmtExact(r.gastos)}</span></div>
           <div class="pnl-tooltip-row" style="border-top:1px solid rgba(255,255,255,0.08);padding-top:6px;margin-top:6px;">
-            <span class="label">Ganancia:</span><span class="val ${isPos ? 'pos' : 'neg'}">${fmtExact(r.ganancias)}</span>
+            <span class="label">Ganancia:</span><span class="val ${r.ganancias < 0 ? 'neg' : 'pos'}">${fmtExact(r.ganancias)}</span>
           </div>
           <div class="pnl-tooltip-row" style="font-size:9.5px;color:var(--text2);margin-top:6px;border-top:1px dashed rgba(255,255,255,0.05);padding-top:4px;">
             <span>Mañana: ${r.empleado_tm || '—'}</span>
@@ -4208,6 +4287,11 @@ function renderBalanceCalendar(rows, filterMonth) {
       grid.appendChild(dayDiv);
     }
     
+    // Título del calendario adaptativo
+    let calendarTitle = 'Rendimiento PnL Diario';
+    if (filterTipo === 'VENTAS') calendarTitle = 'Ventas Diarias';
+    else if (filterTipo === 'GASTOS') calendarTitle = 'Gastos Diarios';
+    
     // Agregar Título del calendario
     const headerTitle = document.createElement('div');
     headerTitle.style.display = 'flex';
@@ -4216,7 +4300,7 @@ function renderBalanceCalendar(rows, filterMonth) {
     headerTitle.style.marginBottom = '10px';
     headerTitle.innerHTML = `
       <div style="font-weight: 600; font-size: 15px; color: var(--text1); display:flex; align-items:center; gap:8px;">
-        <span>Rendimiento PnL Diario</span>
+        <span>${calendarTitle}</span>
         <span style="font-size: 11px; font-weight: 400; color: var(--text2); background: rgba(255,255,255,0.05); padding: 2px 8px; border-radius: 12px;">${filterMonth}</span>
       </div>
       <div style="display:flex; gap:6px;">

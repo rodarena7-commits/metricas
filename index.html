@@ -637,6 +637,175 @@
       color: var(--text2);
       line-height: 1.4;
     }
+    
+    /* Estilos del Calendario PnL de Balance */
+    .pnl-calendar {
+      display: grid;
+      grid-template-columns: repeat(7, 1fr);
+      gap: 8px;
+      margin-top: 15px;
+    }
+    .pnl-calendar-header-day {
+      text-align: center;
+      font-weight: 600;
+      color: var(--text2);
+      font-size: 12px;
+      padding: 6px 0;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+    .pnl-calendar-day {
+      background: var(--bg3);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      min-height: 80px;
+      padding: 8px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      transition: var(--transition);
+      cursor: pointer;
+      position: relative;
+    }
+    .pnl-calendar-day:hover {
+      border-color: var(--border-hover);
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+    }
+    .pnl-calendar-day.empty {
+      background: transparent;
+      border: 1px dashed rgba(255,255,255,0.05);
+      cursor: default;
+      pointer-events: none;
+    }
+    .pnl-calendar-day-num {
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--text2);
+    }
+    .pnl-calendar-day-pnl {
+      font-size: 13px;
+      font-weight: 700;
+      text-align: right;
+      margin-top: auto;
+    }
+    .pnl-calendar-day-pnl.pos {
+      color: #10b981;
+    }
+    .pnl-calendar-day-pnl.neg {
+      color: #ef4444;
+    }
+    .pnl-calendar-day-pnl.zero {
+      color: var(--text2);
+    }
+    .pnl-calendar-day.pos {
+      background: rgba(16, 185, 129, 0.04);
+      border-color: rgba(16, 185, 129, 0.15);
+    }
+    .pnl-calendar-day.neg {
+      background: rgba(239, 68, 68, 0.04);
+      border-color: rgba(239, 68, 68, 0.15);
+    }
+    .pnl-calendar-day.pos:hover {
+      border-color: rgba(16, 185, 129, 0.4);
+      background: rgba(16, 185, 129, 0.08);
+    }
+    .pnl-calendar-day.neg:hover {
+      border-color: rgba(239, 68, 68, 0.4);
+      background: rgba(239, 68, 68, 0.08);
+    }
+    
+    /* Tooltip personalizado */
+    .pnl-tooltip {
+      position: absolute;
+      bottom: 105%;
+      left: 50%;
+      transform: translateX(-50%) translateY(5px);
+      background: rgba(19, 22, 34, 0.95);
+      border: 1px solid var(--border-hover);
+      border-radius: 8px;
+      padding: 10px 14px;
+      width: 180px;
+      font-size: 11px;
+      color: var(--text);
+      box-shadow: 0 10px 25px rgba(0,0,0,0.5);
+      z-index: 200;
+      opacity: 0;
+      visibility: hidden;
+      transition: all 0.2s ease;
+      pointer-events: none;
+      backdrop-filter: blur(8px);
+    }
+    .pnl-calendar-day:hover .pnl-tooltip {
+      opacity: 1;
+      visibility: visible;
+      transform: translateX(-50%) translateY(0);
+    }
+    .pnl-tooltip-title {
+      font-weight: 700;
+      margin-bottom: 6px;
+      border-bottom: 1px solid var(--border);
+      padding-bottom: 4px;
+      color: var(--text1);
+    }
+    .pnl-tooltip-row {
+      display: flex;
+      justify-content: space-between;
+      margin: 3px 0;
+    }
+    .pnl-tooltip-row span.label {
+      color: var(--text2);
+    }
+    .pnl-tooltip-row span.val {
+      font-weight: 600;
+    }
+    .pnl-tooltip-row span.val.pos {
+      color: #10b981;
+    }
+    .pnl-tooltip-row span.val.neg {
+      color: #ef4444;
+    }
+
+    /* Banner del PnL Acumulado */
+    .pnl-acumulado-banner {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background: var(--bg2);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 16px 20px;
+      margin-top: 20px;
+      flex-wrap: wrap;
+      gap: 15px;
+    }
+    .pnl-acumulado-title {
+      font-size: 14px;
+      color: var(--text2);
+      font-weight: 500;
+    }
+    .pnl-acumulado-stats {
+      display: flex;
+      gap: 25px;
+      flex-wrap: wrap;
+    }
+    .pnl-acumulado-stat {
+      display: flex;
+      flex-direction: column;
+    }
+    .pnl-acumulado-stat-label {
+      font-size: 11px;
+      color: var(--text2);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      margin-bottom: 2px;
+    }
+    .pnl-acumulado-stat-val {
+      font-size: 16px;
+      font-weight: 700;
+    }
+    .pnl-acumulado-stat-val.pos { color: #10b981; }
+    .pnl-acumulado-stat-val.neg { color: #ef4444; }
   </style>
 </head>
 <body>
@@ -1178,10 +1347,16 @@
     </div>
 
     <!-- Detalle Diario de Asistencia y Turnos -->
-    <div class="section-row" style="margin-top: 32px;">
+    <div class="section-row" style="margin-top: 32px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
       <span class="section-title">Detalle Diario de Asistencia y Turnos</span>
+      <div class="timeframe-selector" style="margin: 0; display: flex; gap: 2px; background: rgba(255,255,255,0.03); padding: 2px; border-radius: 8px; border: 1px solid var(--border);">
+        <button id="btn-balance-view-table" class="timeframe-btn active" onclick="setBalanceView('table')" style="padding: 6px 12px; font-size: 13px; border-radius: 6px;">Tabla</button>
+        <button id="btn-balance-view-calendar" class="timeframe-btn" onclick="setBalanceView('calendar')" style="padding: 6px 12px; font-size: 13px; border-radius: 6px;">Calendario</button>
+      </div>
     </div>
-    <div class="chart-card" style="overflow-x: auto; margin-bottom: 24px;">
+    
+    <!-- Contenedor Vista Tabla -->
+    <div id="balance-view-table-container" class="chart-card" style="overflow-x: auto; margin-bottom: 24px;">
       <table class="personal-table" id="table-personal-data">
         <thead>
           <tr>
@@ -1197,6 +1372,11 @@
           <!-- Rellenado dinámicamente -->
         </tbody>
       </table>
+    </div>
+
+    <!-- Contenedor Vista Calendario -->
+    <div id="balance-view-calendar-container" class="chart-card" style="margin-bottom: 24px; display: none;">
+      <!-- Rellenado dinámicamente -->
     </div>
   </div>
 
@@ -2847,8 +3027,7 @@ function populateSelects() {
   const months = getMonths(rows);
   document.querySelectorAll('.sel-mes-global').forEach(sel => {
     const currentVal = sel.value;
-    const isBalance = sel.id === 'sel-auditoria-mes';
-    sel.innerHTML = isBalance ? '' : '<option value="all">Todos los meses</option>';
+    sel.innerHTML = '<option value="all">Todos los meses</option>';
     months.forEach(m => {
       const opt = document.createElement('option');
       opt.value = m; opt.textContent = m;
@@ -2857,10 +3036,11 @@ function populateSelects() {
     if (currentVal && [...sel.options].some(o => o.value === currentVal)) {
       sel.value = currentVal;
     } else {
-      if (isBalance && months.length > 0) {
-        sel.value = months[months.length - 1];
+      if (months.length > 0) {
+        // En balance por defecto cargar el último mes de la lista
+        sel.value = (sel.id === 'sel-auditoria-mes') ? months[months.length - 1] : 'all';
       } else {
-        sel.value = isBalance ? '' : 'all';
+        sel.value = 'all';
       }
     }
   });
@@ -3081,6 +3261,11 @@ async function renderPersonal() {
       <div class="metric"><div class="metric-label">Mayor Presencia</div><div class="metric-value" style="font-size:17px;margin-top:4px;">${topEmployee}</div></div>
       <div class="metric"><div class="metric-label">Personal Activo</div><div class="metric-value">${Object.keys(turnos).length}</div></div>
     `;
+  }
+  
+  // Dibujar el calendario de balance si corresponde
+  if (currentBalanceView === 'calendar') {
+    renderBalanceCalendar(rows, filterMonth);
   }
 
   // ─── RENDERING NUEVAS TABLAS DE GASTOS Y ADELANTOS DE EMPLEADOS ──────────────────
@@ -3821,7 +4006,283 @@ function downloadChartBlob(blob, fileName) {
   URL.revokeObjectURL(url);
   showToast('Gráfico descargado como PNG.');
 }
- 
+
+// Variable global para recordar la vista activa de Balance (tabla o calendario)
+let currentBalanceView = localStorage.getItem("ROMA_BALANCE_VIEW") || 'table';
+
+function setBalanceView(view) {
+  currentBalanceView = view;
+  localStorage.setItem("ROMA_BALANCE_VIEW", view);
+  
+  const btnTable = document.getElementById('btn-balance-view-table');
+  const btnCalendar = document.getElementById('btn-balance-view-calendar');
+  const tableContainer = document.getElementById('balance-view-table-container');
+  const calendarContainer = document.getElementById('balance-view-calendar-container');
+  
+  if (btnTable && btnCalendar && tableContainer && calendarContainer) {
+    if (view === 'calendar') {
+      btnTable.classList.remove('active');
+      btnCalendar.classList.add('active');
+      tableContainer.style.display = 'none';
+      calendarContainer.style.display = 'block';
+    } else {
+      btnTable.classList.add('active');
+      btnCalendar.classList.remove('active');
+      tableContainer.style.display = 'block';
+      calendarContainer.style.display = 'none';
+    }
+  }
+  
+  renderPersonal();
+}
+
+function renderBalanceCalendar(rows, filterMonth) {
+  const container = document.getElementById('balance-view-calendar-container');
+  if (!container) return;
+  
+  container.innerHTML = '';
+  
+  if (filterMonth === 'all') {
+    // MODO 2: Todos los meses (tarjetas consolidadas mensuales)
+    const monthStats = {};
+    rows.forEach(r => {
+      if (!monthStats[r.month]) {
+        monthStats[r.month] = { ventas: 0, gastos: 0, ganancias: 0, count: 0 };
+      }
+      monthStats[r.month].ventas += r.ventas;
+      monthStats[r.month].gastos += r.gastos;
+      monthStats[r.month].ganancias += r.ganancias;
+      monthStats[r.month].count += 1;
+    });
+    
+    const monthlyList = Object.entries(monthStats);
+    if (monthlyList.length === 0) {
+      container.innerHTML = '<div style="text-align:center;color:var(--text2);padding:20px;">No hay registros históricos de balance disponibles.</div>';
+      return;
+    }
+    
+    // Crear el layout de tarjetas
+    const title = `<div style="font-weight: 600; margin-bottom: 15px; font-size: 15px; color: var(--text1);">Consolidado Mensual de Ganancias</div>`;
+    const grid = document.createElement('div');
+    grid.style.display = 'grid';
+    grid.style.gridTemplateColumns = 'repeat(auto-fit, minmax(280px, 1fr))';
+    grid.style.gap = '16px';
+    
+    monthlyList.forEach(([m, stats]) => {
+      const card = document.createElement('div');
+      card.className = 'pnl-calendar-day';
+      card.style.minHeight = '120px';
+      card.style.cursor = 'pointer';
+      
+      const isPos = stats.ganancias >= 0;
+      card.classList.add(isPos ? 'pos' : 'neg');
+      
+      card.innerHTML = `
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
+          <strong style="color:var(--text1);font-size:15px;font-family:var(--font-title);">${m}</strong>
+          <span style="font-size:11px;color:var(--text2);">${stats.count} días registrados</span>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:4px;font-size:12px;">
+          <div style="display:flex;justify-content:space-between;"><span style="color:var(--text2);">Ventas Totales:</span><span style="font-weight:600;color:var(--text1);">${fmtExact(stats.ventas)}</span></div>
+          <div style="display:flex;justify-content:space-between;"><span style="color:var(--text2);">Gastos Totales:</span><span style="font-weight:600;color:var(--amber);">${fmtExact(stats.gastos)}</span></div>
+          <div style="display:flex;justify-content:space-between;border-top:1px solid var(--border);padding-top:4px;margin-top:4px;font-size:13px;">
+            <strong style="color:var(--text2);">Neto mensual:</strong>
+            <strong class="${isPos ? 'pos' : 'neg'}">${fmtExact(stats.ganancias)}</strong>
+          </div>
+        </div>
+      `;
+      
+      // Al hacer clic, ir al mes respectivo
+      card.addEventListener('click', () => {
+        const selMes = document.getElementById('sel-auditoria-mes');
+        if (selMes) {
+          selMes.value = m;
+          // Disparar evento de cambio para descargar/renderizar
+          const event = new Event('change');
+          selMes.dispatchEvent(event);
+        }
+      });
+      grid.appendChild(card);
+    });
+    
+    container.appendChild(grid);
+  } else {
+    // MODO 1: Calendario mensual detallado
+    const parts = filterMonth.split(' ');
+    const monthName = parts[0];
+    const year = parseInt(parts[1]) || 2026;
+    
+    const monthMap = {
+      "Enero": 1, "Febrero": 2, "Marzo": 3, "Abril": 4, "Mayo": 5, "Junio": 6,
+      "Julio": 7, "Agosto": 8, "Septiembre": 9, "Octubre": 10, "Noviembre": 11, "Diciembre": 12
+    };
+    const monthIndex = monthMap[monthName] || 6;
+    
+    // Calcular días
+    const firstDayIndex = new Date(year, monthIndex - 1, 1).getDay(); // 0 = Domingo, 1 = Lunes
+    const totalDays = new Date(year, monthIndex, 0).getDate();
+    
+    // Mapear filas por día
+    const dayData = {};
+    let totalVentas = 0;
+    let totalGastos = 0;
+    let totalGanancias = 0;
+    
+    rows.forEach(r => {
+      const rParts = r.label.split(' ');
+      const dayNum = parseInt(rParts[1]);
+      if (dayNum) {
+        dayData[dayNum] = r;
+        totalVentas += r.ventas;
+        totalGastos += r.gastos;
+        totalGanancias += r.ganancias;
+      }
+    });
+    
+    // Armar grilla
+    const grid = document.createElement('div');
+    grid.className = 'pnl-calendar';
+    
+    // Cabecera: D L M M J V S
+    const headerDays = ['Dom', 'Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb'];
+    headerDays.forEach(h => {
+      const hDiv = document.createElement('div');
+      hDiv.className = 'pnl-calendar-header-day';
+      hDiv.textContent = h;
+      grid.appendChild(hDiv);
+    });
+    
+    // Celdas vacías del principio
+    for (let i = 0; i < firstDayIndex; i++) {
+      const emptyDiv = document.createElement('div');
+      emptyDiv.className = 'pnl-calendar-day empty';
+      grid.appendChild(emptyDiv);
+    }
+    
+    // Días del mes
+    for (let d = 1; d <= totalDays; d++) {
+      const dayDiv = document.createElement('div');
+      dayDiv.className = 'pnl-calendar-day';
+      
+      const r = dayData[d];
+      
+      const dayLabel = document.createElement('div');
+      dayLabel.className = 'pnl-calendar-day-num';
+      dayLabel.textContent = d;
+      dayDiv.appendChild(dayLabel);
+      
+      if (r) {
+        const isPos = r.ganancias >= 0;
+        dayDiv.classList.add(isPos ? 'pos' : 'neg');
+        
+        const pnlValue = document.createElement('div');
+        pnlValue.className = `pnl-calendar-day-pnl ${isPos ? 'pos' : 'neg'}`;
+        pnlValue.textContent = (isPos ? '+' : '') + Math.round(r.ganancias).toLocaleString('es-AR');
+        dayDiv.appendChild(pnlValue);
+        
+        // Crear Tooltip
+        const tooltip = document.createElement('div');
+        tooltip.className = 'pnl-tooltip';
+        tooltip.innerHTML = `
+          <div class="pnl-tooltip-title">${r.label}</div>
+          <div class="pnl-tooltip-row"><span class="label">Ventas:</span><span class="val">${fmtExact(r.ventas)}</span></div>
+          <div class="pnl-tooltip-row"><span class="label">Gastos:</span><span class="val" style="color:var(--amber);">${fmtExact(r.gastos)}</span></div>
+          <div class="pnl-tooltip-row" style="border-top:1px solid rgba(255,255,255,0.08);padding-top:6px;margin-top:6px;">
+            <span class="label">Ganancia:</span><span class="val ${isPos ? 'pos' : 'neg'}">${fmtExact(r.ganancias)}</span>
+          </div>
+          <div class="pnl-tooltip-row" style="font-size:9.5px;color:var(--text2);margin-top:6px;border-top:1px dashed rgba(255,255,255,0.05);padding-top:4px;">
+            <span>Mañana: ${r.empleado_tm || '—'}</span>
+          </div>
+          <div class="pnl-tooltip-row" style="font-size:9.5px;color:var(--text2);">
+            <span>Tarde: ${r.empleado_tt || '—'}</span>
+          </div>
+        `;
+        dayDiv.appendChild(tooltip);
+      } else {
+        const pnlValue = document.createElement('div');
+        pnlValue.className = 'pnl-calendar-day-pnl zero';
+        pnlValue.textContent = '—';
+        dayDiv.appendChild(pnlValue);
+      }
+      
+      grid.appendChild(dayDiv);
+    }
+    
+    // Agregar Título del calendario
+    const headerTitle = document.createElement('div');
+    headerTitle.style.display = 'flex';
+    headerTitle.style.justifyContent = 'space-between';
+    headerTitle.style.alignItems = 'center';
+    headerTitle.style.marginBottom = '10px';
+    headerTitle.innerHTML = `
+      <div style="font-weight: 600; font-size: 15px; color: var(--text1); display:flex; align-items:center; gap:8px;">
+        <span>Rendimiento PnL Diario</span>
+        <span style="font-size: 11px; font-weight: 400; color: var(--text2); background: rgba(255,255,255,0.05); padding: 2px 8px; border-radius: 12px;">${filterMonth}</span>
+      </div>
+      <div style="display:flex; gap:6px;">
+        <button class="timeframe-btn" id="btn-pnl-prev" style="padding:4px 10px;font-size:12px;border-radius:6px;"><</button>
+        <button class="timeframe-btn" id="btn-pnl-next" style="padding:4px 10px;font-size:12px;border-radius:6px;">></button>
+      </div>
+    `;
+    
+    container.appendChild(headerTitle);
+    container.appendChild(grid);
+    
+    // Botones de Navegación del Calendario
+    const btnPrev = container.querySelector('#btn-pnl-prev');
+    const btnNext = container.querySelector('#btn-pnl-next');
+    
+    if (btnPrev && btnNext) {
+      const selMes = document.getElementById('sel-auditoria-mes');
+      if (selMes) {
+        const currentIndex = selMes.selectedIndex;
+        btnPrev.disabled = currentIndex <= 1; // 0 es "Todos los meses"
+        btnNext.disabled = currentIndex >= selMes.options.length - 1;
+        
+        btnPrev.addEventListener('click', () => {
+          if (currentIndex > 1) {
+            selMes.selectedIndex = currentIndex - 1;
+            const event = new Event('change');
+            selMes.dispatchEvent(event);
+          }
+        });
+        
+        btnNext.addEventListener('click', () => {
+          if (currentIndex < selMes.options.length - 1) {
+            selMes.selectedIndex = currentIndex + 1;
+            const event = new Event('change');
+            selMes.dispatchEvent(event);
+          }
+        });
+      }
+    }
+    
+    // Banner de PnL Acumulado
+    const pnlAcumulado = document.createElement('div');
+    pnlAcumulado.className = 'pnl-acumulado-banner';
+    pnlAcumulado.innerHTML = `
+      <div class="pnl-acumulado-title">
+        Balance acumulado del período (${filterMonth})
+      </div>
+      <div class="pnl-acumulado-stats">
+        <div class="pnl-acumulado-stat">
+          <span class="pnl-acumulado-stat-label">Ventas Totales</span>
+          <span class="pnl-acumulado-stat-val" style="color:var(--text1);">${fmtExact(totalVentas)}</span>
+        </div>
+        <div class="pnl-acumulado-stat">
+          <span class="pnl-acumulado-stat-label">Gastos Totales</span>
+          <span class="pnl-acumulado-stat-val" style="color:var(--amber);">${fmtExact(totalGastos)}</span>
+        </div>
+        <div class="pnl-acumulado-stat" style="border-left:1px solid var(--border);padding-left:25px;">
+          <span class="pnl-acumulado-stat-label">Ganancia Neta</span>
+          <span class="pnl-acumulado-stat-val ${totalGanancias >= 0 ? 'pos' : 'neg'}">${totalGanancias >= 0 ? '+' : ''}${fmtExact(totalGanancias)}</span>
+        </div>
+      </div>
+    `;
+    container.appendChild(pnlAcumulado);
+  }
+}
+
 // ─── INIT ─────────────────────────────────────────────────────────────────────
 window.addEventListener('DOMContentLoaded', () => {
   initManualCorrections();
@@ -4005,6 +4466,7 @@ window.addEventListener('DOMContentLoaded', () => {
   if (txtUpdate && typeof DATOS_SINCRONIZADOS !== 'undefined') {
     txtUpdate.textContent = `Sincronizado: ${DATOS_SINCRONIZADOS.ultima_actualizacion || '—'}`;
   }
+  setBalanceView(currentBalanceView);
   buildAll();
   
   // Sincronizar en segundo plano el mes seleccionado por defecto al iniciar

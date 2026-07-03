@@ -4389,6 +4389,8 @@ function renderBalanceCalendar(rows, filterMonth) {
           <span class="pnl-acumulado-stat-label">Ganancia Neta</span>
           <span class="pnl-acumulado-stat-val ${totalGanancias >= 0 ? 'pos' : 'neg'}">${totalGanancias >= 0 ? '+' : ''}${fmtExact(totalGanancias)}</span>
         </div>
+      </div>
+    `;
     container.appendChild(pnlAcumulado);
   }
 }

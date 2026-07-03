@@ -1212,7 +1212,13 @@
     
     <!-- Nueva sección: Sueldos -->
     <div class="section-row" style="margin-top: 32px; flex-wrap: wrap; gap: 10px; align-items: center; justify-content: space-between;">
-      <span class="section-title" style="margin: 0;">Sueldos</span>
+      <div style="display: flex; align-items: center; gap: 15px; flex-wrap: wrap;">
+        <span class="section-title" style="margin: 0;">Sueldos</span>
+        <div class="timeframe-selector" style="margin: 0; display: flex; gap: 2px; background: rgba(255,255,255,0.03); padding: 2px; border-radius: 8px; border: 1px solid var(--border);">
+          <button id="btn-sueldos-view-table" class="timeframe-btn active" onclick="setSueldosView('table')" style="padding: 6px 12px; font-size: 13px; border-radius: 6px;">Tabla</button>
+          <button id="btn-sueldos-view-calendar" class="timeframe-btn" onclick="setSueldosView('calendar')" style="padding: 6px 12px; font-size: 13px; border-radius: 6px;">Calendario</button>
+        </div>
+      </div>
       <div style="display: flex; gap: 10px; flex-wrap: wrap; align-items: center;">
         <div class="timeframe-selector">
           <button id="btn-sueldos-tf-mensual" class="timeframe-btn active" onclick="setSueldosTimeframe('mensual')">Mensual</button>
@@ -1236,7 +1242,8 @@
       </div>
     </div>
     
-    <div style="display: flex; flex-direction: row; gap: 24px; flex-wrap: wrap; margin-bottom: 24px;">
+    <!-- Contenedor Vista Tabla Sueldos -->
+    <div id="sueldos-view-table-container" style="display: flex; flex-direction: row; gap: 24px; flex-wrap: wrap; margin-bottom: 24px; width: 100%;">
       <!-- Detalle de Adelantos -->
       <div class="chart-card" style="flex: 1 1 500px; overflow-x: auto;">
         <div style="margin-bottom: 12px; font-weight: 600; color: var(--text1); font-size: 15px;">Sueldos</div>
@@ -1275,6 +1282,11 @@
           </tbody>
         </table>
       </div>
+    </div>
+
+    <!-- Contenedor Vista Calendario Sueldos -->
+    <div id="sueldos-view-calendar-container" class="chart-card" style="margin-bottom: 24px; display: none;">
+      <!-- Rellenado dinámicamente -->
     </div>
 
     <!-- Tarjeta: Mini Portal de Privacidad de Sueldos -->
@@ -3499,7 +3511,10 @@ async function renderPersonal() {
           <td style="color:var(--amber);font-weight:700;font-size:14px;">${displayTotal}</td>
         `;
         resumenBody.appendChild(tr);
-      });
+    }
+    
+    if (currentSueldosView === 'calendar') {
+      renderSueldosCalendar(expenses, sueldosMonth, sueldosEmpVal);
     }
   }
 }
@@ -4303,7 +4318,11 @@ function renderBalanceCalendar(rows, filterMonth) {
         <span>${calendarTitle}</span>
         <span style="font-size: 11px; font-weight: 400; color: var(--text2); background: rgba(255,255,255,0.05); padding: 2px 8px; border-radius: 12px;">${filterMonth}</span>
       </div>
-      <div style="display:flex; gap:6px;">
+      <div style="display:flex; gap:6px; align-items:center;">
+        <button class="timeframe-btn" id="btn-share-balance-wa" style="padding:6px 12px;font-size:12px;border-radius:6px;background:#25d366;color:white;border:none;display:flex;align-items:center;gap:6px;font-weight:600;cursor:pointer;">
+          <svg style="width:14px;height:14px;fill:currentColor;" viewBox="0 0 24 24"><path d="M.057 24l1.687-6.163c-1.041-1.804-1.588-3.849-1.587-5.946C.06 5.348 5.397.01 12.008.01c3.202.001 6.212 1.246 8.477 3.514 2.266 2.268 3.507 5.28 3.505 8.484-.004 6.657-5.34 11.997-11.953 11.997-2.005-.001-3.973-.502-5.724-1.455L0 24zm6.59-4.846c1.6.95 3.188 1.449 4.825 1.451 5.436 0 9.86-4.37 9.864-9.799.002-2.63-1.023-5.101-2.885-6.967C16.59 1.973 14.12 .948 11.501.948 6.064.948 1.64 5.318 1.636 10.751c-.001 1.684.455 3.328 1.32 4.795l-.995 3.633 3.731-.977-.045-.048zM17.15 15.385c-.282-.144-1.67-.825-1.928-.921-.258-.096-.446-.144-.634.144-.188.288-.726.921-.89 1.109-.164.188-.328.212-.61.068-.282-.144-1.19-.439-2.267-1.402-.838-.75-1.403-1.676-1.567-1.964-.164-.288-.018-.444.124-.586.128-.128.282-.328.423-.492.141-.164.188-.282.282-.472.094-.19.047-.356-.024-.5-.071-.144-.634-1.53-.87-2.096-.229-.554-.46-.48-.63-.488-.164-.008-.352-.01-.54-.01-.188 0-.492.072-.75.352-.258.28-.984.96-.984 2.342 0 1.382 1.008 2.716 1.15 2.904.141.188 1.984 3.029 4.81 4.249.672.291 1.196.464 1.605.596.675.214 1.288.184 1.772.111.54-.08 1.67-.68 1.905-1.336.235-.656.235-1.217.164-1.336-.07-.119-.258-.19-.54-.336z"/></svg>
+          Compartir
+        </button>
         <button class="timeframe-btn" id="btn-pnl-prev" style="padding:4px 10px;font-size:12px;border-radius:6px;"><</button>
         <button class="timeframe-btn" id="btn-pnl-next" style="padding:4px 10px;font-size:12px;border-radius:6px;">></button>
       </div>
@@ -4311,6 +4330,14 @@ function renderBalanceCalendar(rows, filterMonth) {
     
     container.appendChild(headerTitle);
     container.appendChild(grid);
+    
+    // Asignar evento al botón de compartir por WhatsApp
+    const btnShareWa = container.querySelector('#btn-share-balance-wa');
+    if (btnShareWa) {
+      btnShareWa.addEventListener('click', () => {
+        shareBalanceWhatsApp(filterMonth);
+      });
+    }
     
     // Botones de Navegación del Calendario
     const btnPrev = container.querySelector('#btn-pnl-prev');
@@ -4361,10 +4388,398 @@ function renderBalanceCalendar(rows, filterMonth) {
           <span class="pnl-acumulado-stat-label">Ganancia Neta</span>
           <span class="pnl-acumulado-stat-val ${totalGanancias >= 0 ? 'pos' : 'neg'}">${totalGanancias >= 0 ? '+' : ''}${fmtExact(totalGanancias)}</span>
         </div>
-      </div>
-    `;
     container.appendChild(pnlAcumulado);
   }
+}
+
+// Variable global para recordar la vista de sueldos (tabla o calendario)
+let currentSueldosView = localStorage.getItem("ROMA_SUELDOS_VIEW") || 'table';
+
+function setSueldosView(view) {
+  currentSueldosView = view;
+  localStorage.setItem("ROMA_SUELDOS_VIEW", view);
+  
+  const btnTable = document.getElementById('btn-sueldos-view-table');
+  const btnCalendar = document.getElementById('btn-sueldos-view-calendar');
+  const tableContainer = document.getElementById('sueldos-view-table-container');
+  const calendarContainer = document.getElementById('sueldos-view-calendar-container');
+  
+  if (btnTable && btnCalendar && tableContainer && calendarContainer) {
+    if (view === 'calendar') {
+      btnTable.classList.remove('active');
+      btnCalendar.classList.add('active');
+      tableContainer.style.display = 'none';
+      calendarContainer.style.display = 'block';
+    } else {
+      btnTable.classList.add('active');
+      btnCalendar.classList.remove('active');
+      tableContainer.style.display = 'flex';
+      calendarContainer.style.display = 'none';
+    }
+  }
+  
+  renderPersonal();
+}
+
+function renderSueldosCalendar(expenses, filterMonth, selectedEmpleado) {
+  const container = document.getElementById('sueldos-view-calendar-container');
+  if (!container) return;
+  
+  container.innerHTML = '';
+  
+  if (filterMonth === 'all') {
+    // MODO: Todos los meses (historial consolidado mensual)
+    const monthStats = {};
+    expenses.forEach(x => {
+      const mName = pestañaAMes[x[0]] || x[0];
+      if (!monthStats[mName]) {
+        monthStats[mName] = { J: 0, K: 0, total: 0, count: 0 };
+      }
+      monthStats[mName].J += x[6] || 0;
+      monthStats[mName].K += x[7] || 0;
+      monthStats[mName].total += x[8] || 0;
+      monthStats[mName].count += 1;
+    });
+    
+    const monthlyList = Object.entries(monthStats);
+    if (monthlyList.length === 0) {
+      container.innerHTML = '<div style="text-align:center;color:var(--text2);padding:20px;">No hay cobros registrados en la temporada.</div>';
+      return;
+    }
+    
+    let consolidatedTitle = `Historial Anual de Cobros — ${selectedEmpleado === 'all' ? 'Todos los empleados' : selectedEmpleado}`;
+    const headerTitle = document.createElement('div');
+    headerTitle.style.fontWeight = '600';
+    headerTitle.style.marginBottom = '15px';
+    headerTitle.style.fontSize = '15px';
+    headerTitle.style.color = 'var(--text1)';
+    headerTitle.textContent = consolidatedTitle;
+    container.appendChild(headerTitle);
+    
+    const grid = document.createElement('div');
+    grid.style.display = 'grid';
+    grid.style.gridTemplateColumns = 'repeat(auto-fit, minmax(280px, 1fr))';
+    grid.style.gap = '16px';
+    
+    monthlyList.forEach(([m, stats]) => {
+      const card = document.createElement('div');
+      card.className = 'pnl-calendar-day sales-view';
+      card.style.minHeight = '120px';
+      card.style.cursor = 'pointer';
+      
+      card.innerHTML = `
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
+          <strong style="color:var(--text1);font-size:15px;font-family:var(--font-title);">${m}</strong>
+          <span style="font-size:11px;color:var(--text2);">${stats.count} registros</span>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:4px;font-size:12px;">
+          <div style="display:flex;justify-content:space-between;"><span style="color:var(--text2);">Transferencia:</span><span style="font-weight:600;color:var(--text1);">${fmtExact(stats.J)}</span></div>
+          <div style="display:flex;justify-content:space-between;"><span style="color:var(--text2);">Caja / Efectivo:</span><span style="font-weight:600;color:var(--amber);">${fmtExact(stats.K)}</span></div>
+          <div style="display:flex;justify-content:space-between;border-top:1px solid var(--border);padding-top:4px;margin-top:4px;font-size:13px;">
+            <strong style="color:var(--text2);">Total Cobrado:</strong>
+            <strong class="sales-color">${fmtExact(stats.total)}</strong>
+          </div>
+        </div>
+      `;
+      
+      // Al hacer clic, ir a ese mes
+      card.addEventListener('click', () => {
+        const selMes = document.getElementById('sel-sueldos-mes');
+        if (selMes) {
+          selMes.value = m;
+          const event = new Event('change');
+          selMes.dispatchEvent(event);
+        }
+      });
+      grid.appendChild(card);
+    });
+    
+    container.appendChild(grid);
+  } else {
+    // Si filterMonth es un mes específico
+    if (selectedEmpleado === 'all') {
+      // MODO: Todos los empleados en un mes específico (tarjetas de empleados)
+      const empStats = {};
+      expenses.forEach(x => {
+        const name = (x[5] || "").trim().toUpperCase();
+        if (name && name !== '—') {
+          if (!empStats[name]) {
+            empStats[name] = { J: 0, K: 0, total: 0, count: 0 };
+          }
+          empStats[name].J += x[6] || 0;
+          empStats[name].K += x[7] || 0;
+          empStats[name].total += x[8] || 0;
+          empStats[name].count += 1;
+        }
+      });
+      
+      const empList = Object.entries(empStats);
+      if (empList.length === 0) {
+        container.innerHTML = `<div style="text-align:center;color:var(--text2);padding:20px;">No hay registros de cobros para empleados en ${filterMonth}.</div>`;
+        return;
+      }
+      
+      const headerTitle = document.createElement('div');
+      headerTitle.style.fontWeight = '600';
+      headerTitle.style.marginBottom = '15px';
+      headerTitle.style.fontSize = '15px';
+      headerTitle.style.color = 'var(--text1)';
+      headerTitle.textContent = `Cobros Mensuales por Empleado — ${filterMonth}`;
+      container.appendChild(headerTitle);
+      
+      const grid = document.createElement('div');
+      grid.style.display = 'grid';
+      grid.style.gridTemplateColumns = 'repeat(auto-fit, minmax(280px, 1fr))';
+      grid.style.gap = '16px';
+      
+      empList.forEach(([name, stats]) => {
+        const card = document.createElement('div');
+        card.className = 'pnl-calendar-day pos';
+        card.style.minHeight = '120px';
+        card.style.cursor = 'pointer';
+        
+        card.innerHTML = `
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
+            <strong style="color:var(--text1);font-size:15px;font-family:var(--font-title);"><span class="badge-emp">${name}</span></strong>
+            <span style="font-size:11px;color:var(--text2);">${stats.count} registros</span>
+          </div>
+          <div style="display:flex;flex-direction:column;gap:4px;font-size:12px;">
+            <div style="display:flex;justify-content:space-between;"><span style="color:var(--text2);">Transferencia:</span><span style="font-weight:600;color:var(--text1);">${fmtExact(stats.J)}</span></div>
+            <div style="display:flex;justify-content:space-between;"><span style="color:var(--text2);">Caja / Efectivo:</span><span style="font-weight:600;color:var(--amber);">${fmtExact(stats.K)}</span></div>
+            <div style="display:flex;justify-content:space-between;border-top:1px solid var(--border);padding-top:4px;margin-top:4px;font-size:13px;">
+              <strong style="color:var(--text2);">Total Cobrado:</strong>
+              <strong class="pos">${fmtExact(stats.total)}</strong>
+            </div>
+          </div>
+        `;
+        
+        // Al hacer clic, selecciona a ese empleado
+        card.addEventListener('click', () => {
+          const selEmp = document.getElementById('sel-sueldos-empleado');
+          if (selEmp) {
+            selEmp.value = name;
+            const event = new Event('change');
+            selEmp.dispatchEvent(event);
+          }
+        });
+        grid.appendChild(card);
+      });
+      
+      container.appendChild(grid);
+    } else {
+      // MODO: Empleado específico en un mes específico (calendario diario)
+      const parts = filterMonth.split(' ');
+      const monthName = parts[0];
+      const year = parseInt(parts[1]) || 2026;
+      
+      const monthMap = {
+        "Enero": 1, "Febrero": 2, "Marzo": 3, "Abril": 4, "Mayo": 5, "Junio": 6,
+        "Julio": 7, "Agosto": 8, "Septiembre": 9, "Octubre": 10, "Noviembre": 11, "Diciembre": 12
+      };
+      const monthIndex = monthMap[monthName] || 6;
+      
+      // Calcular días
+      const firstDayIndex = new Date(year, monthIndex - 1, 1).getDay(); // 0 = Domingo, 1 = Lunes
+      const totalDays = new Date(year, monthIndex, 0).getDate();
+      
+      // Mapear cobros por día
+      const dayData = {};
+      let totalTransf = 0;
+      let totalEfectivo = 0;
+      let totalAcumulado = 0;
+      
+      expenses.forEach(x => {
+        const dayNum = parseInt(x[2].match(/\d+/)?.[0] || "0");
+        if (dayNum) {
+          if (!dayData[dayNum]) {
+            dayData[dayNum] = { transf: 0, efectivo: 0, total: 0, items: [] };
+          }
+          dayData[dayNum].transf += x[6] || 0;
+          dayData[dayNum].efectivo += x[7] || 0;
+          dayData[dayNum].total += x[8] || 0;
+          dayData[dayNum].items.push(x);
+          
+          totalTransf += x[6] || 0;
+          totalEfectivo += x[7] || 0;
+          totalAcumulado += x[8] || 0;
+        }
+      });
+      
+      // Armar grilla
+      const grid = document.createElement('div');
+      grid.className = 'pnl-calendar';
+      
+      // Cabecera: Dom Lun Mar...
+      const headerDays = ['Dom', 'Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb'];
+      headerDays.forEach(h => {
+        const hDiv = document.createElement('div');
+        hDiv.className = 'pnl-calendar-header-day';
+        hDiv.textContent = h;
+        grid.appendChild(hDiv);
+      });
+      
+      // Celdas vacías iniciales
+      for (let i = 0; i < firstDayIndex; i++) {
+        const emptyDiv = document.createElement('div');
+        emptyDiv.className = 'pnl-calendar-day empty';
+        grid.appendChild(emptyDiv);
+      }
+      
+      // Días del mes
+      for (let d = 1; d <= totalDays; d++) {
+        const dayDiv = document.createElement('div');
+        dayDiv.className = 'pnl-calendar-day';
+        
+        const dayStats = dayData[d];
+        
+        const dayLabel = document.createElement('div');
+        dayLabel.className = 'pnl-calendar-day-num';
+        dayLabel.textContent = d;
+        dayDiv.appendChild(dayLabel);
+        
+        if (dayStats && dayStats.total > 0) {
+          dayDiv.classList.add('pos'); // Fondo verde translúcido
+          
+          const valueDiv = document.createElement('div');
+          valueDiv.className = 'pnl-calendar-day-pnl pos';
+          valueDiv.textContent = Math.round(dayStats.total).toLocaleString('es-AR');
+          dayDiv.appendChild(valueDiv);
+          
+          // Crear Tooltip
+          const itemsHtml = dayStats.items.map(x => `
+            <div style="margin-top: 6px; padding-top: 4px; border-top: 1px dashed rgba(255,255,255,0.05);">
+              <div><strong>Concepto:</strong> ${x[4] || 'Cobro/Adelanto'}</div>
+              <div><strong>Transf:</strong> ${fmtExact(x[6])}</div>
+              <div><strong>Efectivo:</strong> ${fmtExact(x[7])}</div>
+            </div>
+          `).join('');
+          
+          const tooltip = document.createElement('div');
+          tooltip.className = 'pnl-tooltip';
+          tooltip.innerHTML = `
+            <div class="pnl-tooltip-title">Día ${d} de ${monthName}</div>
+            <div class="pnl-tooltip-row"><span class="label">Total Cobrado:</span><span class="val pos">${fmtExact(dayStats.total)}</span></div>
+            ${itemsHtml}
+          `;
+          dayDiv.appendChild(tooltip);
+        } else {
+          const valueDiv = document.createElement('div');
+          valueDiv.className = 'pnl-calendar-day-pnl zero';
+          valueDiv.textContent = '—';
+          dayDiv.appendChild(valueDiv);
+        }
+        
+        grid.appendChild(dayDiv);
+      }
+      
+      // Título con botón de WhatsApp
+      const headerTitle = document.createElement('div');
+      headerTitle.style.display = 'flex';
+      headerTitle.style.justifyContent = 'space-between';
+      headerTitle.style.alignItems = 'center';
+      headerTitle.style.marginBottom = '10px';
+      headerTitle.innerHTML = `
+        <div style="font-weight: 600; font-size: 15px; color: var(--text1); display:flex; align-items:center; gap:8px;">
+          <span>Calendario de Cobros — <span class="badge-emp">${selectedEmpleado}</span></span>
+          <span style="font-size: 11px; font-weight: 400; color: var(--text2); background: rgba(255,255,255,0.05); padding: 2px 8px; border-radius: 12px;">${filterMonth}</span>
+        </div>
+        <button class="timeframe-btn" id="btn-share-sueldos-wa" style="padding:6px 12px;font-size:12px;border-radius:6px;background:#25d366;color:white;border:none;display:flex;align-items:center;gap:6px;font-weight:600;cursor:pointer;">
+          <svg style="width:14px;height:14px;fill:currentColor;" viewBox="0 0 24 24"><path d="M.057 24l1.687-6.163c-1.041-1.804-1.588-3.849-1.587-5.946C.06 5.348 5.397.01 12.008.01c3.202.001 6.212 1.246 8.477 3.514 2.266 2.268 3.507 5.28 3.505 8.484-.004 6.657-5.34 11.997-11.953 11.997-2.005-.001-3.973-.502-5.724-1.455L0 24zm6.59-4.846c1.6.95 3.188 1.449 4.825 1.451 5.436 0 9.86-4.37 9.864-9.799.002-2.63-1.023-5.101-2.885-6.967C16.59 1.973 14.12 .948 11.501.948 6.064.948 1.64 5.318 1.636 10.751c-.001 1.684.455 3.328 1.32 4.795l-.995 3.633 3.731-.977-.045-.048zM17.15 15.385c-.282-.144-1.67-.825-1.928-.921-.258-.096-.446-.144-.634.144-.188.288-.726.921-.89 1.109-.164.188-.328.212-.61.068-.282-.144-1.19-.439-2.267-1.402-.838-.75-1.403-1.676-1.567-1.964-.164-.288-.018-.444.124-.586.128-.128.282-.328.423-.492.141-.164.188-.282.282-.472.094-.19.047-.356-.024-.5-.071-.144-.634-1.53-.87-2.096-.229-.554-.46-.48-.63-.488-.164-.008-.352-.01-.54-.01-.188 0-.492.072-.75.352-.258.28-.984.96-.984 2.342 0 1.382 1.008 2.716 1.15 2.904.141.188 1.984 3.029 4.81 4.249.672.291 1.196.464 1.605.596.675.214 1.288.184 1.772.111.54-.08 1.67-.68 1.905-1.336.235-.656.235-1.217.164-1.336-.07-.119-.258-.19-.54-.336z"/></svg>
+          Compartir
+        </button>
+      </div>
+      `;
+      
+      container.appendChild(headerTitle);
+      container.appendChild(grid);
+      
+      // Configurar acción del botón de WhatsApp
+      const btnWa = container.querySelector('#btn-share-sueldos-wa');
+      if (btnWa) {
+        btnWa.addEventListener('click', () => {
+          shareSueldosWhatsApp(filterMonth, selectedEmpleado);
+        });
+      }
+      
+      // Banner de Sueldos Acumulados
+      const pnlAcumulado = document.createElement('div');
+      pnlAcumulado.className = 'pnl-acumulado-banner';
+      pnlAcumulado.innerHTML = `
+        <div class="pnl-acumulado-title">
+          Resumen de cobros del período
+        </div>
+        <div class="pnl-acumulado-stats">
+          <div class="pnl-acumulado-stat">
+            <span class="pnl-acumulado-stat-label">Transferencia</span>
+            <span class="sueldos-acumulado-stat-val" style="color:var(--text1);">${fmtExact(totalTransf)}</span>
+          </div>
+          <div class="pnl-acumulado-stat">
+            <span class="pnl-acumulado-stat-label">Caja / Efectivo</span>
+            <span class="sueldos-acumulado-stat-val" style="color:var(--amber);">${fmtExact(totalEfectivo)}</span>
+          </div>
+          <div class="pnl-acumulado-stat" style="border-left:1px solid var(--border);padding-left:25px;">
+            <span class="pnl-acumulado-stat-label">Total Cobrado</span>
+            <span class="sueldos-acumulado-stat-val pos" style="font-weight:700;">${fmtExact(totalAcumulado)}</span>
+          </div>
+        </div>
+      `;
+      container.appendChild(pnlAcumulado);
+    }
+  }
+}
+
+function shareBalanceWhatsApp(filterMonth) {
+  const selTipo = document.getElementById('sel-auditoria-tipo')?.value || "all";
+  let tipoLabel = "Balance General (Ganancia Neta)";
+  if (selTipo === 'VENTAS') tipoLabel = "Ventas Totales";
+  else if (selTipo === 'GASTOS') tipoLabel = "Gastos Totales";
+  
+  const statsVals = document.querySelectorAll('.pnl-acumulado-stat-val');
+  let ventas = "$ 0";
+  let gastos = "$ 0";
+  let neto = "$ 0";
+  
+  if (statsVals.length >= 3) {
+    ventas = statsVals[0].textContent;
+    gastos = statsVals[1].textContent;
+    neto = statsVals[2].textContent;
+  }
+  
+  let msg = `📊 *Reporte de Métricas Showroom*\n`;
+  msg += `📅 *Período:* ${filterMonth}\n`;
+  msg += `🔍 *Filtro:* ${tipoLabel}\n\n`;
+  msg += `💰 *Resumen Financiero:*\n`;
+  msg += `💵 *Ventas Totales:* ${ventas}\n`;
+  msg += `💸 *Gastos Totales:* ${gastos}\n`;
+  msg += `📈 *Resultado Neto:* ${neto}\n\n`;
+  msg += `📱 _Enviado desde metricas-5rog.onrender.com_`;
+  
+  const url = `https://api.whatsapp.com/send?text=${encodeURIComponent(msg)}`;
+  window.open(url, '_blank');
+}
+
+function shareSueldosWhatsApp(filterMonth, empleado) {
+  const statsVals = document.querySelectorAll('.sueldos-acumulado-stat-val');
+  let transf = "$ 0";
+  let efectivo = "$ 0";
+  let total = "$ 0";
+  
+  if (statsVals.length >= 3) {
+    transf = statsVals[0].textContent;
+    efectivo = statsVals[1].textContent;
+    total = statsVals[2].textContent;
+  }
+  
+  let msg = `💰 *Reporte de Cobros - Métricas Showroom*\n`;
+  msg += `👤 *Empleado:* ${empleado}\n`;
+  msg += `📅 *Período:* ${filterMonth}\n\n`;
+  msg += `🏦 *Transferencia:* ${transf}\n`;
+  msg += `💵 *Caja / Efectivo:* ${efectivo}\n`;
+  msg += `💸 *Total Cobrado:* ${total}\n\n`;
+  msg += `📱 _Enviado desde metricas-5rog.onrender.com_`;
+  
+  const url = `https://api.whatsapp.com/send?text=${encodeURIComponent(msg)}`;
+  window.open(url, '_blank');
 }
 
 // ─── INIT ─────────────────────────────────────────────────────────────────────
@@ -4551,6 +4966,7 @@ window.addEventListener('DOMContentLoaded', () => {
     txtUpdate.textContent = `Sincronizado: ${DATOS_SINCRONIZADOS.ultima_actualizacion || '—'}`;
   }
   setBalanceView(currentBalanceView);
+  setSueldosView(currentSueldosView);
   buildAll();
   
   // Sincronizar en segundo plano el mes seleccionado por defecto al iniciar

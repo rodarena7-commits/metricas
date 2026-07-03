@@ -2371,7 +2371,7 @@ function parseMonthCSV(csvText, sheetName) {
     
     if (!dayData) return;
     
-    if (colA.includes("turno maña") || colA.includes("primera maña")) {
+    if (colA.includes("turno ma") || colA.includes("primera ma")) {
       currentTurno = "MAÑANA";
       return;
     } else if (colA.includes("turno tarde")) {
@@ -2505,7 +2505,7 @@ function parseEmployeeExpensesCSV(csvText, sheetName) {
       return;
     }
     
-    if (colA.includes("turno maña") || colA.includes("primera maña")) {
+    if (colA.includes("turno ma") || colA.includes("primera ma")) {
       currentTurno = "MAÑANA";
       return;
     } else if (colA.includes("turno tarde")) {
@@ -2560,7 +2560,7 @@ function parseEmployeeExpensesCSV(csvText, sheetName) {
       return;
     }
     
-    if (colA.includes("turno maña") || colA.includes("primera maña")) {
+    if (colA.includes("turno ma") || colA.includes("primera ma")) {
       currentTurno = "MAÑANA";
       return;
     } else if (colA.includes("turno tarde")) {
@@ -2636,6 +2636,47 @@ function parseFinancialsFromMonthlyCSV(csvText, sheetName) {
   
   const { month, year } = getMonthYearFromSheet(sheetName);
   
+  // Compilar mapa de asistencia en tiempo real del CSV
+  const asistenciaMap = {};
+  lines.forEach((line) => {
+    const row = parseCSVLine(line);
+    if (row.length === 0) return;
+    
+    const colA = row[0] ? row[0].trim().toLowerCase() : "";
+    const colB = row[1] ? row[1].trim() : "";
+    const colC = row[2] ? row[2].trim().toLowerCase() : "";
+    
+    const isNovedades = colC.includes("novedades del dia") || colC.includes("novedades");
+    const isNewDay = (DIA_MAP_JS[colA] && isDayNum(colB)) || (isNovedades && isDayNum(colB));
+    
+    if (isNewDay) {
+      currentDayNum = parseInt(colB);
+      currentTurno = "";
+      return;
+    }
+    
+    if (colA.includes("turno ma") || colA.includes("primera ma")) {
+      currentTurno = "MAÑANA";
+      return;
+    } else if (colA.includes("turno tarde")) {
+      currentTurno = "TARDE";
+      return;
+    }
+    
+    if (currentDayNum && currentTurno) {
+      const isSobrante = colC.includes("sobrante/faltante") || colC.includes("sobrantede caja") || colC.includes("sobrente de caja");
+      if (isSobrante && row[0]) {
+        const emp = row[0].trim().toUpperCase();
+        if (emp && !["", "nan", "null"].includes(emp.toLowerCase())) {
+          asistenciaMap[currentDayNum + "_" + currentTurno] = emp;
+        }
+      }
+    }
+  });
+  
+  currentDayNum = null;
+  currentTurno = "";
+  
   lines.forEach((line) => {
     const row = parseCSVLine(line);
     if (row.length === 0) return;
@@ -2674,7 +2715,7 @@ function parseFinancialsFromMonthlyCSV(csvText, sheetName) {
     
     if (dayData === null) return;
     
-    if (colA.includes("turno maña") || colA.includes("primera maña")) {
+    if (colA.includes("turno ma") || colA.includes("primera ma")) {
       currentTurno = "MAÑANA";
       return;
     } else if (colA.includes("turno tarde")) {
@@ -2727,15 +2768,8 @@ function parseFinancialsFromMonthlyCSV(csvText, sheetName) {
     
     const label = `${r.dayName} ${r.dayNum} ${monthCode} ${yearCode}`;
     
-    let emp_tm = "—";
-    let emp_tt = "—";
-    if (typeof DATOS_SINCRONIZADOS !== 'undefined' && DATOS_SINCRONIZADOS.showroom) {
-      const localMatch = DATOS_SINCRONIZADOS.showroom.find(x => x[0] === label);
-      if (localMatch) {
-        emp_tm = localMatch[4] || "—";
-        emp_tt = localMatch[5] || "—";
-      }
-    }
+    const emp_tm = asistenciaMap[r.dayNum + "_MAÑANA"] || "—";
+    const emp_tt = asistenciaMap[r.dayNum + "_TARDE"] || "—";
     
     formatted.push([
       label,

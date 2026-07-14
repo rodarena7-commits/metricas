@@ -3,6 +3,12 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <!-- PWA Meta Tags -->
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="theme-color" content="#0b0d14" />
+  <link rel="apple-touch-icon" href="icon-192.png" />
+  <link rel="manifest" href="manifest.json" />
   <title>Dashboard +Roma 2025/26</title>
   
   <!-- Tipografía moderna Google Fonts -->
@@ -36,6 +42,44 @@
       --font: 'Inter', system-ui, sans-serif;
       --font-title: 'Outfit', sans-serif;
       --transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    
+    /* Switch Toggle */
+    .switch {
+      position: relative;
+      display: inline-block;
+      width: 44px;
+      height: 22px;
+    }
+    .switch input {
+      opacity: 0;
+      width: 0;
+      height: 0;
+    }
+    .slider {
+      position: absolute;
+      cursor: pointer;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background-color: var(--border);
+      transition: .3s;
+      border-radius: 22px;
+    }
+    .slider:before {
+      position: absolute;
+      content: "";
+      height: 16px;
+      width: 16px;
+      left: 3px;
+      bottom: 3px;
+      background-color: #fff;
+      transition: .3s;
+      border-radius: 50%;
+    }
+    input:checked + .slider {
+      background-color: var(--green);
+    }
+    input:checked + .slider:before {
+      transform: translateX(22px);
     }
     
     body { 
@@ -1549,6 +1593,53 @@
         </div>
         <div style="margin-top: 15px; font-size: 12px; color: var(--text2); line-height: 1.4;">
           💡 <strong>Nota:</strong> Aquí se muestran las claves de privacidad creadas por cada empleado. Puedes visualizarlas o restablecerlas si el empleado las olvida.
+        </div>
+      </div>
+      
+      <!-- PWA e Instalación / Notificaciones -->
+      <div class="chart-card" style="margin: 0; display: flex; flex-direction: column; gap: 15px;">
+        <div style="font-weight: 600; font-size: 15px; color: var(--text1); display: flex; align-items: center; gap: 8px;">
+          <span>📱 Aplicación (PWA) y Notificaciones</span>
+        </div>
+        
+        <div style="font-size: 12px; color: var(--text2); line-height: 1.4;">
+          Descargue la aplicación en su dispositivo móvil o PC y active las notificaciones del sistema para recibir resúmenes financieros diarios de cierres de caja.
+        </div>
+        
+        <!-- Estado de Instalación -->
+        <div style="border-bottom: 1px solid var(--border); padding-bottom: 15px; display: flex; flex-direction: column; gap: 10px;">
+          <div style="display: flex; justify-content: space-between; align-items: center;">
+            <span style="font-size: 13px; color: var(--text1); font-weight: 500;">Aplicación Móvil/Escritorio:</span>
+            <span id="pwa-status-badge" style="font-size: 11px; font-weight: 600; padding: 4px 8px; border-radius: 6px; background: rgba(255,255,255,0.05); color: var(--text2);">No Instalada</span>
+          </div>
+          <button id="btn-pwa-install" style="background: linear-gradient(135deg, var(--blue) 0%, #1e40af 100%); border: none; color: white; padding: 10px; border-radius: 8px; font-weight: 600; font-size: 13px; cursor: pointer; transition: opacity 0.2s; display: none; width: 100%;">
+            Instalar App +Roma
+          </button>
+        </div>
+        
+        <!-- Notificaciones -->
+        <div style="display: flex; flex-direction: column; gap: 12px;">
+          <div style="display: flex; justify-content: space-between; align-items: center;">
+            <span style="font-size: 13px; color: var(--text1); font-weight: 500;">Permiso de Notificaciones:</span>
+            <span id="notification-permission-badge" style="font-size: 11px; font-weight: 600; padding: 4px 8px; border-radius: 6px; background: rgba(255,255,255,0.05); color: var(--text2);">No Solicitado</span>
+          </div>
+          
+          <div style="display: flex; justify-content: space-between; align-items: center;">
+            <span style="font-size: 13px; color: var(--text1); font-weight: 500;">Alertas de Cierre Diario:</span>
+            <label class="switch">
+              <input type="checkbox" id="chk-notif-cierre">
+              <span class="slider"></span>
+            </label>
+          </div>
+          
+          <div style="display: flex; gap: 10px; margin-top: 5px;">
+            <button id="btn-request-notif-perm" style="flex: 1; background: rgba(255,255,255,0.05); border: 1px solid var(--border); color: var(--text1); padding: 8px 12px; border-radius: 8px; font-size: 12px; font-weight: 500; cursor: pointer; transition: background 0.2s;">
+              Solicitar Permiso
+            </button>
+            <button id="btn-test-notif" style="flex: 1; background: rgba(16, 185, 129, 0.1); border: 1px solid var(--green); color: var(--green); padding: 8px 12px; border-radius: 8px; font-size: 12px; font-weight: 500; cursor: pointer; transition: background 0.2s;">
+              Probar Alerta
+            </button>
+          </div>
         </div>
       </div>
       
@@ -3810,6 +3901,9 @@ function buildAll() {
     renderPersonal();
     renderCierreJunio();
   }
+  if (typeof checkDailyReportNotification === 'function') {
+    checkDailyReportNotification();
+  }
 }
  
 document.getElementById('main-tabs').addEventListener('click', e => {
@@ -5019,6 +5113,218 @@ window.addEventListener('DOMContentLoaded', () => {
       });
     }
   }
+
+  // ─── PWA Y SERVICE WORKER REGISTRATION ───────────────────────────────────
+  if ('serviceWorker' in navigator) {
+    window.addEventListener('load', () => {
+      navigator.serviceWorker.register('./sw.js')
+        .then(reg => {
+          console.log('Service Worker registrado con éxito', reg);
+          // Habilitar chequeos automáticos periódicos en el Service Worker si es posible
+        })
+        .catch(err => console.error('Error al registrar el Service Worker', err));
+    });
+  }
+
+  // ─── LÓGICA DE INSTALACIÓN PWA (beforeinstallprompt) ───────────────────────
+  let deferredPrompt = null;
+  const btnInstall = document.getElementById('btn-pwa-install');
+  const pwaStatus = document.getElementById('pwa-status-badge');
+  
+  window.addEventListener('beforeinstallprompt', (e) => {
+    e.preventDefault();
+    deferredPrompt = e;
+    if (btnInstall) btnInstall.style.display = 'block';
+    if (pwaStatus) {
+      pwaStatus.textContent = 'Disponible para Instalar';
+      pwaStatus.style.background = 'rgba(245, 158, 11, 0.1)';
+      pwaStatus.style.color = 'var(--amber)';
+    }
+  });
+  
+  if (btnInstall) {
+    btnInstall.addEventListener('click', () => {
+      if (deferredPrompt) {
+        deferredPrompt.prompt();
+        deferredPrompt.userChoice.then((choiceResult) => {
+          if (choiceResult.outcome === 'accepted') {
+            console.log('El usuario aceptó la instalación de la PWA');
+            if (btnInstall) btnInstall.style.display = 'none';
+            if (pwaStatus) {
+              pwaStatus.textContent = 'App Instalada';
+              pwaStatus.style.background = 'rgba(16, 185, 129, 0.1)';
+              pwaStatus.style.color = 'var(--green)';
+            }
+          }
+          deferredPrompt = null;
+        });
+      }
+    });
+  }
+  
+  window.addEventListener('appinstalled', (evt) => {
+    console.log('App +Roma instalada con éxito');
+    if (btnInstall) btnInstall.style.display = 'none';
+    if (pwaStatus) {
+      pwaStatus.textContent = 'App Instalada';
+      pwaStatus.style.background = 'rgba(16, 185, 129, 0.1)';
+      pwaStatus.style.color = 'var(--green)';
+    }
+  });
+
+  // ─── LÓGICA DE PERMISOS Y CONFIGURACIÓN DE NOTIFICACIONES ────────────────
+  const notifPermBadge = document.getElementById('notification-permission-badge');
+  const chkNotifCierre = document.getElementById('chk-notif-cierre');
+  const btnReqPerm = document.getElementById('btn-request-notif-perm');
+  const btnTestNotif = document.getElementById('btn-test-notif');
+  
+  window.updateNotifUI = function() {
+    if (!('Notification' in window)) {
+      if (notifPermBadge) {
+        notifPermBadge.textContent = 'No Soportado';
+        notifPermBadge.style.background = 'rgba(239, 68, 68, 0.1)';
+        notifPermBadge.style.color = 'var(--red)';
+      }
+      if (chkNotifCierre) chkNotifCierre.disabled = true;
+      return;
+    }
+    
+    const perm = Notification.permission;
+    if (notifPermBadge) {
+      if (perm === 'granted') {
+        notifPermBadge.textContent = 'Permitido';
+        notifPermBadge.style.background = 'rgba(16, 185, 129, 0.1)';
+        notifPermBadge.style.color = 'var(--green)';
+      } else if (perm === 'denied') {
+        notifPermBadge.textContent = 'Bloqueado';
+        notifPermBadge.style.background = 'rgba(239, 68, 68, 0.1)';
+        notifPermBadge.style.color = 'var(--red)';
+      } else {
+        notifPermBadge.textContent = 'No Solicitado';
+        notifPermBadge.style.background = 'rgba(255,255,255,0.05)';
+        notifPermBadge.style.color = 'var(--text2)';
+      }
+    }
+    
+    const configActive = localStorage.getItem('ROMA_DAILY_NOTIF_ENABLED') === 'true';
+    if (chkNotifCierre) {
+      chkNotifCierre.checked = configActive && perm === 'granted';
+    }
+  };
+  
+  if (btnReqPerm) {
+    btnReqPerm.addEventListener('click', () => {
+      if (!('Notification' in window)) {
+        showToast('Su navegador no soporta notificaciones.');
+        return;
+      }
+      Notification.requestPermission().then((permission) => {
+        window.updateNotifUI();
+        if (permission === 'granted') {
+          showToast('¡Permiso de notificaciones concedido!');
+          localStorage.setItem('ROMA_DAILY_NOTIF_ENABLED', 'true');
+          window.updateNotifUI();
+        } else {
+          showToast('Permiso de notificaciones denegado.');
+        }
+      });
+    });
+  }
+  
+  if (chkNotifCierre) {
+    chkNotifCierre.addEventListener('change', (e) => {
+      if (!('Notification' in window)) return;
+      if (Notification.permission !== 'granted' && e.target.checked) {
+        showToast('Primero debe solicitar permiso de notificaciones.');
+        e.target.checked = false;
+        return;
+      }
+      localStorage.setItem('ROMA_DAILY_NOTIF_ENABLED', e.target.checked ? 'true' : 'false');
+      showToast(e.target.checked ? 'Alertas diarias activadas' : 'Alertas diarias desactivadas');
+    });
+  }
+  
+  if (btnTestNotif) {
+    btnTestNotif.addEventListener('click', () => {
+      window.sendLocalNotification(
+        'Test de Alertas +Roma 💰',
+        'Ventas: $150.000 | Gastos: $80.000\nGanancia Neta: +$70.000 📈'
+      );
+    });
+  }
+  
+  window.sendLocalNotification = function(title, body) {
+    if (!('Notification' in window) || Notification.permission !== 'granted') {
+      showToast('Permiso de notificaciones no activo.');
+      return;
+    }
+    
+    const options = {
+      body: body,
+      icon: './icon-192.png',
+      badge: './icon-192.png',
+      vibrate: [200, 100, 200],
+      tag: 'cierre-diario',
+      renotify: true
+    };
+    
+    if (navigator.serviceWorker && navigator.serviceWorker.ready) {
+      navigator.serviceWorker.ready.then(reg => {
+        reg.showNotification(title, options);
+      }).catch(err => {
+        new Notification(title, options);
+      });
+    } else {
+      new Notification(title, options);
+    }
+  };
+
+  // ─── CHEQUEO AUTOMÁTICO DE NOTIFICACIONES DE CIERRE DIARIO ────────────────
+  window.checkDailyReportNotification = function() {
+    if (localStorage.getItem('ROMA_DAILY_NOTIF_ENABLED') !== 'true' || Notification.permission !== 'granted') {
+      return;
+    }
+    
+    if (typeof DATOS_SINCRONIZADOS === 'undefined' || !DATOS_SINCRONIZADOS.showroom) return;
+    
+    // Obtener los datos reales de showroom ordenados por fecha
+    const rows = DATOS_SINCRONIZADOS.showroom;
+    if (rows.length === 0) return;
+    
+    // Filtrar días que tengan actividad financiera real
+    const activeRows = rows.filter(r => r[1] > 0 || r[2] > 0);
+    if (activeRows.length === 0) return;
+    
+    // Obtener el último cierre disponible
+    const lastRow = activeRows[activeRows.length - 1];
+    const label = lastRow[0]; // ej: "mar 14 jul 26"
+    const ventas = lastRow[1];
+    const gastos = lastRow[2];
+    const ganancias = lastRow[3];
+    
+    // Leer los días ya notificados de localStorage
+    let notifiedDays = [];
+    try {
+      notifiedDays = JSON.parse(localStorage.getItem('ROMA_NOTIFIED_DAYS') || '[]');
+    } catch (err) {}
+    
+    if (!notifiedDays.includes(label)) {
+      // Disparar la notificación
+      const emoji = ganancias >= 0 ? '📈' : '📉';
+      const statusWord = ganancias >= 0 ? 'Ganancia' : 'Pérdida';
+      const title = `💰 Cierre de Caja — +Roma`;
+      const body = `Resumen del día:\n💵 Ventas: $${Math.round(ventas).toLocaleString('es-AR')}\n💸 Gastos: $${Math.round(gastos).toLocaleString('es-AR')}\n${emoji} ${statusWord}: $${Math.round(ganancias).toLocaleString('es-AR')}`;
+      
+      window.sendLocalNotification(title, body);
+      
+      // Guardar en notificados
+      notifiedDays.push(label);
+      if (notifiedDays.length > 50) notifiedDays.shift(); // Limitar historial a 50 registros
+      localStorage.setItem('ROMA_NOTIFIED_DAYS', JSON.stringify(notifiedDays));
+    }
+  };
+  
+  window.updateNotifUI();
 });
 </script>
 </body>

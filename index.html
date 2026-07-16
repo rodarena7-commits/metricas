@@ -5287,17 +5287,43 @@ window.addEventListener('DOMContentLoaded', () => {
     
     if (typeof DATOS_SINCRONIZADOS === 'undefined' || !DATOS_SINCRONIZADOS.showroom) return;
     
-    // Obtener los datos reales de showroom ordenados por fecha
     const rows = DATOS_SINCRONIZADOS.showroom;
     if (rows.length === 0) return;
     
-    // Filtrar días que tengan actividad financiera real
-    const activeRows = rows.filter(r => r[1] > 0 || r[2] > 0);
+    // Obtener mes y año actuales del dispositivo del usuario
+    const now = new Date();
+    const currentMonthNum = now.getMonth() + 1; // 1-12
+    const currentYear = now.getFullYear(); // ej: 2026
+    
+    const monthCodes = ["ene", "feb", "mar", "abr", "may", "jun", "jul", "ago", "sep", "oct", "nov", "dic"];
+    const currentMonthCode = monthCodes[currentMonthNum - 1];
+    const currentYearCode = currentYear.toString().slice(-2); // ej: "26"
+    
+    // Filtrar filas correspondientes al mes en curso (ej: que contengan "jul 26")
+    const currentMonthRows = rows.filter(r => {
+      const parts = r[0].split(' '); // Label format: "mar 14 jul 26"
+      if (parts.length >= 4) {
+        return parts[2] === currentMonthCode && parts[3] === currentYearCode;
+      }
+      return false;
+    });
+    
+    if (currentMonthRows.length === 0) return;
+    
+    // Ordenar las filas del mes actual de forma cronológica por el número de día
+    currentMonthRows.sort((a, b) => {
+      const dayA = parseInt(a[0].split(' ')[1]) || 0;
+      const dayB = parseInt(b[0].split(' ')[1]) || 0;
+      return dayA - dayB;
+    });
+    
+    // Filtrar días que tengan actividad financiera real registrada (Ventas > 0 o Gastos > 0)
+    const activeRows = currentMonthRows.filter(r => r[1] > 0 || r[2] > 0);
     if (activeRows.length === 0) return;
     
-    // Obtener el último cierre disponible
+    // Obtener el último cierre disponible del mes actual
     const lastRow = activeRows[activeRows.length - 1];
-    const label = lastRow[0]; // ej: "mar 14 jul 26"
+    const label = lastRow[0];
     const ventas = lastRow[1];
     const gastos = lastRow[2];
     const ganancias = lastRow[3];
@@ -5323,6 +5349,22 @@ window.addEventListener('DOMContentLoaded', () => {
       localStorage.setItem('ROMA_NOTIFIED_DAYS', JSON.stringify(notifiedDays));
     }
   };
+  
+  // Auto-refresco de datos en segundo plano cada 5 minutos
+  setInterval(() => {
+    const filterMonth = document.querySelector('.sel-mes-global')?.value;
+    if (filterMonth && filterMonth !== 'all') {
+      const sheetName = mesAPestaña[filterMonth];
+      if (sheetName) {
+        console.log(`Auto-refresco de fondo para: ${sheetName}`);
+        fetchMonthlyDataRealTime(sheetName).then(success => {
+          if (success) {
+            buildAll();
+          }
+        });
+      }
+    }
+  }, 300000); // 300000 ms = 5 minutos
   
   window.updateNotifUI();
 });

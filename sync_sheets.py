@@ -11,6 +11,36 @@ SPREADSHEET_URL = "https://docs.google.com/spreadsheets/d/17r2QvAAQsZZK7YB_UXstm
 LOCAL_XLSX_PATH = "google_sheet_temp.xlsx"
 DATA_JS_PATH = "data.js"
 
+def enviar_notificacion_ntfy(label, ventas, gastos, ganancias):
+    topic = "roma_metricas_cajas_9971"
+    url = f"https://ntfy.sh/{topic}"
+    
+    emoji = "📈" if ganancias >= 0 else "📉"
+    status_word = "Ganancia" if ganancias >= 0 else "Pérdida"
+    
+    title = "💰 Cierre de Caja — +Roma"
+    body = (
+        f"Resumen del día:\n"
+        f"💵 Ventas: ${int(ventas):,}\n"
+        f"💸 Gastos: ${int(gastos):,}\n"
+        f"{emoji} {status_word}: ${int(ganancias):,}"
+    ).replace(",", ".")
+    
+    headers = {
+        "Title": title.encode('utf-8'),
+        "Tags": "chart_with_upwards_trend,moneybag",
+        "Priority": "high"
+    }
+    
+    try:
+        res = requests.post(url, data=body.encode('utf-8'), headers=headers)
+        if res.status_code == 200:
+            print("Notificación enviada exitosamente a ntfy.sh.")
+        else:
+            print(f"Error al enviar notificación a ntfy.sh: Status {res.status_code}")
+    except Exception as e:
+        print(f"Error al enviar notificación a ntfy.sh: {str(e)}")
+
 # Mapeo de días de la semana
 DIA_MAP = {
     "lunes": "lun",
@@ -656,15 +686,45 @@ const DATOS_SINCRONIZADOS = {{
         
     print(f"Archivo '{DATA_JS_PATH}' escrito con éxito.")
     
+    # Lógica de notificaciones automáticas por ntfy.sh (en segundo plano / backend)
+    try:
+        # Filtrar registros activos en showroom (ventas > 0 o gastos > 0)
+        active_showroom = [r for r in showroom_data if r[1] > 0 or r[2] > 0]
+        if active_showroom:
+            # Obtener el último cierre
+            last_record = active_showroom[-1]
+            last_label = last_record[0] # ej: "mar 14 jul 26"
+            last_ventas = last_record[1]
+            last_gastos = last_record[2]
+            last_ganancias = last_record[3]
+            
+            # Leer el último día notificado
+            last_notified_path = os.path.join(os.path.dirname(DATA_JS_PATH), "last_notified_day.txt")
+            last_notified_val = ""
+            if os.path.exists(last_notified_path):
+                with open(last_notified_path, "r", encoding="utf-8") as lnf:
+                    last_notified_val = lnf.read().strip()
+            
+            if last_label != last_notified_val:
+                print(f"Nuevo cierre diario detectado: {last_label}. Enviando notificación push...")
+                enviar_notificacion_ntfy(last_label, last_ventas, last_gastos, last_ganancias)
+                # Escribir el nuevo label notificado
+                with open(last_notified_path, "w", encoding="utf-8") as lnf:
+                    lnf.write(last_label)
+            else:
+                print(f"El cierre de {last_label} ya fue notificado previamente.")
+    except Exception as ne:
+        print(f"Error en la lógica de notificaciones: {str(ne)}")
+    
     if os.path.exists(LOCAL_XLSX_PATH):
         os.remove(LOCAL_XLSX_PATH)
         
     try:
         print("Comprobando cambios en Git...")
         status = subprocess.check_output(["git", "status", "--porcelain"], text=True)
-        if "data.js" in status or "package.json" in status or "sync_sheets.py" in status:
+        if "data.js" in status or "last_notified_day.txt" in status or "package.json" in status or "sync_sheets.py" in status:
             print("Subiendo cambios actualizados a GitHub...")
-            subprocess.run(["git", "add", "data.js", "package.json", "sync_sheets.py"])
+            subprocess.run(["git", "add", "data.js", "last_notified_day.txt", "package.json", "sync_sheets.py"])
             subprocess.run(["git", "commit", "-m", f"Sincronización automática de Google Sheets - {timestamp}"])
             subprocess.run(["git", "push", "origin", "main"])
             print("Push a GitHub completado con éxito.")

@@ -70,13 +70,14 @@ MES_MAP = {
     "Abril26": "abr",
     "May26": "may",
     "Jun26": "jun",
-    "Jul26": "jul"
+    "Jul26": "jul",
+    "Agos26": "ago"
 }
 
 # El orden en el que se listan los meses en el dashboard comparativo
 MONTH_ORDER = [
     "Mayo25", "JUN25", "JUL25", "Agos25", "SEP25", "Oct25", "Nov25", "Dic25",
-    "Ene26", "Feb26", "Marz26", "Abril26", "May26", "Jun26", "Jul26"
+    "Ene26", "Feb26", "Marz26", "Abril26", "May26", "Jun26", "Jul26", "Agos26"
 ]
 
 # Datos históricos de Outlet extraídos de index.html original
@@ -275,7 +276,8 @@ MONTH_YEAR_MAP = {
     "Abril26": (2026, 4),
     "May26": (2026, 5),
     "Jun26": (2026, 6),
-    "Jul26": (2026, 7)
+    "Jul26": (2026, 7),
+    "Agos26": (2026, 8)
 }
 
 # Correcciones específicas para montos con ceros de más (typos en planillas mensuales)
@@ -646,7 +648,8 @@ def main():
     showroom_data = compile_showroom_data_from_months(wb)
     print(f"Total de registros de Showroom consolidados desde Balance: {len(showroom_data)}")
     
-    # 3. Generar la solapa exclusiva de auditoría de turnos para Julio, Junio, Mayo, Abril y Marzo 2026
+    # 3. Generar la solapa exclusiva de auditoría de turnos para Agosto, Julio, Junio, Mayo, Abril y Marzo 2026
+    cierre_agosto_data = parse_cierre_auditoria(wb, "Agos26")
     cierre_julio_data = parse_cierre_auditoria(wb, "Jul26")
     cierre_junio_data = parse_cierre_auditoria(wb, "Jun26")
     cierre_mayo_data = parse_cierre_auditoria(wb, "May26")
@@ -672,6 +675,7 @@ const DATOS_SINCRONIZADOS = {{
   ultima_actualizacion: "{timestamp}",
   showroom: {json.dumps(showroom_data)},
   outlet: {json.dumps(OUTLET_HISTORIC_DATA)},
+  cierre_agosto_2026: {json.dumps(cierre_agosto_data)},
   cierre_julio_2026: {json.dumps(cierre_julio_data)},
   cierre_junio_2026: {json.dumps(cierre_junio_data)},
   cierre_mayo_2026: {json.dumps(cierre_mayo_data)},

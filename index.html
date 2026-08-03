@@ -2287,7 +2287,7 @@ function initAjustesForm() {
 
 // ─── HELPERS ──────────────────────────────────────────────────────────────────
 // ─── HELPERS ──────────────────────────────────────────────────────────────────
-const SHEET_BASE_URL = "https://docs.google.com/spreadsheets/d/17r2QvAAQsZZK7YB_UXstmDObZC7WkofGII_cbLUVybU/export?format=csv";
+const SHEET_BASE_URL = "https://docs.google.com/spreadsheets/d/17r2QvAAQsZZK7YB_UXstmDObZC7WkofGII_cbLUVybU/gviz/tq?tqx=out:csv";
 
 function parseCSVLine(line) {
   const result = [];
@@ -2360,7 +2360,7 @@ let auditoriaEnTiempoReal = {};
 let gastosEmpleadosTiempoReal = {};
 
 async function fetchMonthlyDataRealTime(sheetName) {
-  const url = `${SHEET_BASE_URL}&sheet=${encodeURIComponent(sheetName)}`;
+  const url = `${SHEET_BASE_URL}&sheet=${encodeURIComponent(sheetName)}&range=A1:E2500`;
   try {
     const res = await fetch(url);
     if (!res.ok) throw new Error("Status " + res.status);

@@ -587,7 +587,16 @@ def compile_showroom_data_from_months(wb):
         y, m = MONTH_YEAR_MAP[month_sheet]
         for r in daily_records:
             d = r["day_num"]
-            
+
+            # Omitir días futuros: las pestañas mensuales vienen con la plantilla del
+            # mes completo precargada, y celdas con fórmulas arrastradas de días que
+            # todavía no ocurrieron pueden mostrar montos residuales falsos.
+            try:
+                if datetime.date(y, m, d) > datetime.date.today():
+                    continue
+            except ValueError:
+                continue
+
             # Aplicar correcciones específicas si existen para esta fecha
             fecha_key = (y, m, d)
             if fecha_key in FINANCIAL_CORRECTIONS:

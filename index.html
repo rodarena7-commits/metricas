@@ -2337,6 +2337,7 @@ const MES_CODE_JS = {
 
 const DIA_SEMANA_JS = ["dom", "lun", "mar", "mie", "jue", "vie", "sab"];
 const mesAPestaña = {
+  'Septiembre 2026': 'SEPT/26',
   'Agosto 2026': 'Agos/26',
   'Julio 2026': 'Jul/26',
   'Junio 2026': 'Jun/26',
@@ -2902,7 +2903,7 @@ function parseFinancialsFromMonthlyCSV(csvText, sheetName) {
 
 const monthOrder = [
   'Mayo 2025', 'Junio 2025', 'Julio 2025', 'Agosto 2025', 'Septiembre 2025', 'Octubre 2025', 'Noviembre 2025', 'Diciembre 2025',
-  'Enero 2026', 'Febrero 2026', 'Marzo 2026', 'Abril 2026', 'Mayo 2026', 'Junio 2026', 'Julio 2026', 'Agosto 2026'
+  'Enero 2026', 'Febrero 2026', 'Marzo 2026', 'Abril 2026', 'Mayo 2026', 'Junio 2026', 'Julio 2026', 'Agosto 2026', 'Septiembre 2026'
 ];
 const monthMap = { 
   ene:'Enero',feb:'Febrero',mar:'Marzo',abr:'Abril',may:'Mayo',jun:'Junio',
@@ -3678,6 +3679,7 @@ async function renderCierreJunio() {
   const selectedSheet = document.getElementById('sel-auditoria-mes').value; // e.g. "Junio 2026", "Mayo 2026", ...
   
   const sheetMeta = {
+    "Septiembre 2026": { title: "Septiembre 2026", fallback: "cierre_septiembre_2026", label: "sep 26" },
     "Agosto 2026": { title: "Agosto 2026", fallback: "cierre_agosto_2026", label: "ago 26" },
     "Julio 2026": { title: "Julio 2026", fallback: "cierre_julio_2026", label: "jul 26" },
     "Junio 2026": { title: "Junio 2026", fallback: "cierre_junio_2026", label: "jun 26" },

@@ -920,6 +920,96 @@
     .pnl-calendar-day-pnl.expenses-color {
       color: var(--amber);
     }
+
+    /* ─── TOUR GUIADO, TIPS Y BOTÓN DE AYUDA ─────────────────────────────── */
+    .home-help-row { display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; margin-top: 24px; }
+    .home-help-row .home-help-link { margin-top: 0; cursor: pointer; font-family: inherit; background: none; }
+    .home-tour-link { color: var(--green) !important; border-color: rgba(16, 185, 129, 0.45) !important; }
+    .home-tour-link.nuevo { animation: tourPulse 2s infinite; }
+    @keyframes tourPulse {
+      0% { box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.5); }
+      70% { box-shadow: 0 0 0 10px rgba(16, 185, 129, 0); }
+      100% { box-shadow: 0 0 0 0 rgba(16, 185, 129, 0); }
+    }
+
+    #help-fab {
+      position: fixed; right: 16px; bottom: 16px; width: 46px; height: 46px; border-radius: 50%;
+      border: 1px solid var(--border-hover); background: rgba(28, 31, 48, 0.96); color: var(--text);
+      font: 700 20px var(--font-title); cursor: pointer; z-index: 9000;
+      box-shadow: 0 6px 18px rgba(0, 0, 0, 0.45); display: flex; align-items: center; justify-content: center;
+      transition: var(--transition);
+    }
+    #help-fab:hover { transform: translateY(-2px); border-color: var(--green); }
+    #home-selector:not(.hidden) ~ #help-fab { display: none; }
+    .help-menu {
+      position: fixed; right: 16px; bottom: 72px; z-index: 9001; width: min(300px, calc(100vw - 32px));
+      background: var(--bg2); border: 1px solid var(--border-hover); border-radius: 14px; padding: 8px;
+      box-shadow: 0 14px 40px rgba(0, 0, 0, 0.55); display: none;
+    }
+    .help-menu.open { display: block; animation: fadeIn 0.2s ease; }
+    .help-menu button, .help-menu a {
+      display: flex; flex-direction: column; align-items: flex-start; gap: 2px; width: 100%; text-align: left;
+      background: none; border: none; color: var(--text); font: 600 14px var(--font); padding: 10px 12px;
+      border-radius: 10px; cursor: pointer; text-decoration: none;
+    }
+    .help-menu button:hover, .help-menu a:hover { background: var(--bg3); }
+    .help-menu small { color: var(--text2); font-weight: 400; font-size: 12px; }
+    .help-menu hr { border: none; border-top: 1px solid var(--border); margin: 6px 4px; }
+
+    .tip-bubble {
+      position: fixed; right: 16px; bottom: 72px; z-index: 9002; width: min(340px, calc(100vw - 32px));
+      background: var(--bg2); border: 1px solid rgba(16, 185, 129, 0.5); border-radius: 14px; padding: 14px 16px;
+      box-shadow: 0 14px 40px rgba(0, 0, 0, 0.55); animation: tipIn 0.35s cubic-bezier(0.2, 0.9, 0.3, 1.2);
+      font-size: 13.5px; line-height: 1.5; color: var(--text2);
+    }
+    @keyframes tipIn { from { opacity: 0; transform: translateY(14px) scale(0.97); } to { opacity: 1; transform: none; } }
+    .tip-bubble h5 { font: 700 14px var(--font-title); color: var(--text); margin-bottom: 6px; }
+    .tip-bubble ul { margin: 0 0 10px 18px; }
+    .tip-bubble li { margin: 3px 0; }
+    .tip-bubble b { color: var(--text); }
+    .tip-bubble .live { display: block; background: rgba(16, 185, 129, 0.08); border: 1px solid rgba(16, 185, 129, 0.25); border-radius: 8px; padding: 7px 9px; margin: 0 0 10px; color: var(--text); }
+    .tip-actions { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+    .tip-actions button, .tour-actions button {
+      font: 600 13px var(--font); cursor: pointer; border-radius: 9px; padding: 8px 12px;
+      border: 1px solid var(--border-hover); background: var(--bg3); color: var(--text);
+    }
+    .tip-actions button.primario, .tour-actions button.primario {
+      background: linear-gradient(135deg, #10b981, #3b82f6); color: #06130e; border-color: transparent;
+    }
+    .tip-actions button.link { background: none; border: none; color: var(--text2); font-weight: 500; padding: 8px 4px; font-size: 12px; }
+
+    #tour-root { position: fixed; top: 0; left: 0; width: 0; height: 0; z-index: 100100; }
+    .tour-block { position: fixed; background: rgba(5, 7, 12, 0.76); pointer-events: auto; transition: all 0.28s ease; }
+    .tour-cover { position: fixed; background: transparent; pointer-events: auto; }
+    .tour-ring {
+      position: fixed; border: 2px solid var(--green); border-radius: 12px; pointer-events: none;
+      box-shadow: 0 0 0 4px rgba(16, 185, 129, 0.18), 0 0 24px rgba(16, 185, 129, 0.35); transition: all 0.28s ease;
+      animation: ringPulse 1.8s infinite;
+    }
+    @keyframes ringPulse { 50% { box-shadow: 0 0 0 7px rgba(16, 185, 129, 0.12), 0 0 30px rgba(16, 185, 129, 0.5); } }
+    .tour-card {
+      position: fixed; pointer-events: auto; width: min(350px, calc(100vw - 24px)); background: #151a2d;
+      border: 1px solid var(--border-hover); border-radius: 16px; padding: 14px 16px 14px;
+      box-shadow: 0 18px 50px rgba(0, 0, 0, 0.65); color: var(--text2); font-size: 14px; line-height: 1.5;
+      transition: top 0.28s ease, left 0.28s ease;
+    }
+    .tour-top { display: flex; justify-content: space-between; align-items: center; font-size: 12px; color: var(--text2); margin-bottom: 8px; }
+    .tour-x { background: none; border: none; color: var(--text2); font-size: 16px; cursor: pointer; padding: 2px 6px; }
+    .tour-bar { height: 4px; background: var(--bg3); border-radius: 9px; overflow: hidden; margin-bottom: 10px; }
+    .tour-bar i { display: block; height: 100%; width: 0; background: linear-gradient(90deg, #10b981, #3b82f6); transition: width 0.3s; }
+    .tour-title { font: 700 16px var(--font-title); color: var(--text); margin-bottom: 4px; }
+    .tour-text b { color: var(--text); }
+    .tour-text code { background: var(--bg3); border: 1px solid var(--border); padding: 0 5px; border-radius: 5px; font-size: 12.5px; }
+    .tour-text .live { display: block; margin-top: 8px; background: rgba(16, 185, 129, 0.08); border: 1px solid rgba(16, 185, 129, 0.25); border-radius: 8px; padding: 7px 9px; color: var(--text); }
+    .tour-hint { margin-top: 10px; padding: 8px 10px; border-radius: 9px; background: rgba(59, 130, 246, 0.12); border: 1px dashed rgba(59, 130, 246, 0.5); color: var(--text); font-size: 13px; }
+    .tour-hint.ok { background: rgba(16, 185, 129, 0.12); border: 1px solid rgba(16, 185, 129, 0.5); }
+    .tour-actions { display: flex; justify-content: space-between; gap: 8px; margin-top: 12px; }
+    .tour-actions button[disabled] { opacity: 0.4; cursor: default; }
+    .tour-actions .pulso { animation: tourPulse 1.4s infinite; }
+    @media (max-width: 600px) {
+      #help-fab { bottom: 14px; right: 14px; }
+      .tour-card { left: 12px !important; right: 12px; width: auto; top: auto !important; bottom: 12px; transition: none; }
+    }
   </style>
 </head>
 <body>
@@ -958,7 +1048,10 @@
           <div class="home-btn-desc">Auditoría, ventas, gastos y finanzas (Requiere clave)</div>
         </button>
       </div>
-      <a class="home-help-link" href="tutorial.html">📘 ¿Cómo funciona? Ver el tutorial</a>
+      <div class="home-help-row">
+        <button type="button" id="home-btn-tour" class="home-help-link home-tour-link">🧭 Tour guiado</button>
+        <a class="home-help-link" href="tutorial.html">📘 Tutorial completo</a>
+      </div>
     </div>
   </div>
  
@@ -5487,6 +5580,469 @@ window.addEventListener('DOMContentLoaded', () => {
   
   window.updateNotifUI();
 });
+
+// ─── TOUR GUIADO + TIPS DINÁMICOS ────────────────────────────────────────────
+// Tour paso a paso que resalta los elementos reales de la app (navega solo entre
+// pestañas y respeta las claves), tips que aparecen la primera vez que entrás a
+// cada pestaña con datos reales del mes, y un botón "?" siempre disponible.
+(function () {
+  const KEY = 'ROMA_TOUR';
+  const T = { activo: false, pasos: [], i: 0, token: 0, el: null, quitarAccion: null };
+  let ui = null, tipEl = null, menuEl = null, fab = null;
+
+  const esc = s => String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+  const espera = ms => new Promise(r => setTimeout(r, ms));
+  const vivo = h => `<span class="live">${h}</span>`;
+
+  function leer() {
+    const base = { tabs: {}, tipsOff: false, tourVisto: false };
+    try { return Object.assign(base, JSON.parse(localStorage.getItem(KEY) || '{}')); } catch (e) { return base; }
+  }
+  function guardar(s) { try { localStorage.setItem(KEY, JSON.stringify(s)); } catch (e) {} }
+
+  const resolver = sel => (typeof sel === 'function' ? sel() : (sel ? document.querySelector(sel) : null));
+  function visible(el) {
+    if (!el) return false;
+    const r = el.getBoundingClientRect();
+    return r.width > 0 && r.height > 0 && getComputedStyle(el).visibility !== 'hidden';
+  }
+  const tarjeta = id => { const t = document.getElementById(id); return t && (t.closest('.chart-card') || t); };
+  const padre = id => { const t = document.getElementById(id); return t && t.parentElement; };
+  const pestanaActiva = () => (document.querySelector('.tab-btn.active') || {}).dataset?.tab;
+
+  // ── Datos reales para los textos dinámicos ──
+  function datosMes() {
+    try {
+      const filas = getRows().filter(r => r.ventas || r.gastos);
+      const meses = getMonths(filas);
+      if (!meses.length) return null;
+      const mes = meses[meses.length - 1];
+      const d = filas.filter(r => r.month === mes);
+      const suma = k => d.reduce((s, r) => s + r[k], 0);
+      const max = k => d.reduce((a, b) => (b[k] > a[k] ? b : a));
+      return { mes, dias: d.length, ventas: suma('ventas'), gastos: suma('gastos'), ganancia: suma('ganancias'), mejor: max('ventas'), mayorGasto: max('gastos') };
+    } catch (e) { return null; }
+  }
+  function vVentas() {
+    const d = datosMes();
+    return d ? vivo(`📌 Lo último cargado es <b>${esc(d.mes)}</b>: <b>${fmt(d.ventas)}</b> vendidos en ${d.dias} ${d.dias === 1 ? 'día' : 'días'}. Mejor día: <b>${esc(d.mejor.label)}</b> (${fmt(d.mejor.ventas)}).`) : '';
+  }
+  function vGastos() {
+    const d = datosMes();
+    return d ? vivo(`📌 En <b>${esc(d.mes)}</b> se gastaron <b>${fmt(d.gastos)}</b>. El día más pesado fue <b>${esc(d.mayorGasto.label)}</b> (${fmt(d.mayorGasto.gastos)}).`) : '';
+  }
+  function vGanancias() {
+    const d = datosMes();
+    return d ? vivo(`📌 <b>${esc(d.mes)}</b>: ${d.ganancia >= 0 ? 'ganancia' : 'pérdida'} de <b>${fmt(Math.abs(d.ganancia))}</b> (ventas ${fmt(d.ventas)} − gastos ${fmt(d.gastos)}).`) : '';
+  }
+  function vComparativo() {
+    try {
+      const por = byMonth(getRows(), 'ganancias');
+      const mejor = Object.entries(por).sort((a, b) => b[1] - a[1])[0];
+      return mejor ? vivo(`📌 El mejor mes en ganancias fue <b>${esc(mejor[0])}</b> con <b>${fmt(mejor[1])}</b>.`) : '';
+    } catch (e) { return ''; }
+  }
+  function vBalance() {
+    const d = datosMes();
+    return d ? vivo(`📌 Se abre en el mes más reciente con datos: <b>${esc(d.mes)}</b>.`) : '';
+  }
+
+  // ── Contenido: pasos del tour (el mismo sirve para el tour completo y para "esta pantalla") ──
+  const PASOS = {
+    inicio: [
+      { sel: '#home-btn-personal', titulo: 'Empleados', texto: 'Asistencia, turnos y sueldos del personal. <b>Entra directo</b>, sin clave.' },
+      { sel: '#home-btn-balance', titulo: 'Balance', texto: 'Ventas, gastos, ganancias y auditoría de turnos. <b>Pide una clave</b>: una vez ingresada queda abierta durante 1 hora.' }
+    ],
+    comun: [
+      { tab: 'ventas', sel: '#store-tabs', titulo: 'Dos locales', texto: 'Cambiá entre <b>Showroom</b> y <b>Outlet</b>. Todo lo de abajo cambia con el local elegido.' },
+      { tab: 'ventas', sel: '#main-tabs', titulo: 'Las pestañas', texto: 'Cada pestaña muestra una parte del negocio: <b>Ventas, Gastos, Ganancias, Comparativo, Empleados, Balance y Ajustes</b>. Ahora las vemos una por una.' }
+    ],
+    ventas: [
+      { sel: '#metrics-ventas', titulo: 'Resumen de ventas', texto: () => 'Cuatro números clave: <b>total, promedio, mejor y peor</b>. Si elegís un mes, muestran los de ese mes.' + vVentas() },
+      { sel: '#sel-ventas-mes', titulo: 'Elegí un mes', texto: 'Este selector filtra tarjetas, gráfico y detalle. Los meses nuevos aparecen solos.', accion: { sel: '#sel-ventas-mes', evento: 'change', hint: 'elegí un mes de la lista.' } },
+      { sel: '#card-ventas-dia .timeframe-selector', titulo: 'Diario, semanal o mensual', texto: 'Cambiá cómo se agrupa el gráfico.', accion: { sel: '#card-ventas-dia .timeframe-selector', evento: 'click', hint: 'tocá <b>Mensual</b>.' } },
+      { sel: () => { const b = document.querySelector('#card-ventas-dia .chart-action-btn'); return b && b.parentElement; }, titulo: 'Compartir y pantalla completa', texto: 'El ícono de compartir manda el gráfico como imagen (por WhatsApp, por ejemplo) y las flechas lo agrandan.' },
+      { sel: '#inp-ventas-fecha', titulo: 'Buscá un día', texto: 'Escribí, por ejemplo, <code>lun 3</code> y el detalle se filtra.', limpiar: '#inp-ventas-fecha', accion: { sel: '#inp-ventas-fecha', evento: 'input', hint: 'escribí algo, por ejemplo <b>lun</b>.' } },
+      { sel: () => tarjeta('table-ventas-diarias'), titulo: 'Detalle día por día', texto: 'Cada día con su total de ventas.' }
+    ],
+    gastos: [
+      { sel: '#metrics-gastos', titulo: 'Resumen de gastos', texto: () => 'Misma idea que Ventas, pero con los <b>gastos</b> (turno mañana + turno tarde).' + vGastos() },
+      { sel: '#card-gastos-dia .timeframe-selector', titulo: 'Mirá la tendencia', texto: 'Diario, semanal o mensual, igual que en Ventas.' },
+      { sel: () => tarjeta('table-gastos-diarios'), titulo: 'Detalle de gastos', texto: 'Para saber <b>en qué</b> se gastó (y qué porcentaje es cada cosa) usá el menú <b>💸 Gastos</b> dentro de la planilla.' }
+    ],
+    ganancias: [
+      { sel: '#metrics-ganancias', titulo: 'Ganancia = ventas − gastos', texto: () => 'Se calcula día por día.' + vGanancias() },
+      { sel: '#card-ganancias-dia', titulo: 'Verde y rojo', texto: 'En el gráfico, las barras <b>verdes</b> son días con ganancia y las <b>rojas</b> días con pérdida.' }
+    ],
+    comparativo: [
+      { sel: '#card-comparativo', titulo: 'Todos los meses juntos', texto: () => '<b>Azul</b> = ventas, <b>ámbar</b> = gastos, <b>verde</b> = ganancias.' + vComparativo() },
+      { sel: '#table-resumen-mensual', titulo: 'Resumen acumulado', texto: 'La misma información en tabla, con el mes más nuevo arriba. El mes en curso se ve más bajo porque tiene menos días cargados.' }
+    ],
+    personal: [
+      { sel: '#metrics-personal', titulo: 'Turnos y presencia', texto: 'Turnos totales, quién trabajó más y cuánto personal estuvo activo.' },
+      { sel: '#sel-personal-mes', titulo: 'Filtro de período', texto: 'Mirá un mes puntual o todos juntos.', accion: { sel: '#sel-personal-mes', evento: 'change', hint: 'elegí otro período.' } },
+      { sel: () => tarjeta('table-personal-summary'), titulo: 'Días trabajados', texto: 'Cuántos turnos mañana (<b>TM</b>) y tarde (<b>TT</b>) hizo cada persona y qué días exactos.' },
+      { sel: () => padre('btn-sueldos-view-table'), titulo: 'Sueldos: tabla o calendario', texto: 'Los cobros de cada empleado, en tabla o en calendario, por mes o por semana.', accion: { sel: '#btn-sueldos-view-calendar', evento: 'click', hint: 'tocá <b>Calendario</b>.' } },
+      { sel: '#form-privacidad-empleado', titulo: 'Privacidad de sueldos', texto: 'Cada empleado puede ponerle una <b>clave</b> a sus sueldos para que solo él los vea.' }
+    ],
+    'cierre-junio': [
+      { sel: '#sel-auditoria-mes', titulo: 'Mes a auditar', texto: () => 'Elegí el mes que querés revisar.' + vBalance(), accion: { sel: '#sel-auditoria-mes', evento: 'change', hint: 'elegí otro mes.' } },
+      { sel: () => tarjeta('table-cierre-junio'), titulo: 'Auditoría de turnos', texto: 'Cada línea es una fila de la planilla. La columna <b>Fila Excel</b> te dice dónde está, para ir a verificarla.' },
+      { sel: () => tarjeta('table-cierre-ganancias'), titulo: 'Ganancias diarias', texto: 'Ventas menos gastos de cada día.' },
+      { sel: () => padre('btn-balance-view-table'), titulo: 'Tabla o calendario', texto: 'El calendario pinta cada día según su resultado. Tocá un día para ver el detalle y compartilo por WhatsApp.', accion: { sel: '#btn-balance-view-calendar', evento: 'click', hint: 'tocá <b>Calendario</b>.' } }
+    ],
+    ajustes: [
+      { sel: '#form-ajuste', titulo: 'Corregir un tipeo', texto: 'Si en la planilla quedó un monto mal escrito, ponés la fecha y el monto correcto acá y la app lo usa, sin tocar la planilla.' },
+      { sel: '#form-seguridad', titulo: 'Claves por sección', texto: 'Podés proteger cada pestaña con su propia contraseña.' },
+      { sel: () => { const b = document.getElementById('pwa-status-badge'); return b && b.closest('.chart-card'); }, titulo: 'Instalar y recibir alertas', texto: 'Instalá la app en el celular o la PC y activá las alertas de cierre de caja.' }
+    ]
+  };
+
+  const TIPS = {
+    ventas: { titulo: 'Ventas', puntos: ['Elegí un mes arriba a la derecha: tarjetas y gráfico se ajustan.', 'Tocá <b>Mensual</b> en el gráfico para comparar meses.', 'Buscá un día escribiendo, por ejemplo, <code>lun 3</code>.'], vivo: vVentas },
+    gastos: { titulo: 'Gastos', puntos: ['Mismos controles que Ventas, pero con los gastos del día.', 'Para ver <b>en qué</b> se gastó, usá el menú 💸 Gastos en la planilla.'], vivo: vGastos },
+    ganancias: { titulo: 'Ganancias', puntos: ['Ganancia = ventas − gastos.', 'Barras verdes: ganancia. Barras rojas: pérdida.'], vivo: vGanancias },
+    comparativo: { titulo: 'Comparativo anual', puntos: ['Azul = ventas, ámbar = gastos, verde = ganancias.', 'El mes en curso se ve más bajo porque tiene menos días cargados.'], vivo: vComparativo },
+    personal: { titulo: 'Empleados', puntos: ['<b>TM</b> = turno mañana, <b>TT</b> = turno tarde.', 'En Sueldos podés alternar entre <b>Tabla</b> y <b>Calendario</b>.'] },
+    'cierre-junio': { titulo: 'Balance', puntos: ['Cada fila trae su <b>Fila Excel</b> para ir a verificarla.', 'Probá la vista <b>Calendario</b> y compartila por WhatsApp.'], vivo: vBalance },
+    ajustes: { titulo: 'Ajustes', puntos: ['Corregí montos mal tipeados sin tocar la planilla.', 'Desde acá instalás la app en el celular.'] }
+  };
+
+  function finalPaso(libre) {
+    return {
+      titulo: '¡Listo! 🎉',
+      texto: (libre ? 'Ya conocés todas las pestañas.' : 'Ya conocés la parte de <b>Empleados</b>. Para ver Ventas, Gastos y el resto, entrá a <b>Balance</b> con tu clave y repetí el tour desde el <b>?</b>.') +
+        '<br><br>El botón <b>?</b> de abajo a la derecha siempre está: repite el tour, te explica la pantalla en la que estás o abre el <a href="tutorial.html" style="color:var(--sky)">tutorial completo</a>.'
+    };
+  }
+
+  function armarCompleto() {
+    const libre = !!getUnlockedSections().ajustes;
+    const pasos = PASOS.inicio.map(p => Object.assign({ home: true }, p));
+    if (libre) {
+      PASOS.comun.forEach(p => pasos.push(Object.assign({ modo: 'balance' }, p)));
+      ['ventas', 'gastos', 'ganancias', 'comparativo', 'personal', 'cierre-junio', 'ajustes'].forEach(t =>
+        PASOS[t].forEach(p => pasos.push(Object.assign({ modo: 'balance', tab: t }, p))));
+    } else {
+      PASOS.personal.forEach(p => pasos.push(Object.assign({ modo: 'personal', tab: 'personal' }, p)));
+    }
+    pasos.push(finalPaso(libre));
+    return pasos;
+  }
+
+  // ── Navegación de la app durante el tour ──
+  function entrarModo(m) {
+    sessionStorage.setItem('ROMA_CURRENT_MODE', m);
+    if (m === 'balance') setSectionUnlocked('cierre-junio', true);
+    hideHomeSelector();
+  }
+
+  async function irAPestana(tab) {
+    const btn = document.querySelector(`#main-tabs .tab-btn[data-tab="${tab}"]`);
+    if (!btn || btn.style.display === 'none') return false;
+    if (sessionStorage.getItem('ROMA_CURRENT_MODE') === 'balance') {
+      const cfg = getSecurityConfig();
+      if (cfg[tab] && !getUnlockedSections()[tab]) return false; // pestaña con clave: no se fuerza
+    }
+    const panel = document.getElementById('tab-' + tab);
+    if (!panel) return false;
+    if (!panel.classList.contains('active')) { btn.click(); await espera(450); }
+    return panel.classList.contains('active');
+  }
+
+  async function preparar(p) {
+    T.el = null;
+    if (p.home) {
+      if (document.getElementById('home-selector').classList.contains('hidden')) {
+        sessionStorage.removeItem('ROMA_CURRENT_MODE');
+        showHomeSelector();
+        await espera(350);
+      }
+    } else {
+      if (p.modo && sessionStorage.getItem('ROMA_CURRENT_MODE') !== p.modo) {
+        if (p.modo === 'balance' && !getUnlockedSections().ajustes) return false;
+        entrarModo(p.modo);
+        await espera(250);
+      }
+      if (p.tab && !(await irAPestana(p.tab))) return false;
+    }
+    if (p.sel) {
+      const el = resolver(p.sel);
+      if (!visible(el)) return false;
+      T.el = el;
+    }
+    return true;
+  }
+
+  // ── Interfaz del tour ──
+  function crearUI() {
+    if (ui) return ui;
+    const root = document.createElement('div');
+    root.id = 'tour-root';
+    root.style.display = 'none';
+    root.innerHTML = `
+      <div class="tour-block"></div><div class="tour-block"></div><div class="tour-block"></div><div class="tour-block"></div>
+      <div class="tour-cover"></div>
+      <div class="tour-ring"></div>
+      <div class="tour-card" role="dialog" aria-live="polite" aria-label="Tour guiado">
+        <div class="tour-top"><span class="tour-count"></span><button type="button" class="tour-x" aria-label="Cerrar el tour">✕</button></div>
+        <div class="tour-bar"><i></i></div>
+        <div class="tour-title"></div>
+        <div class="tour-text"></div>
+        <div class="tour-hint" hidden></div>
+        <div class="tour-actions"><button type="button" class="tour-prev">‹ Anterior</button><button type="button" class="tour-next primario">Siguiente ›</button></div>
+      </div>`;
+    document.body.appendChild(root);
+    const q = s => root.querySelector(s);
+    const bloques = root.querySelectorAll('.tour-block');
+    ui = { root, t: bloques[0], b: bloques[1], l: bloques[2], r: bloques[3], cover: q('.tour-cover'), ring: q('.tour-ring'), card: q('.tour-card'),
+      count: q('.tour-count'), bar: q('.tour-bar i'), title: q('.tour-title'), text: q('.tour-text'), hint: q('.tour-hint'), prev: q('.tour-prev'), next: q('.tour-next'), x: q('.tour-x') };
+    ui.x.addEventListener('click', () => terminar(false));
+    ui.prev.addEventListener('click', () => mostrar(T.i - 1, -1));
+    ui.next.addEventListener('click', () => { if (T.i >= T.pasos.length - 1) terminar(true); else mostrar(T.i + 1, 1); });
+    return ui;
+  }
+
+  let rafPendiente = false;
+  function pedirColocar() {
+    if (rafPendiente) return;
+    rafPendiente = true;
+    requestAnimationFrame(() => { rafPendiente = false; colocar(); });
+  }
+
+  function colocar() {
+    if (!T.activo || !ui) return;
+    const vw = window.innerWidth, vh = window.innerHeight;
+    const paso = T.pasos[T.i] || {};
+    const el = T.el;
+    const poner = (n, x, y, w, h) => { n.style.left = x + 'px'; n.style.top = y + 'px'; n.style.width = Math.max(0, w) + 'px'; n.style.height = Math.max(0, h) + 'px'; };
+    let hueco;
+    if (el) {
+      const r = el.getBoundingClientRect();
+      const pad = 6;
+      const x = Math.max(4, r.left - pad), y = Math.max(4, r.top - pad);
+      const x2 = Math.min(vw - 4, r.right + pad), y2 = Math.min(vh - 4, r.bottom + pad);
+      // Elementos muy altos (tablas largas): se resalta solo la parte de arriba y la tarjeta queda debajo
+      hueco = { x, y, w: Math.max(0, x2 - x), h: Math.min(Math.max(0, y2 - y), Math.round(vh * 0.5)) };
+      ui.ring.style.display = 'block';
+      poner(ui.ring, hueco.x, hueco.y, hueco.w, hueco.h);
+    } else {
+      hueco = { x: vw / 2, y: vh / 2, w: 0, h: 0 };
+      ui.ring.style.display = 'none';
+    }
+    poner(ui.t, 0, 0, vw, hueco.y);
+    poner(ui.b, 0, hueco.y + hueco.h, vw, vh - (hueco.y + hueco.h));
+    poner(ui.l, 0, hueco.y, hueco.x, hueco.h);
+    poner(ui.r, hueco.x + hueco.w, hueco.y, vw - (hueco.x + hueco.w), hueco.h);
+    if (el && !paso.accion) { ui.cover.style.display = 'block'; poner(ui.cover, hueco.x, hueco.y, hueco.w, hueco.h); }
+    else ui.cover.style.display = 'none';
+
+    if (vw <= 600) { ui.card.style.left = ''; ui.card.style.top = ''; return; } // el CSS la deja abajo
+    const cw = ui.card.offsetWidth, ch = ui.card.offsetHeight;
+    let top, left;
+    if (!el) { top = (vh - ch) / 2; left = (vw - cw) / 2; }
+    else {
+      left = Math.min(Math.max(12, hueco.x + hueco.w / 2 - cw / 2), vw - cw - 12);
+      if (hueco.y + hueco.h + 14 + ch <= vh - 12) top = hueco.y + hueco.h + 14;
+      else if (hueco.y - 14 - ch >= 12) top = hueco.y - 14 - ch;
+      else { top = vh - ch - 16; left = vw - cw - 16; }
+    }
+    ui.card.style.left = left + 'px';
+    ui.card.style.top = top + 'px';
+  }
+
+  async function llevarAPantalla(el) {
+    const alto = el.getBoundingClientRect().height > window.innerHeight * 0.55;
+    el.scrollIntoView({ block: alto ? 'start' : 'center', inline: 'nearest' });
+    if (alto) window.scrollBy(0, -(window.innerWidth <= 600 ? 70 : 90));
+    await espera(80);
+    if (window.innerWidth <= 600) { // la tarjeta va abajo: el elemento tiene que quedar arriba
+      const libre = window.innerHeight - ui.card.offsetHeight - 24;
+      const r = el.getBoundingClientRect();
+      window.scrollBy(0, r.height <= libre ? r.top - ((libre - r.height) / 2 + 8) : r.top - 70);
+      await espera(60);
+    }
+  }
+
+  function quitarAccion() { if (T.quitarAccion) { T.quitarAccion(); T.quitarAccion = null; } }
+
+  function limpiarPaso(p) {
+    quitarAccion();
+    if (p && p.limpiar) {
+      const inp = document.querySelector(p.limpiar);
+      if (inp && inp.value) { inp.value = ''; inp.dispatchEvent(new Event('input', { bubbles: true })); }
+    }
+  }
+
+  async function mostrar(i, dir) {
+    const mi = ++T.token;
+    limpiarPaso(T.pasos[T.i]);
+    let n = i;
+    while (n >= 0 && n < T.pasos.length) {
+      const ok = await preparar(T.pasos[n]);
+      if (mi !== T.token) return;
+      if (ok) break;
+      n += dir;
+    }
+    if (n < 0) return;
+    if (n >= T.pasos.length) { terminar(true); return; }
+    T.i = n;
+    const p = T.pasos[n];
+    crearUI();
+    ui.count.textContent = `Paso ${n + 1} de ${T.pasos.length}`;
+    ui.bar.style.width = ((n + 1) * 100 / T.pasos.length) + '%';
+    ui.title.textContent = p.titulo;
+    ui.text.innerHTML = typeof p.texto === 'function' ? p.texto() : p.texto;
+    ui.prev.disabled = n === 0;
+    ui.next.textContent = n === T.pasos.length - 1 ? '¡Listo!' : 'Siguiente ›';
+    ui.next.classList.remove('pulso');
+    ui.hint.hidden = !p.accion;
+    if (p.accion) {
+      ui.hint.className = 'tour-hint';
+      ui.hint.innerHTML = '👉 <b>Probalo:</b> ' + p.accion.hint;
+      const objetivo = resolver(p.accion.sel);
+      if (objetivo) {
+        const hecho = () => {
+          quitarAccion();
+          ui.hint.className = 'tour-hint ok';
+          ui.hint.innerHTML = '✅ <b>¡Muy bien!</b> Seguimos cuando quieras.';
+          ui.next.classList.add('pulso');
+          setTimeout(pedirColocar, 400);
+        };
+        objetivo.addEventListener(p.accion.evento, hecho);
+        T.quitarAccion = () => objetivo.removeEventListener(p.accion.evento, hecho);
+      }
+    }
+    ui.root.style.display = 'block';
+    T.activo = true;
+    if (T.el) await llevarAPantalla(T.el);
+    if (mi !== T.token) return;
+    colocar();
+    setTimeout(pedirColocar, 450); // por si el panel todavía se está animando o dibujando
+    setTimeout(pedirColocar, 1300);
+    try { ui.next.focus({ preventScroll: true }); } catch (e) {}
+  }
+
+  function terminar(completo) {
+    T.token++;
+    limpiarPaso(T.pasos[T.i]);
+    T.activo = false;
+    if (ui) ui.root.style.display = 'none';
+    if (completo) {
+      const s = leer(); s.tourVisto = true; guardar(s);
+      const b = document.getElementById('home-btn-tour'); if (b) b.classList.remove('nuevo');
+    }
+  }
+
+  function iniciarCompleto() {
+    cerrarMenu(); cerrarTip();
+    T.pasos = armarCompleto(); T.i = 0;
+    crearUI();
+    mostrar(0, 1);
+  }
+
+  function iniciarMini(tab) {
+    cerrarMenu(); cerrarTip();
+    tab = tab || pestanaActiva();
+    if (!tab || !PASOS[tab]) { if (typeof showToast === 'function') showToast('Elegí una pestaña para ver su explicación.'); return; }
+    T.pasos = PASOS[tab].map(p => Object.assign({ tab }, p)); T.i = 0;
+    crearUI();
+    mostrar(0, 1);
+  }
+
+  // ── Tips contextuales (primera vez en cada pestaña) ──
+  function cerrarTip() { if (tipEl) { tipEl.remove(); tipEl = null; } }
+
+  function mostrarTip(tab, forzar) {
+    const t = TIPS[tab];
+    const s = leer();
+    if (!t || T.activo || (!forzar && (s.tipsOff || s.tabs[tab]))) return;
+    cerrarTip(); cerrarMenu();
+    let extra = '';
+    try { extra = t.vivo ? t.vivo() : ''; } catch (e) {}
+    tipEl = document.createElement('div');
+    tipEl.className = 'tip-bubble';
+    tipEl.setAttribute('role', 'status');
+    tipEl.innerHTML = `<h5>💡 ${esc(t.titulo)}</h5><ul>${t.puntos.map(p => `<li>${p}</li>`).join('')}</ul>${extra}
+      <div class="tip-actions"><button type="button" class="primario" data-a="mini">Mostrame cómo</button><button type="button" data-a="ok">Entendido</button><button type="button" class="link" data-a="off">No mostrar más tips</button></div>`;
+    tipEl.addEventListener('click', e => {
+      const a = e.target.dataset && e.target.dataset.a;
+      if (a === 'mini') iniciarMini(tab);
+      else if (a === 'off') { const st = leer(); st.tipsOff = true; guardar(st); cerrarTip(); actualizarMenu(); }
+      else if (a === 'ok') cerrarTip();
+    });
+    document.body.appendChild(tipEl);
+    if (!forzar) { s.tabs[tab] = 1; guardar(s); }
+  }
+
+  // ── Botón "?" y menú de ayuda ──
+  function cerrarMenu() { if (menuEl) menuEl.classList.remove('open'); }
+  function actualizarMenu() {
+    const l = document.getElementById('help-tips-label');
+    if (l) l.textContent = '🔔 Tips automáticos: ' + (leer().tipsOff ? 'desactivados' : 'activados');
+  }
+
+  function crearAyuda() {
+    fab = document.createElement('button');
+    fab.id = 'help-fab'; fab.type = 'button'; fab.textContent = '?';
+    fab.setAttribute('aria-label', 'Ayuda');
+    menuEl = document.createElement('div');
+    menuEl.className = 'help-menu';
+    menuEl.innerHTML = `
+      <button type="button" data-a="tour">🧭 Tour guiado completo<small>Recorre la app paso a paso (2 min)</small></button>
+      <button type="button" data-a="mini">💡 Explicame esta pantalla<small>Resalta lo importante de la pestaña actual</small></button>
+      <button type="button" data-a="tip">📌 Ver el tip de esta pantalla<small>Con datos reales del mes</small></button>
+      <a href="tutorial.html">📘 Tutorial completo<small>La guía con todo explicado</small></a>
+      <hr>
+      <button type="button" data-a="tips"><span id="help-tips-label"></span><small>Avisos cortos la primera vez que entrás a cada pestaña</small></button>`;
+    document.body.appendChild(fab);
+    document.body.appendChild(menuEl);
+    actualizarMenu();
+    fab.addEventListener('click', e => { e.stopPropagation(); cerrarTip(); menuEl.classList.toggle('open'); });
+    menuEl.addEventListener('click', e => {
+      const b = e.target.closest('[data-a]');
+      if (!b) return;
+      const a = b.dataset.a;
+      if (a === 'tour') iniciarCompleto();
+      else if (a === 'mini') iniciarMini();
+      else if (a === 'tip') { cerrarMenu(); mostrarTip(pestanaActiva(), true); }
+      else if (a === 'tips') { const s = leer(); s.tipsOff = !s.tipsOff; if (!s.tipsOff) s.tabs = {}; guardar(s); actualizarMenu(); }
+    });
+    document.addEventListener('click', e => { if (menuEl.classList.contains('open') && !menuEl.contains(e.target) && e.target !== fab) cerrarMenu(); });
+  }
+
+  function iniciar() {
+    crearAyuda();
+    const btnTour = document.getElementById('home-btn-tour');
+    if (btnTour) {
+      btnTour.addEventListener('click', iniciarCompleto);
+      if (!leer().tourVisto) btnTour.classList.add('nuevo');
+    }
+    // Tip contextual al entrar a cada pestaña (si la app la dejó activa: puede estar protegida con clave)
+    document.getElementById('main-tabs').addEventListener('click', e => {
+      const b = e.target.closest('.tab-btn');
+      if (!b) return;
+      cerrarTip();
+      const tab = b.dataset.tab;
+      setTimeout(() => {
+        const panel = document.getElementById('tab-' + tab);
+        if (!T.activo && panel && panel.classList.contains('active')) mostrarTip(tab, false);
+      }, 700);
+    });
+    window.addEventListener('resize', pedirColocar);
+    window.addEventListener('scroll', pedirColocar, { passive: true, capture: true });
+    document.addEventListener('keydown', e => {
+      if (e.key === 'Escape') { if (T.activo) terminar(false); else { cerrarMenu(); cerrarTip(); } return; }
+      if (!T.activo) return;
+      const tag = (e.target.tagName || '').toLowerCase();
+      if (tag === 'input' || tag === 'select' || tag === 'textarea') return;
+      if (e.key === 'ArrowRight') { e.preventDefault(); ui.next.click(); }
+      else if (e.key === 'ArrowLeft' && !ui.prev.disabled) { e.preventDefault(); ui.prev.click(); }
+    });
+  }
+
+  try { iniciar(); } catch (e) { console.error('Tour: no se pudo iniciar', e); }
+})();
 </script>
 </body>
 </html>

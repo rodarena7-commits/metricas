@@ -197,11 +197,11 @@
       <div class="step"><span class="n">1</span><h3>Cargás el día</h3><p>En la planilla de Google, dentro de la pestaña del mes (por ejemplo <code>NOV/26</code>).</p></div>
       <div class="step"><span class="n">2</span><h3>Se sincroniza</h3><p>El script <code>sync_sheets.py</code> lee la planilla y guarda todo en <code>data.js</code>.</p></div>
       <div class="step"><span class="n">3</span><h3>Se publica</h3><p>Los archivos nuevos se suben a GitHub y el sitio los toma.</p></div>
-      <div class="step"><span class="n">4</span><h3>La app lo muestra</h3><p>Gráficos, tablas y calendarios. Además, el mes que estás mirando se lee <b>en vivo</b> de Google cada 5 minutos.</p></div>
+      <div class="step"><span class="n">4</span><h3>La app lo muestra</h3><p>Gráficos, tablas y calendarios. Además, las ventas, gastos y turnos del mes que estás mirando se leen <b>en vivo</b> de Google.</p></div>
     </div>
 
     <div class="callout tip"><span class="ic">💡</span><div><b>Regla de oro:</b> la planilla es la fuente de la verdad. Si un número está mal en la app, casi siempre se arregla en la planilla.</div></div>
-    <div class="callout info"><span class="ic">🕒</span><div><b>¿Cuándo se actualizó?</b> Arriba de la app dice <i>“Sincronizado: fecha y hora”</i>. Esa es la última vez que se copió la planilla a <code>data.js</code>. Hoy ese paso se hace a mano con <code>python sync_sheets.py</code> (o <code>npm run sync</code>) en la carpeta del proyecto; mientras tanto, el mes elegido se sigue leyendo en vivo.</div></div>
+    <div class="callout info"><span class="ic">🕒</span><div><b>¿Cuándo se actualizó?</b> Arriba de la app dice <i>“Sincronizado: fecha y hora”</i>. Esa es la última vez que se copió la planilla a <code>data.js</code>. Hoy ese paso se hace a mano con <code>python sync_sheets.py</code> (o <code>npm run sync</code>) en la carpeta del proyecto. Mientras tanto, <b>ventas, gastos, ganancias, turnos y auditoría</b> del mes elegido se leen en vivo; los <b>sueldos</b> y los <b>meses nuevos</b> esperan la sincronización (ver “Cambié algo en la planilla” en Ayuda).</div></div>
     <div class="callout tip"><span class="ic">🗓️</span><div><b>Los meses se agregan solos.</b> Si en la planilla existe una pestaña <code>MES/AA</code> (ej. <code>DIC/26</code>), el sync la detecta y la app la suma a los selectores, gráficos y comparativo sin tocar código. Si no hay pestaña de ese mes, simplemente no aparece.</div></div>
   </section>
 
@@ -417,6 +417,15 @@
     <div class="eyebrow">Ayuda</div>
     <h2>Si algo no anda</h2>
 
+    <details open>
+      <summary>Cambié algo en la planilla: ¿cuándo se ve en la app?</summary>
+      <div>
+        <p><b>Se ve solo, en vivo</b> (al abrir <b>Balance</b>, al elegir ese mes, y se refresca cada 5 minutos si en Ventas tenés un mes puntual elegido): ventas, gastos y ganancias del mes, quién trabajó en cada turno y la tabla de auditoría. Google puede tardar unos segundos en publicar el cambio.</p>
+        <p><b>Espera a la sincronización</b> (<code>python sync_sheets.py</code>): los <b>sueldos y cobros</b> (columnas J, K y L), los <b>meses nuevos</b>, los meses que no abriste en vivo y el cartel “Sincronizado”.</p>
+        <p>Regla práctica: si tocaste un total de ventas o gastos del mes actual, recargá la app y mirá Balance. Si tocaste sueldos o creaste el mes, corré la sincronización.</p>
+      </div>
+    </details>
+
     <details>
       <summary>No aparece el mes nuevo</summary>
       <div><p>Revisá tres cosas, en este orden:</p>
@@ -454,7 +463,7 @@
       <div><b>Cierre sin gasto</b>Caja del turno antes de descontar los gastos.</div>
       <div><b>Cierre de caja</b>Lo que queda en caja una vez descontado el gasto de caja.</div>
       <div><b>Sincronizado</b>Última vez que se copió la planilla a la app.</div>
-      <div><b>En vivo</b>Lectura directa de Google del mes elegido, cada 5 minutos.</div>
+      <div><b>En vivo</b>Lectura directa de Google de ventas, gastos y turnos del mes elegido (se repite cada 5 minutos).</div>
       <div><b>Calendario (PnL)</b>Vista que pinta cada día según su resultado: ganancia o pérdida.</div>
       <div><b>PWA</b>La app instalada en el celular o la PC como si fuera una aplicación.</div>
     </div>

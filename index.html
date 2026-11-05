@@ -701,7 +701,7 @@
     /* Estilos del Calendario PnL de Balance */
     .pnl-calendar {
       display: grid;
-      grid-template-columns: repeat(7, 1fr);
+      grid-template-columns: repeat(7, minmax(0, 1fr));
       gap: 8px;
       margin-top: 15px;
     }
@@ -726,6 +726,7 @@
       transition: var(--transition);
       cursor: pointer;
       position: relative;
+      min-width: 0;
     }
     .pnl-calendar-day:hover {
       border-color: var(--border-hover);
@@ -824,6 +825,35 @@
     }
     .pnl-tooltip-row span.val.neg {
       color: #ef4444;
+    }
+
+    /* Calendario en celulares: que entre en la pantalla sin ensanchar la página */
+    @media (max-width: 600px) {
+      #balance-view-calendar-container,
+      #sueldos-view-calendar-container { padding: 16px 8px; }
+      .pnl-calendar { gap: 3px; }
+      .pnl-calendar-header-day { font-size: 10px; letter-spacing: 0; padding: 4px 0; }
+      .pnl-calendar-day { min-height: 54px; padding: 4px 2px; border-radius: 6px; }
+      .pnl-calendar-day:hover { transform: none; }
+      .pnl-calendar-day-num { font-size: 10px; }
+      .pnl-calendar-day-pnl { font-size: 10px; white-space: nowrap; letter-spacing: -0.3px; text-align: center; }
+      /* El detalle del día se muestra fijo abajo (al tocar la celda) en vez de flotar sobre ella */
+      .pnl-tooltip,
+      .pnl-calendar-day:hover .pnl-tooltip {
+        position: fixed;
+        left: 12px;
+        right: 12px;
+        bottom: 16px;
+        top: auto;
+        width: auto;
+        transform: none;
+        z-index: 9990;
+      }
+    }
+
+    @media (max-width: 360px) {
+      .pnl-calendar-day { padding: 4px 1px; }
+      .pnl-calendar-day-pnl { font-size: 9px; letter-spacing: -0.4px; }
     }
 
     /* Banner del PnL Acumulado */
@@ -3010,6 +3040,17 @@ function fmtExact(v) {
   if (v === null || v === undefined) return '—';
   return '$' + Math.round(v).toLocaleString('es-AR');
 }
+
+// Monto para las celdas del calendario: completo en pantallas anchas, compacto (286k, 1,2M) en celulares
+function fmtCalendario(n, conSigno) {
+  const abs = Math.abs(Math.round(n));
+  let t;
+  if (window.innerWidth >= 600) t = abs.toLocaleString('es-AR');
+  else if (abs >= 1000000) t = (abs / 1000000).toLocaleString('es-AR', { maximumFractionDigits: 1 }) + 'M';
+  else if (abs >= 1000) t = Math.round(abs / 1000) + 'k';
+  else t = String(abs);
+  return (n < 0 ? '-' : (conSigno ? '+' : '')) + t;
+}
  
 let currentStore = 'showroom';
 const chartInstances = {};
@@ -4457,16 +4498,16 @@ function renderBalanceCalendar(rows, filterMonth) {
         
         if (filterTipo === 'VENTAS') {
           dayClass = 'sales-view';
-          dayPnlText = Math.round(r.ventas).toLocaleString('es-AR');
+          dayPnlText = fmtCalendario(r.ventas);
           dayPnlClass = 'sales-color';
         } else if (filterTipo === 'GASTOS') {
           dayClass = 'expenses-view';
-          dayPnlText = Math.round(r.gastos).toLocaleString('es-AR');
+          dayPnlText = fmtCalendario(r.gastos);
           dayPnlClass = 'expenses-color';
         } else {
           const isPos = r.ganancias >= 0;
           dayClass = isPos ? 'pos' : 'neg';
-          dayPnlText = (isPos ? '+' : '') + Math.round(r.ganancias).toLocaleString('es-AR');
+          dayPnlText = fmtCalendario(r.ganancias, true);
           dayPnlClass = isPos ? 'pos' : 'neg';
         }
         
@@ -4515,6 +4556,8 @@ function renderBalanceCalendar(rows, filterMonth) {
     headerTitle.style.display = 'flex';
     headerTitle.style.justifyContent = 'space-between';
     headerTitle.style.alignItems = 'center';
+    headerTitle.style.flexWrap = 'wrap';
+    headerTitle.style.gap = '8px';
     headerTitle.style.marginBottom = '10px';
     headerTitle.innerHTML = `
       <div style="font-weight: 600; font-size: 15px; color: var(--text1); display:flex; align-items:center; gap:8px;">
@@ -4847,7 +4890,7 @@ function renderSueldosCalendar(expenses, filterMonth, selectedEmpleado) {
           
           const valueDiv = document.createElement('div');
           valueDiv.className = 'pnl-calendar-day-pnl pos';
-          valueDiv.textContent = Math.round(dayStats.total).toLocaleString('es-AR');
+          valueDiv.textContent = fmtCalendario(dayStats.total);
           dayDiv.appendChild(valueDiv);
           
           // Crear Tooltip
@@ -4882,10 +4925,12 @@ function renderSueldosCalendar(expenses, filterMonth, selectedEmpleado) {
       headerTitle.style.display = 'flex';
       headerTitle.style.justifyContent = 'space-between';
       headerTitle.style.alignItems = 'center';
+      headerTitle.style.flexWrap = 'wrap';
+      headerTitle.style.gap = '8px';
       headerTitle.style.marginBottom = '10px';
       headerTitle.innerHTML = `
         <div style="font-weight: 600; font-size: 15px; color: var(--text1); display:flex; align-items:center; gap:8px;">
-          <span>Calendario de Cobros — <span class="badge-emp">${selectedEmpleado}</span></span>
+          <span>Calendario de Cobros —<span class="badge-emp">${selectedEmpleado}</span></span>
           <span style="font-size: 11px; font-weight: 400; color: var(--text2); background: rgba(255,255,255,0.05); padding: 2px 8px; border-radius: 12px;">${filterMonth}</span>
         </div>
         <button class="timeframe-btn" id="btn-share-sueldos-wa" style="padding:6px 12px;font-size:12px;border-radius:6px;background:#25d366;color:white;border:none;display:flex;align-items:center;gap:6px;font-weight:600;cursor:pointer;">

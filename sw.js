@@ -2,6 +2,7 @@ const CACHE_NAME = 'roma-metrica-v1';
 const ASSETS = [
   './',
   './index.html',
+  './tutorial.html',
   './data.js',
   './manifest.json',
   './icon-192.png',

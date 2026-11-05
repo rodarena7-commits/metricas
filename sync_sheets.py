@@ -54,32 +54,54 @@ DIA_MAP = {
     "domingo": "dom"
 }
 
-# Mapeo de meses según pestañas
-MES_MAP = {
-    "Mayo25": "may",
-    "JUN25": "jun",
-    "JUL25": "jul",
-    "Agos25": "ago",
-    "SEP25": "sep",
-    "Oct25": "oct",
-    "Nov25": "nov",
-    "Dic25": "dic",
-    "Ene26": "ene",
-    "Feb26": "feb",
-    "Marz26": "mar",
-    "Abril26": "abr",
-    "May26": "may",
-    "Jun26": "jun",
-    "Jul26": "jul",
-    "Agos26": "ago",
-    "SEPT26": "sep"
-}
+# Los meses se detectan solos a partir de los nombres de las pestañas del Excel
+# (ej. "Jul26", "SEPT26", "NOV26"): si existe la hoja de ese mes y año se incluye,
+# si no existe se omite. Las tres estructuras se completan en detectar_meses().
+MES_MAP = {}          # nombre de pestaña -> código de mes ("jul")
+MONTH_ORDER = []      # nombres de pestaña en orden cronológico
+MONTH_YEAR_MAP = {}   # nombre de pestaña -> (año, mes)
 
-# El orden en el que se listan los meses en el dashboard comparativo
-MONTH_ORDER = [
-    "Mayo25", "JUN25", "JUL25", "Agos25", "SEP25", "Oct25", "Nov25", "Dic25",
-    "Ene26", "Feb26", "Marz26", "Abril26", "May26", "Jun26", "Jul26", "Agos26", "SEPT26"
+MESES_ES = [
+    "enero", "febrero", "marzo", "abril", "mayo", "junio",
+    "julio", "agosto", "septiembre", "octubre", "noviembre", "diciembre"
 ]
+MESES_CODIGO = ["ene", "feb", "mar", "abr", "may", "jun", "jul", "ago", "sep", "oct", "nov", "dic"]
+CIERRES_DESDE = (2026, 3)  # hoja de auditoría de turnos desde Marzo 2026
+
+def interpretar_nombre_hoja(nombre):
+    """'Marz26' / 'SEPT/26' -> (2026, 3) / (2026, 9). Devuelve None si no es una hoja de mes."""
+    m = re.match(r"^([A-Za-z]+)\s*/?\s*(\d{2})$", nombre.strip())
+    if not m:
+        return None
+    letras = m.group(1).lower()
+    if letras.startswith("set"):
+        letras = "sep"
+    if len(letras) < 3 or letras[:3] not in MESES_CODIGO:
+        return None
+    return 2000 + int(m.group(2)), MESES_CODIGO.index(letras[:3]) + 1
+
+def detectar_meses(wb):
+    """Rellena MES_MAP, MONTH_ORDER y MONTH_YEAR_MAP con las pestañas de mes que existan."""
+    MES_MAP.clear()
+    MONTH_ORDER.clear()
+    MONTH_YEAR_MAP.clear()
+    encontradas = []
+    for nombre in wb.sheetnames:
+        ym = interpretar_nombre_hoja(nombre)
+        if ym:
+            encontradas.append((ym, nombre))
+    for (anio, mes), nombre in sorted(encontradas):
+        MES_MAP[nombre] = MESES_CODIGO[mes - 1]
+        MONTH_ORDER.append(nombre)
+        MONTH_YEAR_MAP[nombre] = (anio, mes)
+    print("Meses detectados: " + ", ".join(MONTH_ORDER))
+
+def nombre_visible_mes(anio, mes):
+    return f"{MESES_ES[mes - 1].capitalize()} {anio}"
+
+def nombre_en_vivo(nombre_hoja):
+    """En Google la pestaña lleva barra ('OCT/26'); el Excel exportado la quita ('OCT26')."""
+    return re.sub(r"(\d{2})$", r"/\1", nombre_hoja.strip())
 
 # Datos históricos de Outlet extraídos de index.html original
 OUTLET_HISTORIC_DATA = [
@@ -261,26 +283,6 @@ def parse_month_sheet(wb, sheet_name):
         }
         
     return asistencia
-
-MONTH_YEAR_MAP = {
-    "Mayo25": (2025, 5),
-    "JUN25": (2025, 6),
-    "JUL25": (2025, 7),
-    "Agos25": (2025, 8),
-    "SEP25": (2025, 9),
-    "Oct25": (2025, 10),
-    "Nov25": (2025, 11),
-    "Dic25": (2025, 12),
-    "Ene26": (2026, 1),
-    "Feb26": (2026, 2),
-    "Marz26": (2026, 3),
-    "Abril26": (2026, 4),
-    "May26": (2026, 5),
-    "Jun26": (2026, 6),
-    "Jul26": (2026, 7),
-    "Agos26": (2026, 8),
-    "SEPT26": (2026, 9)
-}
 
 # Correcciones específicas para montos con ceros de más (typos en planillas mensuales)
 FINANCIAL_CORRECTIONS = {
@@ -643,7 +645,8 @@ def main():
         return
         
     wb = openpyxl.load_workbook(LOCAL_XLSX_PATH, data_only=True)
-    
+    detectar_meses(wb)
+
     # 1. Obtener la asistencia de personal de todas las pestañas mensuales
     asistencia_por_mes = {}
     print("Procesando asistencia de personal en pestañas mensuales...")
@@ -659,15 +662,19 @@ def main():
     showroom_data = compile_showroom_data_from_months(wb)
     print(f"Total de registros de Showroom consolidados desde Balance: {len(showroom_data)}")
     
-    # 3. Generar la solapa exclusiva de auditoría de turnos para Septiembre, Agosto, Julio, Junio, Mayo, Abril y Marzo 2026
-    cierre_septiembre_data = parse_cierre_auditoria(wb, "SEPT26")
-    cierre_agosto_data = parse_cierre_auditoria(wb, "Agos26")
-    cierre_julio_data = parse_cierre_auditoria(wb, "Jul26")
-    cierre_junio_data = parse_cierre_auditoria(wb, "Jun26")
-    cierre_mayo_data = parse_cierre_auditoria(wb, "May26")
-    cierre_abril_data = parse_cierre_auditoria(wb, "Abril26")
-    cierre_marzo_data = parse_cierre_auditoria(wb, "Marz26")
-    
+    # 3. Auditoría de turnos de cada mes desde Marzo 2026 (el más reciente primero)
+    cierres = {}
+    for month_sheet in reversed(MONTH_ORDER):
+        anio, mes = MONTH_YEAR_MAP[month_sheet]
+        if (anio, mes) >= CIERRES_DESDE:
+            cierres[f"cierre_{MESES_ES[mes - 1]}_{anio}"] = parse_cierre_auditoria(wb, month_sheet)
+
+    # Pestaña en vivo de cada mes (la app la consulta en tiempo real por este nombre)
+    hojas_meses = {
+        nombre_visible_mes(*MONTH_YEAR_MAP[m]): nombre_en_vivo(m)
+        for m in MONTH_ORDER
+    }
+
     # 4. Obtener todos los gastos/adelantos de empleados de todos los meses de la temporada
     gastos_empleados_data = []
     print("Procesando adelantos y gastos de empleados en pestañas mensuales...")
@@ -680,21 +687,17 @@ def main():
     # Generar el archivo data.js
     timestamp = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
     
+    cierres_js = "".join(f"  {clave}: {json.dumps(datos)},\n" for clave, datos in cierres.items())
+
     js_content = f"""// Archivo generado automáticamente por el script de sincronización.
 // Última actualización: {timestamp}
 
 const DATOS_SINCRONIZADOS = {{
   ultima_actualizacion: "{timestamp}",
+  hojas_meses: {json.dumps(hojas_meses, ensure_ascii=False)},
   showroom: {json.dumps(showroom_data)},
   outlet: {json.dumps(OUTLET_HISTORIC_DATA)},
-  cierre_septiembre_2026: {json.dumps(cierre_septiembre_data)},
-  cierre_agosto_2026: {json.dumps(cierre_agosto_data)},
-  cierre_julio_2026: {json.dumps(cierre_julio_data)},
-  cierre_junio_2026: {json.dumps(cierre_junio_data)},
-  cierre_mayo_2026: {json.dumps(cierre_mayo_data)},
-  cierre_abril_2026: {json.dumps(cierre_abril_data)},
-  cierre_marzo_2026: {json.dumps(cierre_marzo_data)},
-  gastos_empleados: {json.dumps(gastos_empleados_data)}
+{cierres_js}  gastos_empleados: {json.dumps(gastos_empleados_data)}
 }};
 """
     

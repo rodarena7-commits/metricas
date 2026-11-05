@@ -622,6 +622,22 @@
         grid-template-columns: 1fr;
       }
     }
+    .home-help-link {
+      display: inline-block;
+      margin-top: 24px;
+      font-size: 13px;
+      font-weight: 500;
+      color: var(--text2);
+      text-decoration: none;
+      padding: 8px 14px;
+      border: 1px solid var(--border);
+      border-radius: 999px;
+      transition: var(--transition);
+    }
+    .home-help-link:hover {
+      color: var(--text);
+      border-color: var(--border-hover);
+    }
     .home-opt-btn {
       background: rgba(255, 255, 255, 0.03);
       border: 1px solid var(--border);
@@ -912,6 +928,7 @@
           <div class="home-btn-desc">Auditoría, ventas, gastos y finanzas (Requiere clave)</div>
         </button>
       </div>
+      <a class="home-help-link" href="tutorial.html">📘 ¿Cómo funciona? Ver el tutorial</a>
     </div>
   </div>
  
@@ -2430,8 +2447,8 @@ function getMonthYearFromSheet(sheetName) {
   else if (s.includes("nov")) month = 11;
   else if (s.includes("dic")) month = 12;
   
-  if (s.includes("25")) year = 2025;
-  else if (s.includes("26")) year = 2026;
+  const anioDosCifras = s.match(/(\d{2})$/);
+  if (anioDosCifras) year = 2000 + parseInt(anioDosCifras[1], 10);
   return { month, year };
 }
 
@@ -2905,18 +2922,66 @@ const monthOrder = [
   'Mayo 2025', 'Junio 2025', 'Julio 2025', 'Agosto 2025', 'Septiembre 2025', 'Octubre 2025', 'Noviembre 2025', 'Diciembre 2025',
   'Enero 2026', 'Febrero 2026', 'Marzo 2026', 'Abril 2026', 'Mayo 2026', 'Junio 2026', 'Julio 2026', 'Agosto 2026', 'Septiembre 2026'
 ];
-const monthMap = { 
+const monthMap = {
   ene:'Enero',feb:'Febrero',mar:'Marzo',abr:'Abril',may:'Mayo',jun:'Junio',
-  jul:'Julio',ago:'Agosto',sep:'Septiembre',oct:'Octubre',nov:'Noviembre',dic:'Diciembre' 
+  jul:'Julio',ago:'Agosto',sep:'Septiembre',oct:'Octubre',nov:'Noviembre',dic:'Diciembre'
 };
- 
+
+// ─── MESES AUTOMÁTICOS ───────────────────────────────────────────────────────
+// Cada mes que tenga pestaña en la planilla (DATOS_SINCRONIZADOS.hojas_meses) o días
+// cargados se suma solo a los selectores, gráficos y a la lectura en tiempo real.
+// Si no existe la pestaña ni hay días de ese mes, simplemente no aparece.
+const NOMBRES_MES = Object.values(monthMap);
+const ABREV_PESTANA = ['Ene','Feb','Marz','Abril','May','Jun','Jul','Agos','Sept','Oct','Nov','Dic'];
+
+function ordenCronologico(nombreMes) { // 'Octubre 2026' -> número comparable
+  const [mes, anio] = nombreMes.split(' ');
+  return parseInt(anio, 10) * 12 + NOMBRES_MES.indexOf(mes);
+}
+
+function registrarMesesAutomaticos() {
+  const datos = (typeof DATOS_SINCRONIZADOS !== 'undefined') ? DATOS_SINCRONIZADOS : {};
+  const hojas = datos.hojas_meses || {};
+  const meses = new Set(monthOrder);
+
+  Object.keys(hojas).forEach(m => meses.add(m));
+  (datos.showroom || []).forEach(r => {
+    if (r[0].trim().split(' ').length >= 4) {
+      const m = monthOf(r[0]);
+      if (m) meses.add(m);
+    }
+  });
+
+  monthOrder.length = 0;
+  [...meses].sort((a, b) => ordenCronologico(a) - ordenCronologico(b)).forEach(m => monthOrder.push(m));
+
+  monthOrder.forEach(m => {
+    if (mesAPestaña[m]) return;
+    if (hojas[m]) { mesAPestaña[m] = hojas[m]; return; }
+    const [mes, anio] = m.split(' ');
+    mesAPestaña[m] = `${ABREV_PESTANA[NOMBRES_MES.indexOf(mes)]}/${anio.slice(-2)}`;
+  });
+}
+
+function metaDeMes(nombreMes) { // 'Octubre 2026' -> datos de su hoja de auditoría
+  const [mes, anio] = nombreMes.split(' ');
+  const codigo = Object.keys(monthMap).find(k => monthMap[k] === mes);
+  return {
+    title: nombreMes,
+    fallback: `cierre_${mes.toLowerCase()}_${anio}`,
+    label: `${codigo} ${anio.slice(-2)}`
+  };
+}
+
+registrarMesesAutomaticos();
+
 function monthOf(label) {
   const parts = label.trim().split(' ');
   if (parts.length >= 4) {
     const monthCode = parts[2];
-    const yearCode = parts[3]; // '25' o '26'
+    const yearCode = parts[3]; // dos cifras: '25', '26', '27'...
     const monthName = monthMap[monthCode] || '';
-    const yearName = yearCode === '25' ? '2025' : '2026';
+    const yearName = String(2000 + parseInt(yearCode, 10));
     return monthName ? `${monthName} ${yearName}` : '';
   }
   // Fallback si no tiene año (ej: outlet histórico '2 feb')
@@ -2929,6 +2994,7 @@ function monthOf(label) {
 }
  
 function parseNum(s) {
+  if (typeof s === 'number') return s;
   if (s === null || s === undefined || s === '' || s === 'null') return 0;
   return parseFloat(s.toString().replace(/\./g,'').replace(',','.')) || 0;
 }
@@ -2960,12 +3026,12 @@ function getRows() {
       if (parts.length >= 4) {
         const d = parseInt(parts[1]);
         const monthCode = parts[2];
-        const yearCode = parts[3]; // '25' o '26'
-        
+        const yearCode = parts[3]; // dos cifras: '25', '26', '27'...
+
         // Encontrar el mes numérico
         const monthNum = Object.keys(MES_CODE_JS).find(k => MES_CODE_JS[k] === monthCode);
         if (monthNum) {
-          const year = yearCode === '25' ? 2025 : 2026;
+          const year = 2000 + parseInt(yearCode, 10);
           const pad = (n) => n.toString().padStart(2, '0');
           const dateKey = `${year}-${pad(monthNum)}-${pad(d)}`;
           
@@ -3678,27 +3744,7 @@ async function renderCierreJunio() {
   
   const selectedSheet = document.getElementById('sel-auditoria-mes').value; // e.g. "Junio 2026", "Mayo 2026", ...
   
-  const sheetMeta = {
-    "Septiembre 2026": { title: "Septiembre 2026", fallback: "cierre_septiembre_2026", label: "sep 26" },
-    "Agosto 2026": { title: "Agosto 2026", fallback: "cierre_agosto_2026", label: "ago 26" },
-    "Julio 2026": { title: "Julio 2026", fallback: "cierre_julio_2026", label: "jul 26" },
-    "Junio 2026": { title: "Junio 2026", fallback: "cierre_junio_2026", label: "jun 26" },
-    "Mayo 2026": { title: "Mayo 2026", fallback: "cierre_mayo_2026", label: "may 26" },
-    "Abril 2026": { title: "Abril 2026", fallback: "cierre_abril_2026", label: "abr 26" },
-    "Marzo 2026": { title: "Marzo 2026", fallback: "cierre_marzo_2026", label: "mar 26" },
-    "Febrero 2026": { title: "Febrero 2026", fallback: "cierre_febrero_2026", label: "feb 26" },
-    "Enero 2026": { title: "Enero 2026", fallback: "cierre_enero_2026", label: "ene 26" },
-    "Diciembre 2025": { title: "Diciembre 2025", fallback: "cierre_diciembre_2025", label: "dic 25" },
-    "Noviembre 2025": { title: "Noviembre 2025", fallback: "cierre_noviembre_2025", label: "nov 25" },
-    "Octubre 2025": { title: "Octubre 2025", fallback: "cierre_octubre_2025", label: "oct 25" },
-    "Septiembre 2025": { title: "Septiembre 2025", fallback: "cierre_septiembre_2025", label: "sep 25" },
-    "Agosto 2025": { title: "Agosto 2025", fallback: "cierre_agosto_2025", label: "ago 25" },
-    "Julio 2025": { title: "Julio 2025", fallback: "cierre_julio_2025", label: "jul 25" },
-    "Junio 2025": { title: "Junio 2025", fallback: "cierre_junio_2025", label: "jun 25" },
-    "Mayo 2025": { title: "Mayo 2025", fallback: "cierre_mayo_2025", label: "may 25" }
-  };
-  
-  const meta = sheetMeta[selectedSheet] || { title: "Junio 2026", fallback: "cierre_junio_2026", label: "jun 26" };
+  const meta = monthOrder.includes(selectedSheet) ? metaDeMes(selectedSheet) : metaDeMes("Junio 2026");
   const mesTitle = meta.title;
   const fallbackKey = meta.fallback;
   const mesLabel = meta.label;
